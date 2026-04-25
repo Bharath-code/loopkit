@@ -20,6 +20,7 @@ export const BriefSchema = z.object({
   problemNote: z.string(),
   mvpScore: z.number().min(1).max(10),
   mvpNote: z.string(),
+  overallScore: z.number().min(1).max(10),
   riskiestAssumption: z.string(),
   validateAction: z.string(),
   mvpPlainEnglish: z.string(),

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CopyButton } from "./copy-button";
 
 const LOOP_PHASES = [
   {
@@ -103,13 +104,8 @@ export default function LandingPage() {
           <div className="fade-up delay-3 mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
             <div className="flex items-center gap-3 px-6 py-3 rounded-xl bg-zinc-900 border border-zinc-800 font-mono text-sm">
               <span className="text-zinc-500">$</span>
-              <span className="text-white">npx loopkit init</span>
-              <button
-                className="text-zinc-500 hover:text-white transition-colors"
-                aria-label="Copy command"
-              >
-                ⎘
-              </button>
+              <span className="text-white" id="install-cmd">npx loopkit init</span>
+              <CopyButton text="npx loopkit init" />
             </div>
 
             <Link
@@ -394,6 +390,7 @@ export default function LandingPage() {
           <div className="mt-10 flex items-center justify-center gap-3 px-6 py-3 rounded-xl bg-zinc-900 border border-zinc-800 font-mono text-sm w-fit mx-auto">
             <span className="text-zinc-500">$</span>
             <span className="text-white">npx loopkit init</span>
+            <CopyButton text="npx loopkit init" />
           </div>
 
           <p className="mt-6 text-zinc-600 text-sm">

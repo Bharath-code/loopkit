@@ -41,6 +41,7 @@ program
   .description("View and cluster async feedback from your users")
   .option("--raw", "Show raw responses without clustering")
   .option("--setup", "Generate feedback form URL")
+  .option("--add <response>", "Add a single feedback response inline")
   .action(pulseCommand);
 
 program

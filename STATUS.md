@@ -2,7 +2,7 @@
 
 **Last updated:** April 25, 2026  
 **Version:** 0.1.0  
-**Overall:** MVP CLI complete · Landing page live · Auth/payments pending
+**Overall:** MVP CLI complete · Landing page live · Phase 9 polish done · Auth/payments pending
 
 ---
 
@@ -10,10 +10,12 @@
 
 ### Foundation
 - [x] Turborepo monorepo with pnpm workspaces
-- [x] 3 packages: `@loopkit/cli`, `@loopkit/shared`, `@loopkit/web`
+- [x] 3 packages: `loopkit` (CLI), `@loopkit/shared`, `@loopkit/web`
 - [x] Root TypeScript config extended by all packages
-- [x] tsup build pipeline for CLI (single ESM bundle, 47KB)
+- [x] tsup build pipeline for CLI (single ESM bundle, ~52KB)
 - [x] `.gitignore` — includes `.loopkit/` for user data privacy
+- [x] `npm publish` config — `files`, `exports`, `publishConfig`, `prepublishOnly`
+- [x] `.npmignore` — excludes `src/`, tsconfig, tsup config, dev docs
 
 ---
 
@@ -21,7 +23,7 @@
 
 All Zod schemas defined and building:
 
-- [x] `BriefSchema` — AI output from `loopkit init`
+- [x] `BriefSchema` — AI output from `loopkit init` (includes `overallScore`)
 - [x] `TaskSchema` — task entries with status, section, timestamps
 - [x] `ShipDraftsSchema` — HN title+body, Twitter tweets[], IH body
 - [x] `PulseClusterSchema` — Fix now / Validate later / Noise clusters
@@ -39,6 +41,7 @@ All Zod schemas defined and building:
 - [x] AI scoring via Vercel AI SDK `generateObject()` with Zod schema
 - [x] Score bar visualization in terminal (colored ████░░)
 - [x] Brief rendered as box with: bet, 3 scores, riskiest assumption, validate action, MVP
+- [x] `overallScore` field — average of ICP + Problem + MVP scores, shown as `**Overall: X/10**`
 - [x] `brief.md` (human readable) + `brief.json` (machine readable) saved
 - [x] Session resume on Ctrl+C — saves `draft.json`, resumes from last question
 - [x] Project collision handling: overwrite / new version / resume
@@ -48,8 +51,7 @@ All Zod schemas defined and building:
 - [x] System prompt with full PRD spec, 3 few-shot calibration examples
 - [x] Anti-hallucination rules (word caps, JSON output only, no sycophancy)
 
-Missing from PRD spec (next sprint):
-- [ ] `overallScore` field (average of 3 scores) for quick anchor
+Remaining:
 - [ ] Free vs paid tier gating (scores shown, notes hidden for free)
 
 ---
@@ -65,14 +67,15 @@ Missing from PRD spec (next sprint):
 - [x] `[#N]` pattern detection in commit messages — auto-closes tasks
 - [x] Multi-task close in single commit (`[#2] [#4]`)
 - [x] Stale task detection (3+ days) — keep / snooze / cut prompt
-- [x] `--add "task title"` flag — inline task add
+- [x] `--add "task title"` flag — inline task add (stores `created:YYYY-MM-DD` metadata)
 - [x] `--week` flag — full week summary with comparison data
 - [x] `--repair` flag — re-assigns sequential IDs
 - [x] Graceful no-git-repo handling (warns once, runs in manual mode)
+- [x] Snooze date tracking — `snoozed:YYYY-MM-DD` written to task metadata, hides task until date
+- [x] Resurfaced task alert — `↑ N snoozed task(s) resurfaced today` shown on board
+- [x] `cut.md` archive — cut tasks moved to `.loopkit/projects/[slug]/cut.md` (never deleted)
 
-Missing from PRD spec (next sprint):
-- [ ] Snooze with actual date tracking (currently just logs message)
-- [ ] `cut.md` archive file (cut tasks are removed, not archived)
+Remaining:
 - [ ] `loopkit track --project [name]` for switching active project
 
 ---
@@ -85,17 +88,14 @@ Missing from PRD spec (next sprint):
 - [x] Self-reported pre-launch checklist (README, landing, analytics, feedback)
 - [x] AI generates all 3 platform drafts in one call (Vercel AI SDK)
 - [x] HN: title + body | Twitter: 3 tweets | IH: narrative
-- [x] Per-draft actions: [u]se / [s]kip (regenerate deferred to next sprint)
+- [x] Per-draft actions: `[u]se` / `[e]dit` / `[r]egenerate` / `[s]kip`
+- [x] `[r]egenerate` — re-calls AI for that platform, loops back to show new draft
+- [x] `[e]dit` — opens draft in `$EDITOR` (fallback: `nano`), reads back edited content
 - [x] Ship log saved to `.loopkit/ships/YYYY-MM-DD.md`
 - [x] Existing ship log detection — overwrite / append / skip
-- [x] Graceful fallback without brief (3 inline questions)
+- [x] Graceful fallback without brief (inline questions)
 - [x] Graceful fallback when AI fails (saves log without drafts)
 - [x] Ship prompt with full PRD copywriting rules (no hype, developer tone)
-
-Missing from PRD spec (next sprint):
-- [ ] `[r]egenerate` option per draft
-- [ ] `[e]dit` option opening `$EDITOR` for draft editing
-- [ ] Draft regeneration rate tracking (product signal)
 
 ---
 
@@ -110,15 +110,16 @@ Missing from PRD spec (next sprint):
 - [x] Tag "Fix now" cluster to sprint (creates task in tasks.md)
 - [x] `--raw` flag — skip clustering, show raw responses
 - [x] `--setup` flag — explains V1 setup, guides toward responses.json
+- [x] `--add "response text"` flag — append a single response inline, shows count + remaining to threshold
 - [x] Clustering prompt with anti-hallucination rule ("NEVER invent quotes")
 - [x] Graceful fallback on clustering failure (shows raw)
+- [x] Pulse I/O centralized in `storage/local.ts` (`readPulseResponses`, `appendPulseResponse`)
 
-Missing (Phase 7):
+Remaining (Phase 7):
 - [ ] Hosted feedback form URL (web route in Next.js)
 - [ ] Convex write for realtime response collection
 - [ ] JS embed widget (Shadow DOM isolated)
 - [ ] localStorage retry queue for offline submissions
-- [ ] `loopkit pulse --add "response text"` for manual entry
 
 ---
 
@@ -133,13 +134,14 @@ Missing (Phase 7):
 - [x] Tension detection: surfaces conflict between pulse and track plan
 - [x] Accept / Change / Skip recommendation flow
 - [x] Override reason recording for product signal tracking
+- [x] Override rate warning — after 4 weeks at ≥ 50%, surfaces actionable suggestion
 - [x] BIP post generated with 280-char check
 - [x] Loop log saved to `.loopkit/logs/week-N.md`
 - [x] Graceful fallback when AI fails (saves week data without synthesis)
 - [x] System prompt with if/else priority logic (not prose)
+- [x] `nextStep("init")` shown after loop closes
 
-Missing from PRD spec (next sprint):
-- [ ] Override rate tracking across weeks (warn at > 50% over 4 weeks)
+Remaining:
 - [ ] Streak visualization (4-week streak rate metric)
 - [ ] Pulse data ingested from Convex (currently no cloud pulse source)
 
@@ -147,11 +149,13 @@ Missing from PRD spec (next sprint):
 
 ### `@loopkit/web` — Landing Page
 
-- [x] Next.js 15 App Router scaffolded
+- [x] Next.js 16 App Router scaffolded
 - [x] Inter + JetBrains Mono fonts loaded
 - [x] Dark theme global CSS (zinc-950 background)
 - [x] Tailwind v4 with custom design tokens
+- [x] Sticky nav bar — logo, "How it works" / "Pricing" / "GitHub" anchors, "Sign in" + "Get started" CTAs
 - [x] Hero section: headline, subheadline, install command CTA
+- [x] Copy-to-clipboard on install command (client component, `navigator.clipboard` + fallback, ✓ feedback)
 - [x] Terminal demo section: simulated `loopkit init` output
 - [x] Pain points grid (4 relatable pains)
 - [x] "How it works" — 5-phase loop explanation with icons
@@ -161,11 +165,18 @@ Missing from PRD spec (next sprint):
 - [x] Glow effects, grid background, fade-up animations
 - [x] Scroll anchor navigation
 
-Missing (Phase 7):
-- [ ] Nav bar with "Sign in" / "Get started" buttons
-- [ ] Copy-to-clipboard on install command
+Remaining (Phase 7+):
 - [ ] Dashboard routes (project overview, pulse inbox, loop history)
 - [ ] Auth pages (login, signup)
+
+---
+
+### `storage/local.ts` — File I/O Layer
+
+- [x] All `.loopkit/` path resolvers centralized (`getRoot`, `getProjectDir`, etc.)
+- [x] `getCutPath(slug)` + `appendToCut(slug, line, date)` — cut archive helpers
+- [x] `getPulseDir()` + `readPulseResponses()` + `appendPulseResponse(text)` — pulse I/O
+- [x] `readLastNLoopLogs(n)` — reads last N week logs, parses override status
 
 ---
 
@@ -180,7 +191,7 @@ Missing (Phase 7):
 
 ## 🔜 REMAINING
 
-### Phase 7 — Auth + Payments + AI Proxy (Next Sprint)
+### Phase 7 — Auth + Payments + AI Proxy
 
 | Task | Priority | Notes |
 |---|---|---|
@@ -206,20 +217,15 @@ Missing (Phase 7):
 
 ---
 
-### Phase 9 — npm Publish + Polish
+### Phase 9 — Remaining Polish
 
 | Task | Priority | Notes |
 |---|---|---|
-| `npm publish` config | 🔴 High | `npx loopkit init` must work |
-| `.npmignore` | 🔴 High | Exclude src, tests, internal files |
 | `loopkit auth` token refresh | 🟡 Medium | Handle expired sessions gracefully |
-| `cut.md` task archive | 🟡 Medium | Cut tasks → archived, not deleted |
-| Snooze date tracking | 🟡 Medium | Resurface snoozed tasks after N days |
-| `[r]egenerate` in `loopkit ship` | 🟡 Medium | Per-draft regeneration |
-| `$EDITOR` integration in `loopkit ship` | 🟡 Medium | Edit drafts in vim/nano/VSCode |
-| Pulse `--add` flag | 🟢 Low | `loopkit pulse --add "user said this"` |
-| Override rate tracking in `loopkit loop` | 🟢 Low | Warn after 4 weeks of > 50% override |
+| `loopkit track --project [name]` | 🟡 Medium | Switch active project from CLI |
+| Streak visualization in `loopkit loop` | 🟢 Low | 4-week streak rate metric |
 | PostHog analytics events | 🟢 Low | Track command usage, upgrade triggers |
+| Free vs paid tier gating | 🔴 High | Implement in Phase 7 with Better Auth |
 
 ---
 
@@ -228,9 +234,7 @@ Missing (Phase 7):
 | Issue | Severity | Status |
 |---|---|---|
 | No automated tests | Medium | Manual testing only for now |
-| Pulse V1 requires manual JSON editing | Medium | Hosted form in Phase 7 |
-| Snooze doesn't resurface tasks (logs only) | Low | Fix in Phase 9 |
-| Cut tasks are deleted, not archived to cut.md | Low | Fix in Phase 9 |
+| Pulse V1 requires manual entry or `--add` flag | Low | Hosted form in Phase 7 |
 | Free vs paid tier gating not enforced | High | Implement in Phase 7 with Better Auth |
 | Next.js Turbopack warns about workspace root | Info | Cosmetic — no functional impact |
 
@@ -256,7 +260,7 @@ Missing (Phase 7):
 # Build
 pnpm install
 pnpm --filter @loopkit/shared build
-pnpm --filter @loopkit/cli build
+cd packages/cli && pnpm build
 
 # Test CLI
 node packages/cli/dist/index.js --help
@@ -264,6 +268,9 @@ node packages/cli/dist/index.js --help
 # Test with real AI (needs API key)
 export ANTHROPIC_API_KEY=sk-ant-...
 node packages/cli/dist/index.js init
+
+# Quick pulse test (no AI needed)
+node packages/cli/dist/index.js pulse --add "The onboarding is confusing"
 
 # Run landing page
 cd packages/web && npx next dev -p 3099

@@ -45,6 +45,10 @@ export function getTasksPath(slug: string): string {
   return path.join(getProjectDir(slug), "tasks.md");
 }
 
+export function getCutPath(slug: string): string {
+  return path.join(getProjectDir(slug), "cut.md");
+}
+
 export function getShipDir(): string {
   return path.join(getRoot(), "ships");
 }
@@ -74,6 +78,46 @@ export function ensureLoopkitDir(): void {
   ensureDir(path.join(getRoot(), "projects"));
   ensureDir(getShipDir());
   ensureDir(getLogsDir());
+  ensureDir(getPulseDir());
+}
+
+export function getPulseDir(): string {
+  return path.join(getRoot(), "pulse");
+}
+
+export function getPulseResponsesPath(): string {
+  return path.join(getPulseDir(), "responses.json");
+}
+
+export function readPulseResponses(): string[] {
+  const filePath = getPulseResponsesPath();
+  if (!fs.existsSync(filePath)) return [];
+  try {
+    return JSON.parse(fs.readFileSync(filePath, "utf-8")) as string[];
+  } catch {
+    return [];
+  }
+}
+
+export function appendPulseResponse(text: string): void {
+  ensureDir(getPulseDir());
+  const responses = readPulseResponses();
+  responses.push(text.trim());
+  fs.writeFileSync(getPulseResponsesPath(), JSON.stringify(responses, null, 2));
+}
+
+// ─── Cut Archive ────────────────────────────────────────────────
+
+export function appendToCut(slug: string, taskLine: string, cutDate: string): void {
+  ensureProjectDir(slug);
+  const cutPath = getCutPath(slug);
+  const header = `\n## Cut on ${cutDate}\n`;
+  const entry = `- [~] ${taskLine}\n`;
+  if (!fs.existsSync(cutPath)) {
+    fs.writeFileSync(cutPath, `# ${slug} — Cut Tasks\n${header}${entry}`);
+  } else {
+    fs.appendFileSync(cutPath, `${header}${entry}`);
+  }
 }
 
 export function ensureProjectDir(slug: string): void {
@@ -158,15 +202,11 @@ function renderBriefMarkdown(answers: InitAnswers, brief?: Brief): string {
     lines.push("");
     lines.push(`| Dimension | Score | Note |`);
     lines.push(`|---|---|---|`);
-    lines.push(
-      `| ICP | ${brief.icpScore}/10 | ${brief.icpNote} |`
-    );
-    lines.push(
-      `| Problem | ${brief.problemScore}/10 | ${brief.problemNote} |`
-    );
-    lines.push(
-      `| MVP Scope | ${brief.mvpScore}/10 | ${brief.mvpNote} |`
-    );
+    lines.push(`| ICP | ${brief.icpScore}/10 | ${brief.icpNote} |`);
+    lines.push(`| Problem | ${brief.problemScore}/10 | ${brief.problemNote} |`);
+    lines.push(`| MVP Scope | ${brief.mvpScore}/10 | ${brief.mvpNote} |`);
+    lines.push("");
+    lines.push(`**Overall: ${brief.overallScore}/10**`);
     lines.push("");
     lines.push("## Riskiest Assumption");
     lines.push("");
@@ -294,5 +334,30 @@ export function listProjects(): string[] {
   if (!fs.existsSync(projectsDir)) return [];
   return fs.readdirSync(projectsDir).filter((f) => {
     return fs.statSync(path.join(projectsDir, f)).isDirectory();
+  });
+}
+
+// ─── Loop Logs — read last N weeks ──────────────────────────────
+
+export function readLastNLoopLogs(n: number): Array<{ weekNumber: number; overridden: boolean }> {
+  const logsDir = getLogsDir();
+  if (!fs.existsSync(logsDir)) return [];
+
+  const files = fs
+    .readdirSync(logsDir)
+    .filter((f) => /^week-\d+\.md$/.test(f))
+    .sort((a, b) => {
+      const wA = parseInt(a.replace("week-", "").replace(".md", ""));
+      const wB = parseInt(b.replace("week-", "").replace(".md", ""));
+      return wB - wA; // newest first
+    })
+    .slice(0, n);
+
+  return files.map((f) => {
+    const weekNumber = parseInt(f.replace("week-", "").replace(".md", ""));
+    const content = fs.readFileSync(path.join(logsDir, f), "utf-8");
+    // Look for override marker written by loop command
+    const overridden = content.includes("_Override:");
+    return { weekNumber, overridden };
   });
 }

@@ -10,6 +10,7 @@ import {
   readShipLog,
   saveLoopLog,
   loopLogExists,
+  readLastNLoopLogs,
 } from "../storage/local.js";
 import { colors, header, box, pass, warn, info, nextStep, scoreBar } from "../ui/theme.js";
 
@@ -237,6 +238,9 @@ export async function loopCommand(): Promise<void> {
 
     saveLoopLog(weekNum, logContent);
     console.log(info(`Loop log saved → .loopkit/logs/week-${weekNum}.md`));
+
+    // ─── Override rate warning ───────────────────────────────────
+    checkOverrideRate(weekNum);
   } catch (error) {
     s.stop("Synthesis failed.");
     console.log(colors.danger("AI unavailable. Saving week data without synthesis."));
@@ -254,5 +258,30 @@ export async function loopCommand(): Promise<void> {
     saveLoopLog(weekNum, logContent);
   }
 
+  console.log(nextStep("init"));
   p.outro(colors.muted(`Week ${weekNum} complete. See you next Sunday.`));
+}
+
+// ─── Override Rate Warning ──────────────────────────────────────
+
+function checkOverrideRate(currentWeekNum: number): void {
+  const WINDOW = 4; // weeks to look back
+  const THRESHOLD = 2; // ≥2 overrides in 4 weeks = warning
+
+  const logs = readLastNLoopLogs(WINDOW);
+  if (logs.length < WINDOW) return; // Not enough history yet
+
+  const overrideCount = logs.filter((l) => l.overridden).length;
+  if (overrideCount >= THRESHOLD) {
+    console.log(
+      warn(
+        `Override rate: ${overrideCount}/${WINDOW} weeks — you've changed the AI recommendation more than half the time.`
+      )
+    );
+    console.log(
+      colors.muted(
+        "  This may mean the AI needs better context. Try updating your brief: `loopkit init --analyze`"
+      )
+    );
+  }
 }

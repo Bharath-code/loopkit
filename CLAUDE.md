@@ -5,6 +5,22 @@ Read this before touching any code.
 
 ---
 
+## Keep in mind
+1. think before coding.
+2. simplicity first.
+3. don't use any heavy libraries.
+4. follow the codebase strcuture exactly.
+5. simple and clean code.
+6. never use any paid service unless user explicitely wants.
+7. surgical edits only.
+8. goal-driven targets before starting any task.
+9. test your code before writing. I mean TDD.
+10. don't repeat yourself.
+11. Always run tsc --noEmit before running any command.
+12. Always run pnpm lint before running any command.
+13. Always run pnpm format before running any command. 
+
+
 ## What This Product Is
 
 LoopKit is a **CLI-first shipping OS for solo technical founders**.
@@ -27,9 +43,9 @@ The PRD is the source of truth: `prd.md` in the root.
 ```
 loopkit/
 ├── packages/
-│   ├── cli/          # @loopkit/cli — the npm-published CLI
+│   ├── cli/          # loopkit (npm) — the npm-published CLI
 │   ├── shared/       # @loopkit/shared — Zod schemas + types
-│   └── web/          # @loopkit/web — Next.js 15 landing + dashboard
+│   └── web/          # @loopkit/web — Next.js 16 landing + dashboard
 ├── turbo.json
 ├── pnpm-workspace.yaml
 └── prd.md
@@ -50,7 +66,7 @@ Never define a type in `cli` or `web` that belongs in `shared`.
 | AI SDK | Vercel AI SDK (`ai`) | `generateObject()` for all structured output |
 | AI provider | `@ai-sdk/anthropic` | Claude models |
 | Schemas | `zod` | All AI output shapes validated here |
-| Web | Next.js 15 App Router | Tailwind CSS v4 |
+| Web | Next.js 16 App Router | Tailwind CSS v4 |
 | Styling | Tailwind CSS v4 | Dark theme, violet/cyan/emerald palette |
 | Database | Convex | For pulse responses + cloud sync (Phase 7) |
 | Auth | Better Auth | Phase 7 |
@@ -94,7 +110,8 @@ src/
 │       ├── brief.md             ← human-readable markdown
 │       ├── brief.json           ← { answers, brief, createdAt }
 │       ├── draft.json           ← partial answers for session resume
-│       └── tasks.md             ← plain markdown checkboxes
+│       ├── tasks.md             ← plain markdown checkboxes
+│       └── cut.md               ← archived cut tasks (append-only)
 ├── ships/
 │   └── YYYY-MM-DD.md            ← ship log
 ├── logs/
@@ -103,7 +120,20 @@ src/
     └── responses.json           ← local feedback array (V1)
 ```
 
-**Never delete user data. Soft-delete to cut.md or archive with timestamp.**
+### Key Storage Helpers (`storage/local.ts`)
+
+| Function | Purpose |
+|---|---|
+| `getRoot()` | Returns `.loopkit/` path |
+| `readConfig()` / `writeConfig()` | Config CRUD |
+| `readBriefJson(slug)` | Reads `brief.json` for a project |
+| `readTasksFile(slug)` / `writeTasksFile(slug, content)` | tasks.md CRUD |
+| `appendToCut(slug, line, date)` | Archives a cut task line to `cut.md` |
+| `readPulseResponses()` | Reads `.loopkit/pulse/responses.json` |
+| `appendPulseResponse(text)` | Appends a single response and saves |
+| `saveShipLog(content, date)` | Writes ship log |
+| `saveLoopLog(weekNum, content)` | Writes loop log |
+| `readLastNLoopLogs(n)` | Returns last N loop logs with override status |
 
 ### AI Usage Pattern
 
@@ -140,7 +170,7 @@ Contains all Zod schemas. When adding a new data type:
 3. Use in CLI or web via `import { ... } from "@loopkit/shared"`
 
 Schemas defined:
-- `BriefSchema` — AI output from `loopkit init`
+- `BriefSchema` — AI output from `loopkit init` (includes `overallScore`)
 - `TaskSchema` — single task entry
 - `ShipDraftsSchema` — HN + Twitter + IH drafts
 - `PulseClusterSchema` — AI clustering output
@@ -152,11 +182,12 @@ Schemas defined:
 
 ## Web Package (`packages/web/`)
 
-- Next.js 15 App Router with Tailwind v4
+- Next.js 16 App Router with Tailwind v4
 - Dark theme: background `#09090b` (zinc-950)
 - Brand colors: violet-600 primary, cyan-500 secondary
 - Fonts: Inter (body), JetBrains Mono (code blocks)
 - All new routes go under `src/app/`
+- Client components (e.g. `CopyButton`) use `"use client"` directive — keep as leaf nodes
 
 ### Color Palette
 
@@ -181,9 +212,9 @@ pnpm build                            # build all packages (Turborepo)
 # Shared
 pnpm --filter @loopkit/shared build   # must run before CLI if schemas changed
 
-# CLI
-pnpm --filter @loopkit/cli build      # tsup → dist/index.js
-pnpm --filter @loopkit/cli dev        # watch mode
+# CLI (package renamed to 'loopkit' — use direct cd)
+cd packages/cli && pnpm build         # tsup → dist/index.js
+cd packages/cli && pnpm dev           # watch mode
 
 # Web
 cd packages/web && npx next dev -p 3099   # dev server
@@ -251,15 +282,15 @@ When adding a new AI feature:
 | Phase | Status | Description |
 |---|---|---|
 | 0 — Foundation | ✅ Done | Monorepo, Turborepo, TypeScript |
-| 1 — `init` | ✅ Done | 5-question flow, AI scoring, brief.md |
-| 2 — `track` | ✅ Done | tasks.md, git hook, shipping score |
-| 3 — `ship` | ✅ Done | 3-platform AI drafts, ship log |
-| 4 — `loop` | ✅ Done | Weekly synthesis, BIP post |
-| 5 — `pulse` | ✅ Done (V1) | Local JSON, AI clustering |
-| 6 — Landing page | ✅ Done | Next.js 15, dark premium design |
+| 1 — `init` | ✅ Done | 5-question flow, AI scoring, brief.md, overallScore |
+| 2 — `track` | ✅ Done | tasks.md, git hook, shipping score, snooze tracking, cut.md archive |
+| 3 — `ship` | ✅ Done | 3-platform AI drafts, ship log, regenerate, $EDITOR |
+| 4 — `loop` | ✅ Done | Weekly synthesis, BIP post, override rate warning |
+| 5 — `pulse` | ✅ Done (V1) | Local JSON, AI clustering, --add flag |
+| 6 — Landing page | ✅ Done | Next.js 16, dark premium design, nav bar, clipboard |
 | 7 — Auth + Payments | 🔜 Next | Better Auth, Polar.sh, AI proxy |
 | 8 — Dashboard | 🔜 Later | Project overview, pulse inbox |
-| 9 — npm publish | 🔜 Later | `npx loopkit init` globally |
+| 9 — npm publish | ✅ Done | `npx loopkit init` ready, .npmignore set |
 
 ---
 

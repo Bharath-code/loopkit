@@ -21,9 +21,10 @@ Given 5 raw answers from a founder, produce a structured brief with:
 5. PROBLEM NOTE — max 2 sentences
 6. MVP SCOPE SCORE (1-10) — how clear and shippable is the MVP in 7 days?
 7. MVP NOTE — max 2 sentences
-8. RISKIEST ASSUMPTION — the single thing most likely to make this fail
-9. VALIDATE BEFORE YOU BUILD — one specific async action (no meetings)
-10. MVP IN PLAIN ENGLISH — the feature set in 2 sentences max
+8. OVERALL SCORE (1-10) — simple average of the three scores: round((icpScore + problemScore + mvpScore) / 3, 1)
+9. RISKIEST ASSUMPTION — the single thing most likely to make this fail
+10. VALIDATE BEFORE YOU BUILD — one specific async action (no meetings)
+11. MVP IN PLAIN ENGLISH — the feature set in 2 sentences max
 
 ## scoring rules
 ICP:

@@ -1,7 +1,6 @@
 import * as p from "@clack/prompts";
 import fs from "node:fs";
 import path from "node:path";
-import { execSync } from "node:child_process";
 import { formatDate } from "@loopkit/shared";
 import {
   readConfig,
@@ -10,8 +9,9 @@ import {
   createTasksScaffold,
   getTasksPath,
   ensureProjectDir,
+  appendToCut,
 } from "../storage/local.js";
-import { colors, header, pass, fail, warn, info, nextStep } from "../ui/theme.js";
+import { colors, header, pass, warn, info, nextStep } from "../ui/theme.js";
 
 interface TrackOptions {
   week?: boolean;
@@ -24,9 +24,7 @@ export async function trackCommand(options: TrackOptions): Promise<void> {
   const slug = config.activeProject;
 
   if (!slug) {
-    console.log(
-      colors.danger("No active project. Run `loopkit init` first.")
-    );
+    console.log(colors.danger("No active project. Run `loopkit init` first."));
     process.exit(1);
   }
 
@@ -54,15 +52,26 @@ export async function trackCommand(options: TrackOptions): Promise<void> {
   installGitHook();
 
   // ─── Parse and display ────────────────────────────────────────
+  const today = formatDate();
   const tasks = parseTasks(content);
   const weekTasks = tasks.filter((t) => t.section === "week");
   const backlogTasks = tasks.filter((t) => t.section === "backlog");
+
+  // Separate active vs snoozed-and-still-sleeping
+  const visibleOpen = weekTasks.filter(
+    (t) => !t.done && (!t.snoozedUntil || t.snoozedUntil <= today)
+  );
+  const snoozedActive = weekTasks.filter(
+    (t) => !t.done && t.snoozedUntil && t.snoozedUntil > today
+  );
+  const resurfaced = weekTasks.filter(
+    (t) => !t.done && t.snoozedUntil && t.snoozedUntil <= today
+  );
   const done = weekTasks.filter((t) => t.done);
-  const open = weekTasks.filter((t) => !t.done);
+
+  // Shipping score counts all week tasks (snoozed included)
   const shippingScore =
-    weekTasks.length > 0
-      ? Math.round((done.length / weekTasks.length) * 100)
-      : 0;
+    weekTasks.length > 0 ? Math.round((done.length / weekTasks.length) * 100) : 0;
 
   if (options.week) {
     renderWeekSummary(weekTasks, backlogTasks, shippingScore, slug);
@@ -72,17 +81,28 @@ export async function trackCommand(options: TrackOptions): Promise<void> {
   // ─── Board View ───────────────────────────────────────────────
   console.log(header("This Week"));
 
-  if (open.length === 0 && done.length === 0) {
+  if (visibleOpen.length === 0 && done.length === 0 && snoozedActive.length === 0) {
     console.log(colors.muted("  No tasks yet. Add one:"));
-    console.log(colors.primary("  loopkit track --add \"Build the thing\""));
+    console.log(colors.primary('  loopkit track --add "Build the thing"'));
   } else {
     for (const task of done) {
       console.log(`  ${pass(`#${task.id} ${task.title}`)} ${colors.dim(task.closedVia || "")}`);
     }
-    for (const task of open) {
+    for (const task of visibleOpen) {
       const age = getTaskAgeDays(task.createdAt);
       const ageLabel = age >= 3 ? colors.warning(` (${age}d)`) : "";
       console.log(`  ${colors.muted("○")} #${task.id} ${task.title}${ageLabel}`);
+    }
+    if (snoozedActive.length > 0) {
+      console.log(colors.dim(`  ··· ${snoozedActive.length} snoozed (resurface: ${snoozedActive[0].snoozedUntil})`));
+    }
+  }
+
+  // ─── Resurfaced tasks (snooze expired) ───────────────────────
+  if (resurfaced.length > 0) {
+    console.log(colors.warning(`\n  ↑ ${resurfaced.length} snoozed task(s) resurfaced today:`));
+    for (const task of resurfaced) {
+      console.log(`    ${colors.warning("○")} #${task.id} ${task.title}`);
     }
   }
 
@@ -99,8 +119,8 @@ export async function trackCommand(options: TrackOptions): Promise<void> {
     `\n  ${colors.white.bold("Shipping")} ${renderProgressBar(shippingScore)} ${colors.white.bold(`${shippingScore}%`)}`
   );
 
-  // ─── Stale Task Detection ────────────────────────────────────
-  for (const task of open) {
+  // ─── Stale Task Detection ─────────────────────────────────────
+  for (const task of visibleOpen) {
     const age = getTaskAgeDays(task.createdAt);
     if (age >= 3) {
       const action = await p.select({
@@ -108,15 +128,15 @@ export async function trackCommand(options: TrackOptions): Promise<void> {
         options: [
           { value: "keep", label: "[k]eep" },
           { value: "snooze", label: "[s]nooze 3 days" },
-          { value: "cut", label: "[c]ut" },
+          { value: "cut", label: "[c]ut (archived)" },
         ],
       });
 
       if (!p.isCancel(action)) {
         if (action === "cut") {
-          cutTask(slug, task.id);
+          cutTask(slug, task.id, task.title, today);
         } else if (action === "snooze") {
-          snoozeTask(slug, task.id, 3);
+          snoozeTask(slug, task.id, 3, today);
         }
       }
     }
@@ -125,7 +145,7 @@ export async function trackCommand(options: TrackOptions): Promise<void> {
   console.log(nextStep("ship"));
 }
 
-// ─── Task Parser ────────────────────────────────────────────────
+// ─── Task Parser ─────────────────────────────────────────────────
 
 interface ParsedTask {
   id: number;
@@ -134,6 +154,7 @@ interface ParsedTask {
   section: "week" | "backlog";
   createdAt: string;
   closedVia?: string;
+  snoozedUntil?: string;
 }
 
 function parseTasks(content: string): ParsedTask[] {
@@ -160,34 +181,28 @@ function parseTasks(content: string): ParsedTask[] {
       continue;
     }
 
-    const taskMatch = line.match(
-      /^-\s*\[([ x])\]\s*(?:#(\d+)\s)?(.+?)(?:\s*—\s*(.+))?$/
-    );
+    // Pattern: - [x] #N title — meta=key:value key:value
+    const taskMatch = line.match(/^-\s*\[([ x])\]\s*(?:#(\d+)\s)?(.+?)(?:\s*—\s*(.+))?$/);
     if (taskMatch) {
       const done = taskMatch[1] === "x";
       const id = taskMatch[2] ? parseInt(taskMatch[2]) : nextId++;
       const title = taskMatch[3].trim();
       const meta = taskMatch[4] || "";
 
-      // Extract closed via info
       const closedVia = meta.match(/closed via (\w+)/)?.[1];
-      const createdAt = meta.match(/\d{4}-\d{2}-\d{2}/)?.[0] || formatDate();
+      const snoozedUntil = meta.match(/snoozed:(\d{4}-\d{2}-\d{2})/)?.[1];
+      const createdAt = meta.match(/created:(\d{4}-\d{2}-\d{2})/)?.[0]?.replace("created:", "")
+        || meta.match(/\d{4}-\d{2}-\d{2}/)?.[0]
+        || formatDate();
 
-      tasks.push({
-        id,
-        title,
-        done,
-        section: currentSection,
-        createdAt,
-        closedVia,
-      });
+      tasks.push({ id, title, done, section: currentSection, createdAt, closedVia, snoozedUntil });
     }
   }
 
   return tasks;
 }
 
-// ─── Task Operations ────────────────────────────────────────────
+// ─── Task Operations ─────────────────────────────────────────────
 
 function addTask(slug: string, title: string): void {
   let content = readTasksFile(slug);
@@ -199,8 +214,8 @@ function addTask(slug: string, title: string): void {
   const tasks = parseTasks(content);
   const maxId = tasks.reduce((max, t) => Math.max(max, t.id), 0);
   const newId = maxId + 1;
+  const today = formatDate();
 
-  // Insert after "## This Week" heading
   const lines = content.split("\n");
   let insertIndex = -1;
   for (let i = 0; i < lines.length; i++) {
@@ -211,33 +226,70 @@ function addTask(slug: string, title: string): void {
   }
 
   if (insertIndex === -1) {
-    // No "This Week" section found, add it
     lines.push("", "## This Week");
     insertIndex = lines.length;
   }
 
-  lines.splice(insertIndex, 0, `- [ ] #${newId} ${title}`);
+  // Store createdAt in metadata so age tracking works across runs
+  lines.splice(insertIndex, 0, `- [ ] #${newId} ${title} — created:${today}`);
   writeTasksFile(slug, lines.join("\n"));
   console.log(pass(`Added #${newId}: ${title}`));
 }
 
-function cutTask(slug: string, taskId: number): void {
+/**
+ * Archives the task line to cut.md then removes it from tasks.md.
+ * Never silently deletes — data goes to cut.md for recovery.
+ */
+function cutTask(slug: string, taskId: number, taskTitle: string, today: string): void {
   const content = readTasksFile(slug);
   if (!content) return;
 
   const lines = content.split("\n");
+  let archivedLine = "";
+
   const updated = lines.filter((line) => {
     const match = line.match(/#(\d+)\s/);
-    return !(match && parseInt(match[1]) === taskId);
+    if (match && parseInt(match[1]) === taskId) {
+      archivedLine = line.trim();
+      return false; // remove from tasks.md
+    }
+    return true;
   });
 
+  // Write to cut.md archive first (data safety before deletion)
+  appendToCut(slug, archivedLine || `#${taskId} ${taskTitle}`, today);
   writeTasksFile(slug, updated.join("\n"));
-  console.log(warn(`Cut #${taskId}`));
+  console.log(warn(`#${taskId} cut → archived to .loopkit/projects/${slug}/cut.md`));
 }
 
-function snoozeTask(slug: string, taskId: number, days: number): void {
-  // For now, just add a note. Full snooze with date tracking in v2.
-  console.log(info(`Snoozed #${taskId} for ${days} days`));
+/**
+ * Adds `snoozedUntil` metadata to the task line in tasks.md.
+ * The board view will hide it until the date passes.
+ */
+function snoozeTask(slug: string, taskId: number, days: number, today: string): void {
+  const content = readTasksFile(slug);
+  if (!content) return;
+
+  const snoozeDate = new Date();
+  snoozeDate.setDate(snoozeDate.getDate() + days);
+  const snoozedUntil = formatDate(snoozeDate);
+
+  const lines = content.split("\n").map((line) => {
+    const match = line.match(/#(\d+)\s/);
+    if (match && parseInt(match[1]) === taskId) {
+      // Remove any existing snooze tag then add new one
+      const withoutSnooze = line.replace(/\s*snoozed:\d{4}-\d{2}-\d{2}/, "");
+      // Append snooze metadata to the meta section
+      if (withoutSnooze.includes(" — ")) {
+        return `${withoutSnooze} snoozed:${snoozedUntil}`;
+      }
+      return `${withoutSnooze} — snoozed:${snoozedUntil}`;
+    }
+    return line;
+  });
+
+  writeTasksFile(slug, lines.join("\n"));
+  console.log(info(`#${taskId} snoozed until ${snoozedUntil}`));
 }
 
 function repairTasks(slug: string): void {
@@ -247,7 +299,6 @@ function repairTasks(slug: string): void {
     return;
   }
 
-  // Re-assign sequential IDs
   const lines = content.split("\n");
   let nextId = 1;
   const repaired = lines.map((line) => {
@@ -262,14 +313,12 @@ function repairTasks(slug: string): void {
   console.log(pass(`Repaired tasks.md — ${nextId - 1} tasks re-numbered.`));
 }
 
-// ─── Git Hook ───────────────────────────────────────────────────
+// ─── Git Hook ────────────────────────────────────────────────────
 
 function installGitHook(): void {
   const gitDir = path.join(process.cwd(), ".git");
   if (!fs.existsSync(gitDir)) {
-    console.log(
-      warn("No git repo — auto-close from commits disabled.")
-    );
+    console.log(warn("No git repo — auto-close from commits disabled."));
     console.log(colors.muted("  Run `git init` to enable commit-to-task sync.\n"));
     return;
   }
@@ -277,7 +326,6 @@ function installGitHook(): void {
   const hooksDir = path.join(gitDir, "hooks");
   const hookPath = path.join(hooksDir, "commit-msg");
 
-  // Check if our hook is already installed
   if (fs.existsSync(hookPath)) {
     const existing = fs.readFileSync(hookPath, "utf-8");
     if (existing.includes("loopkit")) return; // Already installed
@@ -289,10 +337,9 @@ function installGitHook(): void {
 node -e "
 const fs = require('fs');
 const msg = fs.readFileSync(process.argv[1], 'utf-8');
-const matches = msg.match(/\\[#(\\d+)\\]/g);
+const matches = msg.match(/\\\\[#(\\\\d+)\\\\]/g);
 if (!matches) process.exit(0);
 
-// Find .loopkit project
 const configPath = '.loopkit/config.json';
 if (!fs.existsSync(configPath)) process.exit(0);
 const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
@@ -307,7 +354,7 @@ const sha = require('child_process').execSync('git rev-parse --short HEAD 2>/dev
 const date = new Date().toISOString().split('T')[0];
 
 for (const match of matches) {
-  const id = match.replace(/[\\[#\\]]/g, '');
+  const id = match.replace(/[\\\\[#\\\\]]/g, '');
   content = content.replace(
     new RegExp('- \\\\[ \\\\] #' + id + ' (.+)'),
     '- [x] #' + id + ' \$1 — closed via ' + sha + ' on ' + date
@@ -327,7 +374,7 @@ fs.writeFileSync(tasksPath, content);
   fs.chmodSync(hookPath, "755");
 }
 
-// ─── Helpers ────────────────────────────────────────────────────
+// ─── Helpers ─────────────────────────────────────────────────────
 
 function getTaskAgeDays(createdAt: string): number {
   const created = new Date(createdAt);

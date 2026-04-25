@@ -2,48 +2,40 @@ import * as p from "@clack/prompts";
 import { PulseClusterSchema } from "@loopkit/shared";
 import { generateStructured } from "../ai/client.js";
 import { PULSE_SYSTEM_PROMPT, buildPulsePrompt } from "../ai/prompts/pulse.js";
-import { readConfig } from "../storage/local.js";
+import {
+  readConfig,
+  readPulseResponses,
+  appendPulseResponse,
+} from "../storage/local.js";
 import { colors, header, box, pass, warn, info, nextStep } from "../ui/theme.js";
 
 interface PulseOptions {
   raw?: boolean;
   setup?: boolean;
-}
-
-// In-memory responses for V1 (will be replaced by Convex in web version)
-// For now, pulse reads from a local JSON file
-import fs from "node:fs";
-import path from "node:path";
-
-function getPulseDir(): string {
-  return path.join(process.cwd(), ".loopkit", "pulse");
-}
-
-function getPulseResponsesPath(): string {
-  return path.join(getPulseDir(), "responses.json");
-}
-
-function readPulseResponses(): string[] {
-  const filePath = getPulseResponsesPath();
-  if (!fs.existsSync(filePath)) return [];
-  try {
-    return JSON.parse(fs.readFileSync(filePath, "utf-8"));
-  } catch {
-    return [];
-  }
-}
-
-function savePulseResponses(responses: string[]): void {
-  const dir = getPulseDir();
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-  fs.writeFileSync(getPulseResponsesPath(), JSON.stringify(responses, null, 2));
+  add?: string;
 }
 
 export async function pulseCommand(options: PulseOptions): Promise<void> {
   const config = readConfig();
   const slug = config.activeProject;
 
-  // ─── Setup: Generate feedback form URL ────────────────────────
+  // ─── --add: Append a single response ─────────────────────────
+  if (options.add !== undefined) {
+    const text = options.add.trim();
+    if (!text) {
+      console.log(colors.danger("Response text cannot be empty."));
+      process.exit(1);
+    }
+    appendPulseResponse(text);
+    const total = readPulseResponses().length;
+    console.log(pass(`Response added (${total} total)`));
+    if (total < 5) {
+      console.log(colors.muted(`  Need ${5 - total} more for AI clustering.`));
+    }
+    return;
+  }
+
+  // ─── --setup: Explain how to collect feedback ─────────────────
   if (options.setup) {
     p.intro(colors.primary.bold("LoopKit — Pulse Setup"));
 
@@ -52,16 +44,15 @@ export async function pulseCommand(options: PulseOptions): Promise<void> {
       process.exit(1);
     }
 
-    // For V1: local form. Web-hosted form comes in Phase 6.
     console.log(header("Feedback Collection — V1 (Local)"));
     console.log(
       box(
         [
-          "For now, collect feedback manually and add it here:",
+          "Collect feedback via any channel and add it to LoopKit:",
           "",
-          colors.primary("loopkit pulse --add \"User said this thing\""),
+          colors.primary('loopkit pulse --add "User said this thing"'),
           "",
-          "Or paste responses into:",
+          "Or paste responses directly into:",
           colors.dim(`.loopkit/pulse/responses.json`),
           "",
           "Web-hosted feedback form coming in the next release.",
@@ -94,9 +85,7 @@ export async function pulseCommand(options: PulseOptions): Promise<void> {
   if (options.raw || responses.length < 5) {
     if (responses.length < 5) {
       console.log(
-        warn(
-          `Not enough responses to cluster reliably (${responses.length}/5 minimum). Showing raw.`
-        )
+        warn(`Not enough responses to cluster reliably (${responses.length}/5 minimum). Showing raw.`)
       );
     }
 
@@ -105,9 +94,7 @@ export async function pulseCommand(options: PulseOptions): Promise<void> {
       console.log(`  ${colors.dim(`${i + 1}.`)} "${responses[i]}"`);
     }
 
-    console.log(
-      colors.muted("\n  Tip: Your feedback channel may need better placement.\n")
-    );
+    console.log(colors.muted("\n  Tip: Your feedback channel may need better placement.\n"));
     p.outro("");
     return;
   }
@@ -127,7 +114,7 @@ export async function pulseCommand(options: PulseOptions): Promise<void> {
 
     s.stop("Clustering complete.");
 
-    // ─── Render clusters ────────────────────────────────────────
+    // ─── Render clusters ─────────────────────────────────────────
     for (const cluster of clusters.clusters) {
       const icon =
         cluster.label === "Fix now"
@@ -151,15 +138,13 @@ export async function pulseCommand(options: PulseOptions): Promise<void> {
     }
 
     console.log(
-      colors.dim(
-        `\n  Confidence: ${Math.round(clusters.confidence * 100)}% clearly clustered`
-      )
+      colors.dim(`\n  Confidence: ${Math.round(clusters.confidence * 100)}% clearly clustered`)
     );
     if (clusters.note) {
       console.log(colors.dim(`  ${clusters.note}`));
     }
 
-    // ─── Actions ────────────────────────────────────────────────
+    // ─── Tag to sprint ───────────────────────────────────────────
     const fixNow = clusters.clusters.find((c) => c.label === "Fix now");
     if (fixNow && fixNow.count > 0) {
       const tagAction = await p.confirm({
@@ -167,11 +152,10 @@ export async function pulseCommand(options: PulseOptions): Promise<void> {
       });
 
       if (!p.isCancel(tagAction) && tagAction) {
-        // Add as task
         console.log(pass(`Tagged to sprint: [from pulse] ${fixNow.pattern}`));
       }
     }
-  } catch (error) {
+  } catch {
     s.stop("Clustering failed.");
     console.log(warn("Clustering failed — showing raw feedback."));
     for (let i = 0; i < responses.length; i++) {

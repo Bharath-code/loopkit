@@ -1,15 +1,33 @@
 {
-  "name": "@loopkit/cli",
+  "name": "loopkit",
   "version": "0.1.0",
   "description": "The Solo Founder's Shipping OS — Define · Develop · Deliver · Learn · Repeat",
   "type": "module",
   "bin": {
     "loopkit": "./dist/index.js"
   },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/loopkit/loopkit.git",
+    "directory": "packages/cli"
+  },
+  "homepage": "https://loopkit.dev",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "scripts": {
     "build": "tsup src/index.ts --format esm --dts --clean",
     "dev": "tsup src/index.ts --format esm --watch --onSuccess 'echo Build ready'",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "prepublishOnly": "pnpm build"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^1.2.0",
@@ -17,8 +35,7 @@
     "ai": "^4.3.0",
     "chalk": "^5.4.0",
     "commander": "^13.1.0",
-    "zod": "^3.24.0",
-    "@loopkit/shared": "workspace:*"
+    "zod": "^3.24.0"
   },
   "devDependencies": {
     "tsup": "^8.4.0",

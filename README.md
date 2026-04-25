@@ -8,7 +8,7 @@ Define · Develop · Deliver · Learn · Repeat
 
 Five commands. One loop. The entire shipping cycle closed from your terminal.
 
-```
+```bash
 $ npx loopkit init
 ```
 
@@ -38,6 +38,10 @@ loopkit init
 loopkit track --add "Build the landing page"
 git commit -m "feat: add hero section [#1]"  # task auto-closes
 
+# Collect feedback inline
+loopkit pulse --add "The onboarding flow is confusing"
+loopkit pulse --add "I wish I could export to Notion"
+
 # Ship it on Friday
 loopkit ship
 
@@ -51,7 +55,8 @@ loopkit loop
 
 Five questions. AI scoring. A brief that stings when it should.
 
-- Problem score, ICP score, MVP scope score (each 1–10)
+- ICP score, Problem score, MVP scope score (each 1–10)
+- **Overall score** — averaged anchor at a glance
 - Riskiest assumption named explicitly
 - One async validation action you can do tonight
 
@@ -59,28 +64,32 @@ Five questions. AI scoring. A brief that stings when it should.
 
 - Tasks live in plain markdown (`.loopkit/projects/[name]/tasks.md`)
 - Git hook auto-closes tasks when you reference `[#N]` in commits
-- Stale task detection after 3 days
+- Stale task detection after 3 days — keep, snooze, or cut
+- Snoozed tasks hidden until the snooze date, then resurfaced automatically
+- Cut tasks archived to `cut.md` — never silently deleted
 - Shipping score: tasks completed / tasks planned
 
 ### `loopkit ship` — never stare at a blank tweet again
 
-- Reads your brief + completed tasks
+- Reads your brief + completed tasks for AI context
 - Generates drafts for Show HN, Twitter, and Indie Hackers
+- Per-draft: **use**, **edit in `$EDITOR`**, **regenerate**, or **skip**
 - Pre-launch checklist catches what you forgot
-- 60 seconds from command to three drafts
+- Ship log saved to `.loopkit/ships/YYYY-MM-DD.md`
 
 ### `loopkit pulse` — feedback that comes to you
 
-- Share a feedback link with your users
+- Add responses from the CLI: `loopkit pulse --add "user said this"`
 - AI clusters responses into: Fix now / Validate later / Noise
+- Requires 5+ responses for clustering; shows raw list below threshold
 - Tag clusters directly to your sprint
-- Zero social energy required
 
 ### `loopkit loop` — the Sunday ritual
 
 - Aggregates your week: tasks, feedback, ship logs
 - AI recommends the single highest-leverage thing for next week
-- Generates a build-in-public post
+- Override rate tracked — warns if you're overriding AI > 50% of the time
+- Generates a build-in-public post (280-char checked)
 - One decision. One post. Week done.
 
 ## Pricing
@@ -93,7 +102,7 @@ Five questions. AI scoring. A brief that stings when it should.
 
 ## Local First
 
-All project data lives in `.loopkit/` in your repo. No forced cloud sync. No vendor lock-in. Your data is yours.
+All project data lives in `.loopkit/` in your repo. No forced cloud sync. No vendor lock-in.
 
 ```
 .loopkit/
@@ -102,26 +111,29 @@ All project data lives in `.loopkit/` in your repo. No forced cloud sync. No ven
 │   └── [project-slug]/
 │       ├── brief.md
 │       ├── brief.json
-│       └── tasks.md
+│       ├── tasks.md
+│       └── cut.md          ← cut tasks archived here
 ├── ships/
 │   └── YYYY-MM-DD.md
-└── logs/
-    └── week-N.md
+├── logs/
+│   └── week-N.md
+└── pulse/
+    └── responses.json
 ```
 
 ## Tech Stack
 
-- **CLI:** Node.js + Commander + Clack
-- **AI:** Vercel AI SDK + Claude
-- **Web:** Next.js 15
-- **Database:** Convex (for pulse responses)
+- **CLI:** Node.js 20+ · Commander · Clack
+- **AI:** Vercel AI SDK · Claude (`@ai-sdk/anthropic`)
+- **Schemas:** Zod (single source of truth in `@loopkit/shared`)
+- **Web:** Next.js 16 · Tailwind v4
 
 ## Philosophy
 
 1. **CLI-first, web-optional** — developers live in the terminal
 2. **Async by default** — no meetings, no community management
 3. **Opinionated over flexible** — fewer decisions = more shipping
-4. **AI-augmented, not AI-dependent** — you stay in control
+4. **AI-augmented, not AI-dependent** — degrades gracefully without a key
 
 ---
 

@@ -1,0 +1,22 @@
+# Source files — not needed at runtime
+src/
+
+# TypeScript config
+tsconfig.json
+tsconfig.*.json
+
+# Build tool config
+tsup.config.*
+
+# Tests
+__tests__/
+*.test.ts
+*.spec.ts
+
+# Internal docs
+CLAUDE.md
+AGENTS.md
+STATUS.md
+
+# Dev artifacts
+*.tsbuildinfo
