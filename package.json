@@ -1,0 +1,16 @@
+{
+  "name": "loopkit",
+  "private": true,
+  "packageManager": "pnpm@10.23.0",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "cli": "pnpm --filter @loopkit/cli dev",
+    "web": "pnpm --filter @loopkit/web dev"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.0",
+    "typescript": "^5.8.0"
+  }
+}

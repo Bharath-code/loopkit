@@ -1,0 +1,40 @@
+{
+  "name": "@loopkit/cli",
+  "version": "0.1.0",
+  "description": "The Solo Founder's Shipping OS — Define · Develop · Deliver · Learn · Repeat",
+  "type": "module",
+  "bin": {
+    "loopkit": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts --clean",
+    "dev": "tsup src/index.ts --format esm --watch --onSuccess 'echo Build ready'",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@ai-sdk/anthropic": "^1.2.0",
+    "@clack/prompts": "^0.10.0",
+    "ai": "^4.3.0",
+    "chalk": "^5.4.0",
+    "commander": "^13.1.0",
+    "zod": "^3.24.0",
+    "@loopkit/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "tsup": "^8.4.0",
+    "typescript": "^5.8.0",
+    "@types/node": "^22.0.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "keywords": [
+    "cli",
+    "solo-founder",
+    "shipping",
+    "build-in-public",
+    "indie-hacker",
+    "productivity"
+  ],
+  "license": "MIT"
+}
