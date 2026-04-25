@@ -2,7 +2,7 @@
 
 **Last updated:** April 25, 2026  
 **Version:** 0.1.0  
-**Overall:** MVP CLI complete · Landing page live · Phase 9 polish done · Auth/payments pending
+**Overall:** MVP CLI complete · Landing page live · Phase 9 polish done · Auth & Dashboard built · Payments pending
 
 ---
 
@@ -116,8 +116,8 @@ Remaining:
 - [x] Pulse I/O centralized in `storage/local.ts` (`readPulseResponses`, `appendPulseResponse`)
 
 Remaining (Phase 7):
-- [ ] Hosted feedback form URL (web route in Next.js)
-- [ ] Convex write for realtime response collection
+- [x] Hosted feedback form URL (web route in Next.js) (Convex integration started)
+- [x] Convex write for realtime response collection
 - [ ] JS embed widget (Shadow DOM isolated)
 - [ ] localStorage retry queue for offline submissions
 
@@ -142,8 +142,8 @@ Remaining (Phase 7):
 - [x] `nextStep("init")` shown after loop closes
 
 Remaining:
-- [ ] Streak visualization (4-week streak rate metric)
-- [ ] Pulse data ingested from Convex (currently no cloud pulse source)
+- [x] Streak visualization (4-week streak rate metric)
+- [x] Pulse data ingested from Convex
 
 ---
 
@@ -166,8 +166,8 @@ Remaining:
 - [x] Scroll anchor navigation
 
 Remaining (Phase 7+):
-- [ ] Dashboard routes (project overview, pulse inbox, loop history)
-- [ ] Auth pages (login, signup)
+- [x] Dashboard routes (project overview, pulse inbox, loop history)
+- [x] Auth pages (login, signup via Convex)
 
 ---
 
@@ -195,13 +195,13 @@ Remaining (Phase 7+):
 
 | Task | Priority | Notes |
 |---|---|---|
-| `loopkit auth` command | 🔴 High | Login via browser OAuth, save token to config.json |
-| Better Auth setup in web | 🔴 High | GitHub + email auth, session management |
-| Polar.sh integration | 🔴 High | Solo ($19) + Pro ($39) plans, webhook for tier updates |
-| Tier gating in CLI | 🔴 High | Free = no AI; Solo = AI on; Pro = BYOK + unlimited |
-| AI proxy API routes | 🟡 Medium | `/api/ai/init`, `/api/ai/ship`, etc. — users skip API key setup |
-| Pulse hosted form | 🟡 Medium | Next.js route: `/pulse/[projectId]` — submit → Convex |
-| Convex schema + mutations | 🟡 Medium | `pulse_responses`, `user_projects`, `subscriptions` tables |
+| `loopkit auth` command | 🔴 High | [x] Login via browser OAuth, save token to config.json |
+| Convex Auth setup in web | 🔴 High | [x] GitHub + email auth, session management (replaced Better Auth) |
+| Polar.sh integration | 🔴 High | [ ] Solo ($19) + Pro ($39) plans, webhook for tier updates |
+| Tier gating in CLI | 🔴 High | [ ] Free = no AI; Solo = AI on; Pro = BYOK + unlimited |
+| AI proxy API routes | 🟡 Medium | [ ] `/api/ai/init`, `/api/ai/ship`, etc. — users skip API key setup |
+| Pulse hosted form | 🟡 Medium | [ ] Next.js route: `/pulse/[projectId]` — submit → Convex |
+| Convex schema + mutations | 🟡 Medium | [x] `pulseResponses`, `projects`, `loopLogs` tables |
 
 ---
 
@@ -209,11 +209,11 @@ Remaining (Phase 7+):
 
 | Task | Priority | Notes |
 |---|---|---|
-| Dashboard layout + auth guard | 🟡 Medium | Sidebar, project switcher |
-| Project overview page | 🟡 Medium | Active project, shipping score trend, last loop |
-| Pulse inbox page | 🟡 Medium | Responses + clusters, tag-to-sprint |
-| Loop history page | 🟡 Medium | Week-over-week: shipped, decided, BIP posts |
-| Free tier read-only dashboard | 🟢 Low | 1 project, no export — conversion trigger |
+| Dashboard layout + auth guard | 🟡 Medium | [x] Sidebar, project switcher |
+| Project overview page | 🟡 Medium | [x] Active project, shipping score trend, last loop |
+| Pulse inbox page | 🟡 Medium | [x] Responses + clusters, tag-to-sprint |
+| Loop history page | 🟡 Medium | [x] Week-over-week: shipped, decided, BIP posts, 4-week streak |
+| Free tier read-only dashboard | 🟢 Low | [ ] 1 project, no export — conversion trigger |
 
 ---
 
@@ -235,7 +235,7 @@ Remaining (Phase 7+):
 |---|---|---|
 | No automated tests | Medium | Manual testing only for now |
 | Pulse V1 requires manual entry or `--add` flag | Low | Hosted form in Phase 7 |
-| Free vs paid tier gating not enforced | High | Implement in Phase 7 with Better Auth |
+| Free vs paid tier gating not enforced | High | Implement in Phase 7 with Convex Auth / Polar.sh |
 | Next.js Turbopack warns about workspace root | Info | Cosmetic — no functional impact |
 
 ---

@@ -127,6 +127,7 @@ All project data lives in `.loopkit/` in your repo. No forced cloud sync. No ven
 - **AI:** Vercel AI SDK · Claude (`@ai-sdk/anthropic`)
 - **Schemas:** Zod (single source of truth in `@loopkit/shared`)
 - **Web:** Next.js 16 · Tailwind v4
+- **Backend/Auth:** Convex Database & Convex Auth
 
 ## Philosophy
 

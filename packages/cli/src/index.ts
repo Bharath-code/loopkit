@@ -6,6 +6,7 @@ import { trackCommand } from "./commands/track.js";
 import { shipCommand } from "./commands/ship.js";
 import { pulseCommand } from "./commands/pulse.js";
 import { loopCommand } from "./commands/loop.js";
+import { authCommand } from "./commands/auth.js";
 
 const program = new Command();
 
@@ -48,5 +49,7 @@ program
   .command("loop")
   .description("Weekly review — one decision, one post, loop closed")
   .action(loopCommand);
+
+program.addCommand(authCommand);
 
 program.parse();
