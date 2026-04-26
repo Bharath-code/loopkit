@@ -1,8 +1,8 @@
 # LoopKit — Build Status
 
-**Last updated:** April 26, 2026 (Week 1: T0+P1+P4+F2 ✅ · Week 2: F1+D1+S1+S4 ✅)  
+**Last updated:** April 26, 2026 (Week 3 P0 sprint COMPLETE)  
 **Version:** 0.1.0  
-**Overall:** MVP complete · Week 2 improvements shipped · Improvement plan created (see §Post-v0.1 Plan)
+**Overall:** MVP complete · Weeks 1-2 shipped · Week 3 P0 done · Ready for public launch
 
 ---
 
@@ -20,218 +20,195 @@
 ---
 
 ### `@loopkit/shared` — Types & Schemas
-
-All Zod schemas defined and building:
-
-- [x] `BriefSchema` — AI output from `loopkit init` (includes `overallScore`)
-- [x] `TaskSchema` — task entries with status, section, timestamps
-- [x] `ShipDraftsSchema` — HN title+body, Twitter tweets[], IH body
-- [x] `PulseClusterSchema` — Fix now / Validate later / Noise clusters
-- [x] `LoopSynthesisSchema` — oneThing, rationale, tension, bipPost
-- [x] `ConfigSchema` — version, activeProject, auth (BYOK), preferences
+- [x] `BriefSchema`, `TaskSchema`, `ShipDraftsSchema`, `PulseClusterSchema`, `LoopSynthesisSchema`, `ConfigSchema`
 - [x] Helpers: `slugify()`, `getWeekNumber()`, `formatDate()`
 
 ---
 
-### `loopkit init` — Define Phase
-
-- [x] 5-question Clack prompt flow (name, problem, ICP, why unsolved, MVP)
-- [x] Solution-in-disguise detection on Q2 (client-side regex + AI flag)
-- [x] Soft warning for short answers (< 5 words)
-- [x] AI scoring via Vercel AI SDK `generateObject()` with Zod schema
-- [x] Score bar visualization in terminal (colored ████░░)
-- [x] Brief rendered as box with: bet, 3 scores, riskiest assumption, validate action, MVP
-- [x] `overallScore` field — average of ICP + Problem + MVP scores, shown as `**Overall: X/10**`
-- [x] `brief.md` (human readable) + `brief.json` (machine readable) saved
-- [x] Session resume on Ctrl+C — saves `draft.json`, resumes from last question
-- [x] Project collision handling: overwrite / new version / resume
-- [x] Graceful fallback when AI unavailable — saves answers without scores
-- [x] `--analyze [name]` flag — run AI on existing saved answers
-- [x] Active project set in `config.json` after init
-- [x] System prompt with full PRD spec, 3 few-shot calibration examples
-- [x] Anti-hallucination rules (word caps, JSON output only, no sycophancy)
-
-Remaining:
-- [x] Free vs paid tier gating (scores shown, notes hidden for free)
+### CLI Commands
+- [x] `loopkit init` — Define Phase (5 questions, AI scoring, brief saved, session resume, collision handling)
+- [x] `loopkit track` — Develop Phase (tasks.md parser, board view, git hook, stale detection, snooze, cut archive, `--add`, `--week`, `--repair`)
+- [x] `loopkit ship` — Deliver Phase (reads brief, generates HN/Twitter/IH drafts, per-draft actions, ship log)
+- [x] `loopkit pulse` — Feedback Phase (local storage, AI clustering, tag-to-sprint, `--raw`, `--setup`, `--add`, `--share` with QR code)
+- [x] `loopkit loop` — Iterate Phase (local aggregation, week summary, AI synthesis, tension detection, override tracking, BIP post)
+- [x] `loopkit auth` — Login via browser OAuth, encrypted token storage
 
 ---
 
-### `loopkit track` — Develop Phase
-
-- [x] `tasks.md` parser — reads `## This Week` and `## Backlog` sections
-- [x] Task ID extraction from `#N` patterns
-- [x] Done/open detection from `[x]` / `[ ]` markdown
-- [x] Board view: done tasks (✓), open tasks (○), age labels for stale tasks
-- [x] Shipping score progress bar (done/total × 100)
-- [x] Git hook installer (`commit-msg`) — **append-only, never overwrites**
-- [x] `[#N]` pattern detection in commit messages — auto-closes tasks
-- [x] Multi-task close in single commit (`[#2] [#4]`)
-- [x] Stale task detection (3+ days) — keep / snooze / cut prompt
-- [x] `--add "task title"` flag — inline task add (stores `created:YYYY-MM-DD` metadata)
-- [x] `--week` flag — full week summary with comparison data
-- [x] `--repair` flag — re-assigns sequential IDs
-- [x] Graceful no-git-repo handling (warns once, runs in manual mode)
-- [x] Snooze date tracking — `snoozed:YYYY-MM-DD` written to task metadata, hides task until date
-- [x] Resurfaced task alert — `↑ N snoozed task(s) resurfaced today` shown on board
-- [x] `cut.md` archive — cut tasks moved to `.loopkit/projects/[slug]/cut.md` (never deleted)
-
-Remaining:
-- [x] `loopkit track --project [name]` for switching active project
-
----
-
-### `loopkit ship` — Deliver Phase
-
-- [x] Reads brief.json for context (bet, ICP, problem) if available
-- [x] Reads tasks.md and extracts completed tasks for AI context
-- [x] Single question: "What's the main thing you shipped?"
-- [x] Self-reported pre-launch checklist (README, landing, analytics, feedback)
-- [x] AI generates all 3 platform drafts in one call (Vercel AI SDK)
-- [x] HN: title + body | Twitter: 3 tweets | IH: narrative
-- [x] Per-draft actions: `[u]se` / `[e]dit` / `[r]egenerate` / `[s]kip`
-- [x] `[r]egenerate` — re-calls AI for that platform, loops back to show new draft
-- [x] `[e]dit` — opens draft in `$EDITOR` (fallback: `nano`), reads back edited content
-- [x] Ship log saved to `.loopkit/ships/YYYY-MM-DD.md`
-- [x] Existing ship log detection — overwrite / append / skip
-- [x] Graceful fallback without brief (inline questions)
-- [x] Graceful fallback when AI fails (saves log without drafts)
-- [x] Ship prompt with full PRD copywriting rules (no hype, developer tone)
-
----
-
-### `loopkit pulse` — Feedback Phase (V1)
-
-- [x] Local JSON storage for responses (`.loopkit/pulse/responses.json`)
-- [x] Raw mode for < 5 responses (skips AI, shows list)
-- [x] AI clustering with 3 fixed buckets: Fix now / Validate later / Noise
-- [x] Per-cluster: count, pattern description, representative quotes
-- [x] Confidence score display
-- [x] Outlier responses shown separately
-- [x] Tag "Fix now" cluster to sprint (creates task in tasks.md)
-- [x] `--raw` flag — skip clustering, show raw responses
-- [x] `--setup` flag — explains V1 setup, guides toward responses.json
-- [x] `--add "response text"` flag — append a single response inline, shows count + remaining to threshold
-- [x] Clustering prompt with anti-hallucination rule ("NEVER invent quotes")
-- [x] Graceful fallback on clustering failure (shows raw)
-- [x] Pulse I/O centralized in `storage/local.ts` (`readPulseResponses`, `appendPulseResponse`)
-
-Remaining (Phase 7):
-- [x] Hosted feedback form URL (`/pulse/[projectId]`)
-- [x] Convex write for realtime response collection
-- [x] JS embed widget (`/api/pulse/widget`)
-- [x] Convex offline queueing for form submissions
-
----
-
-### `loopkit loop` — Iterate Phase
-
-- [x] Instant local data aggregation (< 1 second, no API call)
-- [x] Week summary: tasks done, open, shipping score, shipped Friday
-- [x] Mid-week check-in mode (skips AI by default on non-Sunday)
-- [x] First-week handling — 2 inline questions, no AI required
-- [x] AI synthesis: one-thing recommendation with structured priority logic
-- [x] Priority ranking: Fix now → Ship → Validate assumption → Next task
-- [x] Tension detection: surfaces conflict between pulse and track plan
-- [x] Accept / Change / Skip recommendation flow
-- [x] Override reason recording for product signal tracking
-- [x] Override rate warning — after 4 weeks at ≥ 50%, surfaces actionable suggestion
-- [x] BIP post generated with 280-char check
-- [x] Loop log saved to `.loopkit/logs/week-N.md`
-- [x] Graceful fallback when AI fails (saves week data without synthesis)
-- [x] System prompt with if/else priority logic (not prose)
-- [x] `nextStep("init")` shown after loop closes
-
-Remaining:
-- [x] Streak visualization (4-week streak rate metric)
-- [x] Pulse data ingested from Convex
-
----
-
-### `@loopkit/web` — Landing Page
-
-- [x] Next.js 16 App Router scaffolded
-- [x] Inter + JetBrains Mono fonts loaded
-- [x] Dark theme global CSS (zinc-950 background)
-- [x] Tailwind v4 with custom design tokens
-- [x] Sticky nav bar — logo, "How it works" / "Pricing" / "GitHub" anchors, "Sign in" + "Get started" CTAs
-- [x] Hero section: headline, subheadline, install command CTA
-- [x] Copy-to-clipboard on install command (client component, `navigator.clipboard` + fallback, ✓ feedback)
-- [x] Terminal demo section: simulated `loopkit init` output
-- [x] Pain points grid (4 relatable pains)
-- [x] "How it works" — 5-phase loop explanation with icons
-- [x] Pricing section — 3 tiers (Free / Solo $19 / Pro $39)
-- [x] Footer with GitHub and Twitter links
-- [x] SEO metadata (title, description, OG tags, keywords)
-- [x] Glow effects, grid background, fade-up animations
-- [x] Scroll anchor navigation
-
-Remaining (Phase 7+):
-- [x] Dashboard routes (project overview, pulse inbox, loop history)
+### Web Dashboard
+- [x] Next.js 16 App Router, Tailwind v4, dark theme
+- [x] Landing page (hero, demo, pricing, footer, SEO, animations)
+- [x] Dashboard routes (overview, pulse inbox, loop history) with live Convex queries
 - [x] Auth pages (login, signup via Convex)
+- [x] Public pulse form (`/pulse/[projectId]`) + embed widget
+- [x] Free tier read-only dashboard with upgrade CTA
 
 ---
 
-### `storage/local.ts` — File I/O Layer
+### Backend (Convex)
+- [x] Schema: `pulseResponses`, `projects`, `loopLogs`, `subscriptions`, `aiUsage`
+- [x] Auth: GitHub + email via `@convex-dev/auth`
+- [x] Payments: Polar.sh integration (Solo $19, Pro $39)
+- [x] Rate limiting: 10/day free, 100/day Solo, 1000/day Pro
+- [x] AI proxy routes: `/api/ai/{init,ship,pulse,loop}` with real auth + rate limiting
+- [x] Token encryption: AES-256-GCM with machine-derived key
 
-- [x] All `.loopkit/` path resolvers centralized (`getRoot`, `getProjectDir`, etc.)
-- [x] `getCutPath(slug)` + `appendToCut(slug, line, date)` — cut archive helpers
-- [x] `getPulseDir()` + `readPulseResponses()` + `appendPulseResponse(text)` — pulse I/O
-- [x] `readLastNLoopLogs(n)` — reads last N week logs, parses override status
+---
+
+### Performance & Polish
+- [x] AI streaming with `streamObject()` (P1)
+- [x] Haiku for "fast" tier, Sonnet for "creative" (P4)
+- [x] `loopkit track --add` with `$EDITOR` (F2)
 
 ---
 
 ### Documentation
-
-- [x] `README.md` — product overview, 5 commands, quick start, pricing
-- [x] `CLAUDE.md` — codebase guide for Claude AI
-- [x] `AGENTS.md` — agentic coding guidelines
-- [x] `STATUS.md` — this file
-- [x] `docs/PERSONAS.md` — 4 primary personas (Sarah, Marcus, Alex, Jordan) with goals, pain points, and interaction flows
-- [x] `docs/USER_STORIES.md` — 25+ user stories with acceptance criteria, mapped to personas and features
-- [x] `docs/SCENARIOS.md` — 30+ interaction scenarios including happy paths, edge cases, and error recovery
-- [x] `docs/USER_GUIDE.md` — end-user friendly guide explaining philosophy, 5-phase loop, tips, and FAQ
-- [x] `docs/QUICK_START.md` — 15-minute getting started guide with first-week checklist
-- [x] `docs/README.md` — documentation directory index
+- [x] `README.md`, `CLAUDE.md`, `AGENTS.md`, `STATUS.md`
+- [x] `docs/PERSONAS.md`, `docs/USER_STORIES.md`, `docs/SCENARIOS.md`
+- [x] `docs/USER_GUIDE.md`, `docs/QUICK_START.md`, `docs/README.md`
+- [x] `docs/MOAT.md`, `docs/DATA_MOAT.md`, `docs/COMPETITIVE_ANALYSIS.md`
+- [x] `docs/CONTENT_STRATEGY.md`, `docs/INTELLIGENCE_ENGINE.md`
 
 ---
 
-## 🔜 REMAINING
+## 🔴 CURRENT BACKLOG
 
-### Phase 7 — Auth + Payments + AI Proxy
-
-| Task | Priority | Notes |
-|---|---|---|
-| `loopkit auth` command | 🔴 High | [x] Login via browser OAuth, save token to config.json |
-| Convex Auth setup in web | 🔴 High | [x] GitHub + email auth, session management (replaced Better Auth) |
-| Polar.sh integration | 🔴 High | [x] Solo ($19) + Pro ($39) plans, webhook for tier updates |
-| Tier gating in CLI | 🔴 High | [x] Free = no AI; Solo = AI on; Pro = BYOK + unlimited |
-| AI proxy API routes | 🟡 Medium | [x] `/api/ai/init`, `/api/ai/ship`, etc. — users skip API key setup |
-| Pulse hosted form | 🟡 Medium | [x] Next.js route: `/pulse/[projectId]` + embed widget |
-| Convex schema + mutations | 🟡 Medium | [x] `pulseResponses`, `projects`, `loopLogs`, `subscriptions` tables |
+### Priority Legend
+- 🔴 **P0** — Blocks public launch. Do first.
+- 🟡 **P1** — High impact, ship within 2 weeks.
+- 🟢 **P2** — Important polish, ship within 4 weeks.
+- 🔵 **P3** — Future roadmap, ship within 3 months.
 
 ---
 
-### Phase 8 — Web Dashboard
+### P0 — Launch Blockers (Week 3) ✅ COMPLETE
 
-| Task | Priority | Notes |
-|---|---|---|
-| Dashboard layout + auth guard | 🟡 Medium | [x] Sidebar, project switcher |
-| Project overview page | 🟡 Medium | [x] Active project, shipping score trend, last loop |
-| Pulse inbox page | 🟡 Medium | [x] Responses + clusters, tag-to-sprint |
-| Loop history page | 🟡 Medium | [x] Week-over-week: shipped, decided, BIP posts, 4-week streak |
-| Free tier read-only dashboard | 🟢 Low | [x] Read-only mode for free tier with upgrade CTA |
+| # | Task | Effort | Files | Acceptance Criteria |
+|---|---|---|---|---|
+| T1 | **Schema validation tests** | S | `shared/src/__tests__/` | ✅ All Zod schemas tested with valid/invalid data. `ConfigSchema.parse()` handles corruption. (41 tests) |
+| T2 | **Prompt builder tests** | M | `cli/src/ai/__tests__/` | ✅ Prompt builders produce correct shape. Edge cases: empty data, missing fields. (30 tests) |
+| T3 | **Storage I/O tests** | M | `cli/src/storage/__tests__/` | ✅ `readConfig/writeConfig`, `saveBrief`, `readTasksFile`, `appendToCut`, `readPulseResponses` tested with temp dirs. (58 tests) |
+| S2 | **Input sanitization on pulse form** | S | `web/src/app/api/pulse/submit/route.ts`, `convex/pulse.ts` | ✅ Strip HTML tags, 500-char limit server-side, IP rate limiting (3 req/min) on public form. |
+| D2 | **Real-time pulse inbox** | M | `web/src/app/dashboard/pulse/page.tsx` | ✅ Convex subscription for new feedback. "New" badge with slide-in + pulse animation. No refresh required. |
+
+**Why P0:** Zero test coverage = every refactor is risky. Public pulse form without sanitization = XSS/injection. These block public launch.
 
 ---
 
-### Phase 9 — Remaining Polish
+### P1 — Ship Within 2 Weeks (Weeks 4-5)
 
-| Task | Priority | Notes |
-|---|---|---|
-| `loopkit auth` token refresh | 🟡 Medium | [x] Catch 401 and handle expired sessions gracefully |
-| `loopkit track --project [name]` | 🟡 Medium | [x] Switch active project from CLI |
-| Streak visualization in `loopkit loop` | 🟢 Low | [x] 4-week streak rate metric |
-| PostHog analytics events | 🟢 Low | [x] Track command usage, upgrade triggers |
-| Free vs paid tier gating | 🔴 High | [x] Implemented in Phase 7 with Polar.sh + Convex |
+| # | Task | Effort | Files | Acceptance Criteria |
+|---|---|---|---|---|
+| W1 | **`loopkit celebrate`** | S | `commands/celebrate.ts` (new) | ASCII confetti + "You shipped!" card with score, streak, shareable text. Auto-triggered after `ship`. |
+| W2 | **"Unstuck me" mode** | M | `commands/loop.ts` | Detect 0 tasks this week → offer 3 micro-tasks from brief context. |
+| F3 | **Keyboard shortcuts** | M | `ui/theme.ts` | `?` help, `q` quit, `s` skip, `Enter` default in Clack prompts. |
+| F4 | **Better empty states** | S | All command files | Helpful next steps when no data: "No tasks yet. Run `loopkit track --add`." |
+| D4 | **Dashboard mobile responsive** | M | All dashboard pages | Collapsible sidebar, stacked cards, touch-friendly on <768px. |
+| STRAT-1 | **Telemetry module** | M | `cli/src/analytics/telemetry.ts` | Opt-in anonymous collection. Local by default, aggregated only, exportable/deletable. |
+| STRAT-2 | **Benchmark tool** | M | `web/src/app/dashboard/benchmarks/` | "How do you compare?" Percentile rankings vs anonymized data. Shareable cards. |
+| STRAT-3 | **Monthly Insights #1** | S | `docs/content/` (new) | First data-driven piece: "What [N] founders taught us in [Month]". Blog + Twitter + newsletter. |
+
+| IE-1 | **Shipping DNA v1** | M | `cli/src/analytics/dna.ts` (new), `commands/loop.ts` | After 4 weeks, generate "Shipping DNA" profile: pattern (Marathoner/Sprinter/etc.), velocity trend, peak day, completion style, risk warnings. |
+| IE-2 | **Smart Benchmarks CLI** | S | `cli/src/analytics/benchmarks.ts` (new), `commands/track.ts` | Show percentile rankings vs anonymized founders (same project type, same week). "You ship faster than 72% of SaaS founders." |
+| IE-3 | **Snooze Oracle** | S | `commands/track.ts`, `cli/src/analytics/oracle.ts` (new) | When snoozing, show probability of completion based on historical data. "67% of snoozed tasks are never done." |
+
+**Why P1:** Delight moments (celebrate/unstuck) drive retention. Telemetry unblocks all metrics. Benchmarks + content build the data moat. Intelligence Engine features create identity attachment and switching costs.
+
+---
+
+### P2 — Ship Within 4 Weeks (Week 6)
+
+| # | Task | Effort | Files | Acceptance Criteria |
+|---|---|---|---|---|
+| S3 | **CSRF protection** | S | `web/src/app/api/**/route.ts` | `Origin` / `Referer` header checks on AI proxy and auth routes. |
+| P2 | **Merge config reads** | S | `ai/client.ts` | Single `resolveAuth()` returning `{ anthropic, token }`. Eliminate duplicate `readConfig()` calls. |
+| P3 | **Cache AI results** | M | `storage/cache.ts` (new) | Hash `(command, system, prompt, schema)` → `.loopkit/cache/`. Reuse on identical calls. |
+| P5 | **Optimize git hook** | S | `commands/track.ts` | Read `.git/COMMIT_EDITMSG` directly instead of `execSync`. Target <50ms. |
+| STRAT-4 | **Founder archetype detection** | L | `convex/analytics.ts` + dashboard widget | Cluster users into 5 types (Sprinter, Marathoner, Perfectionist, Reactor, All-Star). Show in dashboard. |
+| IE-4 | **Churn Guardian v1** | M | `cli/src/analytics/churn.ts` (new), `commands/track.ts`, `commands/loop.ts` | Rule-based detection: declining shipping score for 2+ weeks, skipped loops, rising override rate. Proactive intervention with actionable suggestions. |
+| IE-5 | **Auto-Loop (Sunday Ritual Assistant)** | M | `convex/crons.ts`, `cli/src/analytics/autoLoop.ts` (new) | If user misses Sunday `loop`, auto-generate draft on Monday from tasks/ships/pulse. Email/notification with one-click confirm. |
+| IE-6 | **Success Predictor v1** | S | `cli/src/analytics/predictor.ts` (new), `commands/loop.ts` | After 8 weeks, predict probability of first revenue within 6 months based on behavioral heuristics. Show strengths, risks, and probability shift from fixes. |
+
+**Why P2:** Security hardening (CSRF), performance wins (config merge, cache, hook), and first data products (archetypes, churn guard, auto-loop, success prediction).
+
+---
+
+### P3 — Future Roadmap (Week 7+)
+
+| # | Task | Effort | Files | Acceptance Criteria |
+|---|---|---|---|---|
+| D3 | **Dashboard task CRUD** | L | New files in `dashboard/` | Create/edit tasks from web. Sync with local `tasks.md`. Drag-to-reorder. |
+| F5 / W6 | **Project templates** | M | `commands/init.ts`, `templates/` (new) | `loopkit init --template [saas\|api\|mobile\|cli\|newsletter\|agency]` pre-fills hints. |
+| W3 | **Weekly email digest** | L | `convex/crons.ts` (new) | Sunday cron: tasks done, shipping score, streak, BIP post, next week rec. |
+| W4 | **Public ship log** | L | `commands/ship.ts`, new web route | `loopkit ship --public` → shareable URL (`loopkit.dev/@username/ships`). |
+| W5 | **GitHub Issues sync** | L | `commands/track.ts`, `sync/` module | `loopkit track --sync` two-way sync. ID mapping table. |
+| STRAT-5 | **Annual report framework** | L | `web/src/app/state-of-solo-founders/` | Landing page + data pipeline for "State of Solo Founders 2027". Launch Month 9. |
+| IE-7 | **Anonymous Peer Inspiration** | M | `cli/src/analytics/peers.ts` (new), `commands/loop.ts` | Show what anonymized founders with similar projects shipped this week. "SaaS founders at Week 12 shipped: Stripe billing, webhook retry..." Opt-in. |
+| IE-8 | **Trending Validations** | S | `convex/analytics.ts`, `web/src/app/dashboard/trends/` (new) | Surface trending ICPs, problems, MVP categories from aggregate data. Feed into Monthly Insights (STRAT-3). |
+| IE-9 | **Pattern Interrupt** | M | `commands/init.ts`, `cli/src/analytics/patterns.ts` (new) | Detect repeated failure patterns (e.g., 4th project in 6 months). Interrupt with data: "Founders with this pattern have 15% success rate." Suggest `--narrow` ICP refinement. |
+| IE-10 | **AI Coach v1** | L | `cli/src/analytics/coach.ts` (new), all command files | Rule-based coaching layer. Week 3: "Add validation tasks to track." Week 8: "Ship something public." Week 16: "Tension detected: pulse wants API, tasks focus on UI." |
+| IE-11 | **Churn Guardian v2 (ML)** | L | `convex/analytics.ts` + model training pipeline | Replace rule-based Churn Guardian with ML model trained on proprietary behavioral data. |
+| IE-12 | **Success Predictor v2 (ML)** | L | `convex/analytics.ts` + model training pipeline | Replace heuristics with ML model correlating 8+ weeks of behavior with actual revenue/outcome reports. |
+| IE-13 | **AI Coach v2 (ML-powered)** | L | `cli/src/analytics/coach.ts`, `convex/analytics.ts` | ML-powered coaching interventions calibrated to individual user patterns + aggregate success data. |
+
+**Why P3:** CLI-first means dashboard task CRUD is secondary. Intelligence Engine Phase 3+ needs critical mass (500+ users, 12+ weeks data). These are the ultimate moat features — they compound over time and cannot be replicated by competitors without catching up on data depth.
+
+---
+
+## 📅 Execution Order
+
+```
+WEEK 3 (P0 — Launch Blockers)     ✅ COMPLETE
+├── T1: Schema validation tests          ✅ 41 tests
+├── T2: Prompt builder tests             ✅ 30 tests
+├── T3: Storage I/O tests                ✅ 58 tests
+├── S2: Input sanitization               ✅ HTML strip + 500-char limit + rate limit
+└── D2: Real-time pulse inbox            ✅ Convex subscription + slide-in animation
+
+WEEK 4 (P1 — Delight + Polish)          ← NEXT SPRINT
+├── W1: loopkit celebrate
+├── W2: "Unstuck me" mode
+├── F3: Keyboard shortcuts
+└── F4: Better empty states
+
+WEEK 5 (P1 — Strategic Foundation + IE Phase 1)
+├── STRAT-1: Telemetry module
+├── STRAT-2: Benchmark tool
+├── STRAT-3: Monthly Insights #1
+├── IE-1: Shipping DNA v1
+├── IE-2: Smart Benchmarks CLI
+├── IE-3: Snooze Oracle
+└── D4: Dashboard mobile responsive
+
+WEEK 6 (P2 — Performance + Security + IE Phase 2)
+├── S3: CSRF protection
+├── P2: Merge config reads
+├── P3: Cache AI results
+├── P5: Optimize git hook
+├── STRAT-4: Founder archetypes
+├── IE-4: Churn Guardian v1
+├── IE-5: Auto-Loop
+└── IE-6: Success Predictor v1
+
+WEEK 7-8 (P3 — IE Phase 3 Early)
+├── IE-7: Anonymous Peer Inspiration
+├── IE-8: Trending Validations
+└── IE-9: Pattern Interrupt
+
+WEEK 9-12 (P3 — Platform Expansion)
+├── D3: Dashboard task CRUD
+├── F5/W6: Project templates
+├── W3: Weekly email digest
+├── W4: Public ship log
+├── W5: GitHub sync
+└── IE-10: AI Coach v1
+
+WEEK 13+ (P3 — IE Phase 4-5 ML)
+├── IE-11: Churn Guardian v2 (ML)
+├── IE-12: Success Predictor v2 (ML)
+├── IE-13: AI Coach v2 (ML-powered)
+└── STRAT-5: Annual report
+```
 
 ---
 
@@ -239,141 +216,52 @@ Remaining (Phase 7+):
 
 | Issue | Severity | Status |
 |---|---|---|
-| No automated tests (zero coverage) | High | Test infra added (vitest). Actual tests planned — see §Testing |
-| No AI streaming — users stare at spinner for 3-10s | High | ✅ Resolved — P1: `streamObject` with progress output |
-| Auth token stored unencrypted in `config.json` | Medium | ✅ Resolved — S1: AES-256-GCM encryption with machine-derived key |
-| "Fast" and "creative" tiers use same model | Medium | ✅ Resolved — P4: Haiku for fast, Sonnet for creative |
-| Dashboard uses placeholder data, not live Convex | Medium | ✅ Resolved — D1: Overview, Pulse Inbox, and Loop History all use live `useQuery` |
-| `config.json` parsed 2-3x per command invocation | Low | Planned — see §Performance P2 |
-| Pulse `--share` missing — no easy way to deploy feedback form | Low | Planned — see §Friction F1 |
-| No rate limiting enforcement on free tier AI calls | Medium | ✅ Resolved — S4: 10/day free, 100/day Solo, 1000/day Pro enforced server-side |
-| Next.js Turbopack warns about workspace root | Info | Cosmetic — no functional impact |
+| No automated tests (zero coverage) | High | ✅ Resolved — 129 tests (41 shared + 88 CLI) |
+| No AI streaming | High | ✅ Resolved (P1) |
+| Auth token stored unencrypted | Medium | ✅ Resolved (S1) |
+| "Fast" and "creative" tiers same model | Medium | ✅ Resolved (P4) |
+| Dashboard uses placeholder data | Medium | ✅ Resolved (D1) |
+| `config.json` parsed 2-3x per command | Low | Planned (P2 — Week 6) |
+| Pulse `--share` missing | Low | ✅ Resolved (F1) |
+| No rate limiting on free tier | Medium | ✅ Resolved (S4) |
+| No input sanitization on pulse form | High | ✅ Resolved (S2 — Week 3) |
+| Next.js Turbopack workspace root warn | Info | Cosmetic — no functional impact |
 
 ---
 
-## Metrics to Hit (from PRD §10)
+## Metrics to Hit
 
-| Metric | Target | Current |
-|---|---|---|
-| Break-even paid users | 10 | 0 (pre-launch) |
-| `init` session completion | ≥ 70% | Unknown |
-| `track` weekly active retention | ≥ 65% | Unknown |
-| `ship` draft use rate | ≥ 50% | Unknown |
-| `pulse` widget response rate | ≥ 8% | Blocked — no widget yet |
-| `loop` Sunday run rate | ≥ 75% | Unknown |
-| Month 3 paid users | 35 | 0 (pre-launch) |
+| Metric | Target | Current | Tracking Method |
+|---|---|---|---|
+| Break-even paid users | 10 | 0 (pre-launch) | Polar.sh dashboard |
+| `init` session completion | ≥ 70% | Unknown | Telemetry (STRAT-1) |
+| `track` weekly active retention | ≥ 65% | Unknown | Telemetry (STRAT-1) |
+| `ship` draft use rate | ≥ 50% | Unknown | Telemetry (STRAT-1) |
+| `pulse` widget response rate | ≥ 8% | 0 (form ready) | Convex pulseResponses count |
+| `loop` Sunday run rate | ≥ 75% | Unknown | Telemetry (STRAT-1) |
+| Month 3 paid users | 35 | 0 (pre-launch) | Polar.sh dashboard |
 
----
+### Strategic Metrics (Month 3-6)
 
-## 📋 Post-v0.1 Improvement Plan
-
-### Priority Legend
-- 🔴 **P0** — Blocks launch quality
-- 🟡 **P1** — High impact, ship within 2 weeks
-- 🟢 **P2** — Nice to have, ship within 4 weeks
-- 🔵 **P3** — Future roadmap
-
----
-
-### Performance
-
-| # | Task | Pri | Effort | Files |
-|---|---|---|---|---|
-| P1 | [x] **Stream AI responses token-by-token** — Replace `generateObject()` with `streamObject()` in `ai/client.ts`. Render tokens as they arrive via `process.stdout.write()` with spinner toggle. Target: perceived latency <1s to first token. | 🟡 P1 | M | `ai/client.ts`, all command files |
-| P2 | **Merge config reads to single pass** — `getAnthropicClient()` and `getLoopKitToken()` both call `readConfig()`. Refactor to single `resolveAuth()` that returns `{ anthropic, token }` once. | 🟢 P2 | S | `ai/client.ts` |
-| P3 | **Cache AI results** — Hash `(command, system, prompt, schema)` → store in `.loopkit/cache/`. Reuse on identical calls. Invalidate on schema version bump. | 🟢 P2 | M | `storage/cache.ts` (new) |
-| P4 | [x] **Use Haiku for "fast" tier** — `getModelId("fast")` → `claude-3-5-haiku-latest`. Keep Sonnet for "creative". Reduces cost ~80% for simple scoring calls. | 🟡 P1 | S | `ai/client.ts:28-35` |
-| P5 | **Optimize git hook** — Replace `execSync` for commit SHA with reading `.git/COMMIT_EDITMSG` directly. Target: hook execution <50ms. | 🟢 P2 | S | `commands/track.ts` |
+| Metric | Month 3 | Month 6 | Tracking |
+|---|---|---|---|
+| Telemetry opt-in rate | 50% | 70% | Consent prompt at `loopkit loop` |
+| Founder-weeks in database | 200 | 1,000 | Convex aggregation |
+| Benchmark tool usage | 50/week | 500/week | Dashboard analytics |
+| Content-driven signups | 5% | 20% | UTM tracking |
+| Newsletter subscribers | 50 | 500 | Beehiiv/Substack |
+| Press mentions | 0 | 1 | Manual tracking |
 
 ---
 
-### Friction Reduction
+## Definition of Done (per task)
 
-| # | Task | Pri | Effort | Files |
-|---|---|---|---|---|
-| F1 | [x] **`loopkit pulse --share`** — Generate and return a shareable feedback URL (`https://loopkit.dev/pulse/[projectId]`). Creates project in Convex if needed. Show QR code in terminal. | 🟡 P1 | M | `commands/pulse.ts` |
-| F2 | [x] **`loopkit track --add` with `$EDITOR`** — When `--add` has no argument, open `$EDITOR` for multi-line task text. Same pattern as `ship [e]dit`. | 🟡 P1 | S | `commands/track.ts` |
-| F3 | **Keyboard shortcuts** — `?` for help, `q` to quit, `s` to skip, `Enter` for default in Clack prompts. | 🟢 P2 | M | `ui/theme.ts` |
-| F4 | **Better empty states** — When no tasks/projects/pulse data, show helpful next steps instead of blank screens. E.g., "No tasks yet. Run `loopkit track --add` to create your first task." | 🟢 P2 | S | All command files |
-| F5 | **`loopkit init --template`** — `--template [saas\|api\|mobile\|cli]` pre-fills hints for each question. Reduces blank-page paralysis. | 🔵 P3 | M | `commands/init.ts`, `templates/` (new) |
-
----
-
-### Dashboard — Live Data
-
-| # | Task | Pri | Effort | Files |
-|---|---|---|---|---|
-| D1 | [x] **Replace placeholder data with live Convex queries** — Dashboard overview, pulse inbox, and loop history pages all wired to real `useQuery` calls. | 🟡 P1 | L | `web/src/app/dashboard/**/*.tsx` |
-| D2 | **Real-time pulse inbox** — Use Convex subscriptions so new feedback appears without refresh. Show "New" badge with enter animation. | 🟡 P1 | M | `web/src/app/dashboard/pulse/page.tsx` |
-| D3 | **Task management in dashboard** — CRUD tasks from web UI. Sync with local `tasks.md` via Convex. Add drag-to-reorder for priority. | 🔵 P3 | L | New files in `dashboard/` |
-| D4 | **Dashboard mobile responsive** — Current dashboard is desktop-only. Add collapsible sidebar, stacked cards on mobile. | 🟢 P2 | M | All dashboard pages |
-
----
-
-### Testing (zero current coverage → build from scratch)
-
-| # | Task | Pri | Effort | Files |
-|---|---|---|---|---|
-| T0 | [x] **Add test runner** — Install `vitest` in CLI and shared packages. Add `"test": "vitest run"` scripts. | 🟡 P1 | S | `package.json` in cli + shared |
-| T1 | **Schema validation tests** — Test all Zod schemas with valid/invalid data. Ensure `ConfigSchema.parse()` handles corruption gracefully. | 🟡 P1 | S | `shared/src/__tests__/` |
-| T2 | **Prompt builder tests** — Verify prompt builders produce correct output shape given known inputs. Test edge cases (empty data, missing fields). | 🟡 P1 | M | `cli/src/ai/__tests__/` |
-| T3 | **Storage I/O tests** — Test `readConfig/writeConfig`, `saveBrief`, `readTasksFile`, `appendToCut`, `readPulseResponses` with temp dirs. | 🟡 P1 | M | `cli/src/storage/__tests__/` |
-| T4 | **Command integration tests** — Test full command flows with mocked AI. Verify file outputs, exit codes, error handling, Ctrl+C behavior. | 🟢 P2 | L | `cli/src/commands/__tests__/` |
-
----
-
-### Security Hardening
-
-| # | Task | Pri | Effort | Files |
-|---|---|---|---|---|
-| S1 | [x] **Encrypt auth token at rest** — Uses `node:crypto` AES-256-GCM with machine-derived key (`scryptSync` of hostname + username + salt). Backward-compatible with plaintext legacy tokens. | 🟡 P1 | M | `storage/local.ts` |
-| S2 | **Input sanitization on pulse form** — Strip HTML tags, enforce 500-char limit server-side, add IP-based rate limiting (3 req/min) on public form route. | 🟡 P1 | S | `web/src/app/pulse/*`, `web/app/api/pulse/*` |
-| S3 | **CSRF protection on API routes** — Add `Origin` / `Referer` header check to AI proxy and auth routes. | 🟢 P2 | S | `web/src/app/api/**/route.ts` |
-| S4 | [x] **Rate limiting for free tier** — Enforces max 10 AI calls/day on free tier, 100/day on Solo, 1000/day on Pro. Server-side enforcement in Convex via `aiUsage` table. All AI proxy routes check limits before calling AI and return 429 when exceeded. | 🟡 P1 | M | `convex/rateLimits.ts` (new), AI proxy routes |
-
----
-
-### Wow Features — Delight Users
-
-| # | Task | Pri | Effort | Notes |
-|---|---|---|---|---|
-| W1 | **`loopkit celebrate`** — After shipping, ASCII confetti animation + "You shipped! 🚀" card with shipping score, streak count, and a shareable text card. Triggered automatically after `ship` completes. | 🟢 P2 | S | `commands/celebrate.ts` (new) |
-| W2 | **"Unstuck me" mode** — `loopkit loop` detects 0 tasks completed this week → offers "Want me to suggest 3 micro-tasks?" → AI generates tiny actionable tasks from brief context. | 🟢 P2 | M | `commands/loop.ts` |
-| W3 | **Weekly email digest** — Cron job sends Sunday summary: tasks done, shipping score, streak, BIP post, next week recommendation. | 🔵 P3 | L | `convex/crons.ts` (new), email integration |
-| W4 | **Public ship log page** — `loopkit ship --public` uploads to Convex and returns shareable URL (`loopkit.dev/@username/ships`). Timeline view of shipping history. | 🔵 P3 | L | `commands/ship.ts`, new web route |
-| W5 | **GitHub Issues sync** — `loopkit track --sync` pulls open issues as tasks, pushes completed tasks as closed issues. Two-way sync with ID mapping table. | 🔵 P3 | L | `commands/track.ts`, `sync/` module (new) |
-| W6 | **Project templates** — `loopkit init --template saas` pre-fills ICP/problem/MVP hints. Built-in: SaaS, Mobile App, API, CLI Tool, Newsletter, Agency. | 🔵 P3 | M | `commands/init.ts`, `templates/` (new) |
-
----
-
-### Execution Order (4-week sprint)
-
-```
-Week 1: T0 + P1 + P4 + F2  ✅ DONE
-  → Test infra, AI streaming, Haiku tier, $EDITOR for track
-
-Week 2: F1 + D1 + S1 + S4  ✅ DONE
-  → Pulse --share, live dashboard, encrypted auth, rate limiting
-
-Week 3: T1 + T2 + T3 + S2 + D2
-  → Schema/prompt/storage tests, input sanitization, real-time pulse
-
-Week 4: W1 + W2 + P2 + F3 + D4
-  → Celebrate, unstuck mode, config merge, keyboard shortcuts, mobile
-
-Week 5+: P3 + W3-W6 + D3 + F5 + P5 + F4
-  → Caching, weekly digest, GitHub sync, templates, empty states
-```
-
----
-
-### Definition of Done (per task)
-
+- [ ] `pnpm --filter @loopkit/shared build` → 0 errors
 - [ ] `pnpm --filter @loopkit/cli build` → 0 errors
 - [ ] Web changed? → `cd packages/web && npx next build` → clean
-- [ ] New AI paths: `generateStructured()` still works for both auth paths (Anthropic direct + proxy)
+- [ ] New AI paths: `generateStructured()` works for both auth paths
 - [ ] Ctrl+C exits gracefully at every prompt
-- [ ] New tests pass: `pnpm --filter @loopkit/cli test`
+- [ ] Tests pass: `pnpm --filter @loopkit/cli test` (129 tests total)
 - [ ] `STATUS.md` updated with task completion checkmark
 
 ---

@@ -28,6 +28,12 @@ export default defineSchema({
     text: v.string(),
     createdAt: v.number(),
   }).index("by_project", ["projectId"]),
+
+  rateLimits: defineTable({
+    key: v.string(),
+    windowStart: v.number(),
+    count: v.number(),
+  }).index("by_key", ["key"]),
   
   loopLogs: defineTable({
     projectId: v.id("projects"),

@@ -1,33 +1,39 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation } from "convex/react";
-import { api } from "../../../../convex/_generated/api";
-import { Id } from "../../../../convex/_generated/dataModel";
+
+const MAX_CHARS = 500;
 
 export function PulseForm({ projectId }: { projectId: string }) {
   const [text, setText] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const submitResponse = useMutation(api.pulse.submitResponse);
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!text.trim()) return;
-    
+
     setIsSubmitting(true);
+    setError("");
     try {
-      // Convex natively queues this if offline
-      await submitResponse({
-        projectId: projectId as Id<"projects">,
-        text,
+      const res = await fetch("/api/pulse/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ projectId, text }),
       });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "Failed to submit feedback");
+        return;
+      }
+
       setIsSuccess(true);
       setText("");
-    } catch (error) {
-      console.error("Failed to submit feedback", error);
-      // Even if offline, Convex handles it gracefully in the background,
-      // but if an actual error throws, we log it.
+    } catch {
+      setError("Network error. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -37,7 +43,7 @@ export function PulseForm({ projectId }: { projectId: string }) {
     return (
       <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/20 text-center">
         <p className="text-green-400 font-medium">Thank you for your feedback!</p>
-        <button 
+        <button
           onClick={() => setIsSuccess(false)}
           className="mt-4 text-xs text-zinc-400 hover:text-white transition-colors"
         >
@@ -53,10 +59,20 @@ export function PulseForm({ projectId }: { projectId: string }) {
         value={text}
         onChange={(e) => setText(e.target.value)}
         required
+        maxLength={MAX_CHARS}
         placeholder="What could be improved?"
         rows={4}
-        className="w-full p-4 rounded-xl bg-zinc-950 border border-zinc-800 text-white placeholder-zinc-500 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all resize-none mb-4"
+        className="w-full p-4 rounded-xl bg-zinc-950 border border-zinc-800 text-white placeholder-zinc-500 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all resize-none mb-2"
       />
+      <div className="flex justify-between items-center mb-4">
+        <p className="text-xs text-zinc-500">HTML will be stripped automatically</p>
+        <p className={`text-xs ${text.length > MAX_CHARS * 0.9 ? "text-amber-400" : "text-zinc-500"}`}>
+          {text.length}/{MAX_CHARS}
+        </p>
+      </div>
+      {error && (
+        <p className="text-sm text-red-400 mb-4">{error}</p>
+      )}
       <button
         type="submit"
         disabled={isSubmitting || !text.trim()}

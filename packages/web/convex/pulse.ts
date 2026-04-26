@@ -1,6 +1,12 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 
+function sanitizeInput(text: string): string {
+  const stripped = text.replace(/<[^>]*>/g, "");
+  const trimmed = stripped.trim();
+  return trimmed.slice(0, 500);
+}
+
 export const ensureProject = mutation({
   args: {
     userId: v.id("users"),
@@ -32,13 +38,55 @@ export const submitResponse = mutation({
     text: v.string(),
   },
   handler: async (ctx, args) => {
-    // In production, we'd verify the project exists and belongs to a Pro user
-    // For MVP, we insert it directly
+    const sanitized = sanitizeInput(args.text);
+    if (!sanitized) return { error: "Empty feedback after sanitization" };
+
     await ctx.db.insert("pulseResponses", {
       projectId: args.projectId,
-      text: args.text,
+      text: sanitized,
       createdAt: Date.now(),
     });
+  },
+});
+
+export const checkRateLimit = query({
+  args: { key: v.string(), windowMs: v.number(), maxRequests: v.number() },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+    const record = await ctx.db
+      .query("rateLimits")
+      .withIndex("by_key", (q) => q.eq("key", args.key))
+      .first();
+
+    if (!record) return { allowed: true, remaining: args.maxRequests };
+
+    if (now - record.windowStart > args.windowMs) {
+      return { allowed: true, remaining: args.maxRequests };
+    }
+
+    const remaining = args.maxRequests - record.count;
+    return { allowed: remaining > 0, remaining: Math.max(0, remaining) };
+  },
+});
+
+export const incrementRateLimit = mutation({
+  args: { key: v.string(), windowMs: v.number() },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+    const record = await ctx.db
+      .query("rateLimits")
+      .withIndex("by_key", (q) => q.eq("key", args.key))
+      .first();
+
+    if (!record || now - record.windowStart > args.windowMs) {
+      await ctx.db.insert("rateLimits", {
+        key: args.key,
+        windowStart: now,
+        count: 1,
+      });
+    } else {
+      await ctx.db.patch(record._id, { count: record.count + 1 });
+    }
   },
 });
 

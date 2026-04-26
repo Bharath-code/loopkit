@@ -17,6 +17,16 @@ Welcome to the LoopKit documentation. This directory contains everything you nee
 | **[USER_STORIES.md](USER_STORIES.md)** | User stories with acceptance criteria | You're implementing features or writing tests |
 | **[SCENARIOS.md](SCENARIOS.md)** | All interaction scenarios including edge cases | You're doing QA, designing flows, or handling support |
 
+## For Strategy & Growth
+
+| Document | Purpose | Read This If... |
+|----------|---------|-----------------|
+| **[MOAT.md](MOAT.md)** | Competitive moat analysis using the 7 Powers framework | You're thinking about long-term defensibility and competitive strategy |
+| **[DATA_MOAT.md](DATA_MOAT.md)** | Data collection strategy for building a proprietary data moat | You're designing telemetry, benchmarks, or the annual report |
+| **[COMPETITIVE_ANALYSIS.md](COMPETITIVE_ANALYSIS.md)** | Tool-by-tool competitive comparison on moat dimensions | You're positioning against Notion, Linear, or other PM tools |
+| **[CONTENT_STRATEGY.md](CONTENT_STRATEGY.md)** | State of Solo Founders content engine and 12-month calendar | You're planning content, PR, or brand building |
+| **[INTELLIGENCE_ENGINE.md](INTELLIGENCE_ENGINE.md)** | How behavioral data becomes product intelligence | You're building features that wow users and deepen retention |
+
 ## Document Relationships
 
 ```
