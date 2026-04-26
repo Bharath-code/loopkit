@@ -32,7 +32,7 @@ function getModelId(tier: ModelTier): string {
 
 // ─── Structured Generation ──────────────────────────────────────
 
-export async function generateStructured<T>(options: {
+export async function generateStructured<T extends object>(options: {
   command: "init" | "ship" | "pulse" | "loop";
   system: string;
   prompt: string;
@@ -82,7 +82,8 @@ export async function generateStructured<T>(options: {
 
     let keyCount = 0;
     for await (const partial of partialObjectStream) {
-      const keys = Object.keys(partial).length;
+      if (!partial) continue;
+      const keys = Object.keys(partial as object).length;
       if (keys > keyCount) {
         keyCount = keys;
         process.stdout.write(keyCount === 1 ? "  ↳ receiving..." : `  ↳ ${keyCount} fields parsed\r`);

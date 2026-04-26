@@ -22,7 +22,7 @@ interface WeekData {
   date: string;
 }
 
-function parseLoopLogMarkdown(content: string): Partial<WeekData> {
+function parseLoopLogMarkdown(content: string): WeekData {
   const tasksMatch = content.match(/- Tasks completed:\s*(\d+)/);
   const tasksTotalMatch = content.match(/- Tasks open:\s*(\d+)/);
   const scoreMatch = content.match(/- Shipping score:\s*(\d+)%/);

@@ -395,7 +395,7 @@ export async function loopCommand(): Promise<void> {
     }
 
     // ─── Override rate warning ───────────────────────────────────
-    checkOverrideRate();
+    checkOverrideRate(slug);
   } catch (error) {
     s.stop("Synthesis failed.");
     console.log(colors.danger("AI unavailable. Saving week data without synthesis."));
@@ -491,7 +491,7 @@ function detectProjectType(mvpDescription: string): string | undefined {
 
 // ─── Override Rate Warning ──────────────────────────────────────
 
-function checkOverrideRate(): void {
+function checkOverrideRate(slug: string): void {
   const WINDOW = 4; // weeks to look back
   const THRESHOLD = 2; // ≥2 overrides in 4 weeks = warning
 
