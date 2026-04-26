@@ -173,6 +173,7 @@ export async function initCommand(
 
   try {
     const brief = await generateStructured({
+      command: "init",
       system: INIT_SYSTEM_PROMPT,
       prompt: buildInitPrompt(finalAnswers),
       schema: BriefSchema,
@@ -290,6 +291,7 @@ async function analyzeExisting(name: string): Promise<void> {
 
   try {
     const brief = await generateStructured({
+      command: "init",
       system: INIT_SYSTEM_PROMPT,
       prompt: buildInitPrompt(data.answers),
       schema: BriefSchema,

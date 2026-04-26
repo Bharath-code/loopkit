@@ -68,8 +68,8 @@ Never define a type in `cli` or `web` that belongs in `shared`.
 | Schemas | `zod` | All AI output shapes validated here |
 | Web | Next.js 16 App Router | Tailwind CSS v4 |
 | Styling | Tailwind CSS v4 | Dark theme, violet/cyan/emerald palette |
-| Database | Convex | For pulse responses + cloud sync (Phase 7) |
-| Auth | Better Auth | Phase 7 |
+| Database | Convex | Pulse responses + cloud sync (Phase 7) |
+| Auth | Convex Auth | Replaced Better Auth (Phase 7) |
 | Payments | Polar.sh | Phase 7 |
 
 ---
@@ -288,8 +288,8 @@ When adding a new AI feature:
 | 4 — `loop` | ✅ Done | Weekly synthesis, BIP post, override rate warning |
 | 5 — `pulse` | ✅ Done (V1) | Local JSON, AI clustering, --add flag |
 | 6 — Landing page | ✅ Done | Next.js 16, dark premium design, nav bar, clipboard |
-| 7 — Auth + Payments | 🔜 Next | Better Auth, Polar.sh, AI proxy |
-| 8 — Dashboard | 🔜 Later | Project overview, pulse inbox |
+| 7 — Auth + Payments | ✅ Done | Convex Auth, Polar.sh, AI proxy |
+| 8 — Dashboard | ✅ Done | Project overview, pulse inbox |
 | 9 — npm publish | ✅ Done | `npx loopkit init` ready, .npmignore set |
 
 ---
@@ -306,3 +306,11 @@ Before implementing any command feature, check the relevant section:
 - `loopkit loop` → §9.5 (line ~1250)
 
 When the PRD and this file conflict, **the PRD wins**.
+
+<!-- convex-ai-start -->
+This project uses [Convex](https://convex.dev) as its backend.
+
+When working on Convex code, **always read `convex/_generated/ai/guidelines.md` first** for important guidelines on how to correctly use Convex APIs and patterns. The file contains rules that override what you may have learned about Convex from training data.
+
+Convex agent skills for common tasks can be installed by running `npx convex ai-files install`.
+<!-- convex-ai-end -->

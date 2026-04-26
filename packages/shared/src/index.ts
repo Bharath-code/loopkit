@@ -127,18 +127,18 @@ export type LoopLog = z.infer<typeof LoopLogSchema>;
 // ─── Config ─────────────────────────────────────────────────────
 
 export const ConfigSchema = z.object({
-  version: z.string().default("0.1.0"),
+  version: z.number().default(1),
   activeProject: z.string().optional(),
+  distinctId: z.string().optional(),
   auth: z
     .object({
-      token: z.string().optional(),
-      apiKey: z.string().optional(), // BYOK for higher plans
+      apiKey: z.string().optional(),
     })
     .optional(),
   preferences: z
     .object({
-      editor: z.string().optional(),
-      notifications: z.boolean().default(false),
+      defaultEditor: z.string().optional(),
+      autoOpenDashboard: z.boolean().default(true),
     })
     .optional(),
 });

@@ -1,7 +1,7 @@
 import * as p from "@clack/prompts";
 import fs from "node:fs";
 import path from "node:path";
-import { formatDate } from "@loopkit/shared";
+import { formatDate, slugify } from "@loopkit/shared";
 import {
   readConfig,
   readTasksFile,
@@ -10,17 +10,33 @@ import {
   getTasksPath,
   ensureProjectDir,
   appendToCut,
+  projectExists,
 } from "../storage/local.js";
 import { colors, header, pass, warn, info, nextStep } from "../ui/theme.js";
 
-interface TrackOptions {
-  week?: boolean;
+export async function trackCommand(options?: {
   add?: string;
+  week?: boolean;
   repair?: boolean;
-}
-
-export async function trackCommand(options: TrackOptions): Promise<void> {
+  project?: string;
+}): Promise<void> {
   const config = readConfig();
+
+  // Handle project switcher
+  if (options?.project) {
+    const newProject = slugify(options.project);
+    if (!projectExists(newProject)) {
+      console.log(colors.danger(`Project "${options.project}" does not exist.`));
+      process.exit(1);
+    }
+    
+    config.activeProject = newProject;
+    const { writeConfig } = await import("../storage/local.js");
+    writeConfig(config);
+    console.log(colors.success(`Switched active project to: ${colors.primary(options.project)}`));
+    // Continue running track for the new project
+  }
+
   const slug = config.activeProject;
 
   if (!slug) {
@@ -29,13 +45,13 @@ export async function trackCommand(options: TrackOptions): Promise<void> {
   }
 
   // ─── --add: Quick task add ────────────────────────────────────
-  if (options.add) {
+  if (options?.add) {
     addTask(slug, options.add);
     return;
   }
 
   // ─── --repair: Fix formatting ─────────────────────────────────
-  if (options.repair) {
+  if (options?.repair) {
     repairTasks(slug);
     return;
   }
@@ -73,7 +89,7 @@ export async function trackCommand(options: TrackOptions): Promise<void> {
   const shippingScore =
     weekTasks.length > 0 ? Math.round((done.length / weekTasks.length) * 100) : 0;
 
-  if (options.week) {
+  if (options?.week) {
     renderWeekSummary(weekTasks, backlogTasks, shippingScore, slug);
     return;
   }

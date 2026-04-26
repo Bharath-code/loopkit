@@ -79,6 +79,7 @@ Five questions. AI scoring. A brief that stings when it should.
 
 ### `loopkit pulse` — feedback that comes to you
 
+- **Hosted Form & Widget**: Collect feedback async via your own `/pulse/[projectId]` hosted page or an embeddable JS widget on your landing page.
 - Add responses from the CLI: `loopkit pulse --add "user said this"`
 - AI clusters responses into: Fix now / Validate later / Noise
 - Requires 5+ responses for clustering; shows raw list below threshold
@@ -97,8 +98,8 @@ Five questions. AI scoring. A brief that stings when it should.
 | Tier | Price | Includes |
 |---|---|---|
 | Free | $0/forever | 1 project, full CLI, git sync |
-| Solo | $19/month | 5 projects, AI features, pulse clustering |
-| Pro | $39/month | Unlimited, web dashboard, BYOK API key |
+| Solo | $19/month | 5 projects, AI proxy access, Pulse hosted form |
+| Pro | $39/month | Unlimited, web dashboard, Pulse widget, BYOK API key |
 
 ## Local First
 

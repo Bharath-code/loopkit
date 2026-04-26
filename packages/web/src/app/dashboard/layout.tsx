@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuthActions } from "@convex-dev/auth/react";
+import { useQuery } from "convex/react";
+import { api } from "../../../convex/_generated/api";
 
 export default function DashboardLayout({
   children,
@@ -11,6 +13,7 @@ export default function DashboardLayout({
 }) {
   const pathname = usePathname();
   const { signOut } = useAuthActions();
+  const user = useQuery(api.users.me);
 
   const navLinks = [
     { name: "Overview", href: "/dashboard", icon: "⟳" },
@@ -51,7 +54,16 @@ export default function DashboardLayout({
           </nav>
         </div>
 
-        <div className="mt-auto p-6 border-t border-zinc-900">
+        <div className="mt-auto p-6 border-t border-zinc-900 space-y-4">
+          {user?.tier === "free" && (
+            <div className="p-4 rounded-xl border border-violet-500/20 bg-violet-500/10 mb-4">
+              <h3 className="text-sm font-semibold text-white mb-1">Upgrade to Pro</h3>
+              <p className="text-xs text-zinc-400 mb-3">Unlock AI synthesis and team pulse features.</p>
+              <button className="w-full py-2 px-3 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-xs font-medium transition-colors cursor-pointer">
+                View Plans
+              </button>
+            </div>
+          )}
           <button
             onClick={() => void signOut()}
             className="flex items-center gap-3 px-3 py-2 w-full rounded-lg text-sm text-zinc-400 hover:bg-zinc-900 hover:text-white transition-colors cursor-pointer"

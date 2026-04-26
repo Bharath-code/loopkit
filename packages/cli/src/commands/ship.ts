@@ -35,6 +35,7 @@ interface PlatformDraft {
 // ─── Generate drafts from AI ───────────────────────────────────
 async function generateDrafts(ctx: ShipContext): Promise<PlatformDraft[]> {
   const drafts = await generateStructured({
+    command: "ship",
     system: SHIP_SYSTEM_PROMPT,
     prompt: buildShipPrompt(ctx),
     schema: ShipDraftsSchema,

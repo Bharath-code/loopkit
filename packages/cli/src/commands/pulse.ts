@@ -105,6 +105,7 @@ export async function pulseCommand(options: PulseOptions): Promise<void> {
 
   try {
     const clusters = await generateStructured({
+      command: "pulse",
       system: PULSE_SYSTEM_PROMPT,
       prompt: buildPulsePrompt(responses),
       schema: PulseClusterSchema,

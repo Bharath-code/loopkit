@@ -13,6 +13,14 @@ export default defineSchema({
     createdAt: v.number(),
   }).index("by_user", ["userId"]),
   
+  subscriptions: defineTable({
+    userId: v.id("users"),
+    polarId: v.string(),
+    polarPriceId: v.string(),
+    status: v.string(),
+    currentPeriodEnd: v.optional(v.number()),
+  }).index("by_user", ["userId"]).index("by_polar_id", ["polarId"]),
+  
   pulseResponses: defineTable({
     projectId: v.id("projects"),
     text: v.string(),

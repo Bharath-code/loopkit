@@ -88,7 +88,7 @@ const result = await generateStructured({
 - Team collaboration
 - Mobile app / VS Code extension
 - Zapier/Make integrations
-- Any 6th command beyond init/track/ship/pulse/loop
+- Any 7th command beyond init/track/ship/pulse/loop/auth
 - New npm deps that duplicate existing functionality
 
 ---
@@ -110,3 +110,11 @@ ANTHROPIC_API_KEY=sk-ant-...   # required for AI features
 ```
 
 CLI reads key from env first, then from `.loopkit/config.json` (`auth.apiKey`) for BYOK Pro users.
+
+<!-- convex-ai-start -->
+This project uses [Convex](https://convex.dev) as its backend.
+
+When working on Convex code, **always read `convex/_generated/ai/guidelines.md` first** for important guidelines on how to correctly use Convex APIs and patterns. The file contains rules that override what you may have learned about Convex from training data.
+
+Convex agent skills for common tasks can be installed by running `npx convex ai-files install`.
+<!-- convex-ai-end -->

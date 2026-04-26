@@ -8,3 +8,5 @@ dist/
 .loopkit/
 *.tsbuildinfo
 .DS_Store
+.agents
+.claude

@@ -129,7 +129,7 @@ export function ensureProjectDir(slug: string): void {
 export function readConfig(): Config {
   const configPath = getConfigPath();
   if (!fs.existsSync(configPath)) {
-    const defaults: Config = { version: "0.1.0" };
+    const defaults: Config = { version: 1 };
     writeConfig(defaults);
     return defaults;
   }
@@ -137,7 +137,7 @@ export function readConfig(): Config {
     const raw = JSON.parse(fs.readFileSync(configPath, "utf-8"));
     return ConfigSchema.parse(raw);
   } catch {
-    const defaults: Config = { version: "0.1.0" };
+    const defaults: Config = { version: 1 };
     writeConfig(defaults);
     return defaults;
   }

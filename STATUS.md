@@ -116,9 +116,9 @@ Remaining:
 - [x] Pulse I/O centralized in `storage/local.ts` (`readPulseResponses`, `appendPulseResponse`)
 
 Remaining (Phase 7):
-- [x] Hosted feedback form URL (web route in Next.js) (Convex integration started)
+- [x] Hosted feedback form URL (`/pulse/[projectId]`)
 - [x] Convex write for realtime response collection
-- [ ] JS embed widget (Shadow DOM isolated)
+- [x] JS embed widget (`/api/pulse/widget`)
 - [ ] localStorage retry queue for offline submissions
 
 ---
@@ -197,11 +197,11 @@ Remaining (Phase 7+):
 |---|---|---|
 | `loopkit auth` command | 🔴 High | [x] Login via browser OAuth, save token to config.json |
 | Convex Auth setup in web | 🔴 High | [x] GitHub + email auth, session management (replaced Better Auth) |
-| Polar.sh integration | 🔴 High | [ ] Solo ($19) + Pro ($39) plans, webhook for tier updates |
-| Tier gating in CLI | 🔴 High | [ ] Free = no AI; Solo = AI on; Pro = BYOK + unlimited |
-| AI proxy API routes | 🟡 Medium | [ ] `/api/ai/init`, `/api/ai/ship`, etc. — users skip API key setup |
-| Pulse hosted form | 🟡 Medium | [ ] Next.js route: `/pulse/[projectId]` — submit → Convex |
-| Convex schema + mutations | 🟡 Medium | [x] `pulseResponses`, `projects`, `loopLogs` tables |
+| Polar.sh integration | 🔴 High | [x] Solo ($19) + Pro ($39) plans, webhook for tier updates |
+| Tier gating in CLI | 🔴 High | [x] Free = no AI; Solo = AI on; Pro = BYOK + unlimited |
+| AI proxy API routes | 🟡 Medium | [x] `/api/ai/init`, `/api/ai/ship`, etc. — users skip API key setup |
+| Pulse hosted form | 🟡 Medium | [x] Next.js route: `/pulse/[projectId]` + embed widget |
+| Convex schema + mutations | 🟡 Medium | [x] `pulseResponses`, `projects`, `loopLogs`, `subscriptions` tables |
 
 ---
 
@@ -222,10 +222,10 @@ Remaining (Phase 7+):
 | Task | Priority | Notes |
 |---|---|---|
 | `loopkit auth` token refresh | 🟡 Medium | Handle expired sessions gracefully |
-| `loopkit track --project [name]` | 🟡 Medium | Switch active project from CLI |
+| `loopkit track --project [name]` | 🟡 Medium | [x] Switch active project from CLI |
 | Streak visualization in `loopkit loop` | 🟢 Low | 4-week streak rate metric |
-| PostHog analytics events | 🟢 Low | Track command usage, upgrade triggers |
-| Free vs paid tier gating | 🔴 High | Implement in Phase 7 with Better Auth |
+| PostHog analytics events | 🟢 Low | [x] Track command usage, upgrade triggers |
+| Free vs paid tier gating | 🔴 High | [x] Implemented in Phase 7 with Polar.sh + Convex |
 
 ---
 
@@ -235,7 +235,7 @@ Remaining (Phase 7+):
 |---|---|---|
 | No automated tests | Medium | Manual testing only for now |
 | Pulse V1 requires manual entry or `--add` flag | Low | Hosted form in Phase 7 |
-| Free vs paid tier gating not enforced | High | Implement in Phase 7 with Convex Auth / Polar.sh |
+| Free vs paid tier gating not enforced | High | Fixed — Enforced in Phase 7 via Polar.sh and Convex proxies |
 | Next.js Turbopack warns about workspace root | Info | Cosmetic — no functional impact |
 
 ---

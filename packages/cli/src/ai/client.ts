@@ -7,15 +7,18 @@ import { readConfig } from "../storage/local.js";
 
 function getAnthropicClient() {
   const config = readConfig();
-  const apiKey = config.auth?.apiKey || process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.ANTHROPIC_API_KEY;
 
   if (!apiKey) {
-    throw new Error(
-      "AI analysis requires an API key. Set ANTHROPIC_API_KEY or run `loopkit auth`."
-    );
+    return null;
   }
 
   return createAnthropic({ apiKey });
+}
+
+function getLoopKitToken() {
+  const config = readConfig();
+  return config.auth?.apiKey;
 }
 
 // ─── Model Selection ────────────────────────────────────────────
@@ -34,6 +37,7 @@ function getModelId(tier: ModelTier): string {
 // ─── Structured Generation ──────────────────────────────────────
 
 export async function generateStructured<T>(options: {
+  command: "init" | "ship" | "pulse" | "loop";
   system: string;
   prompt: string;
   schema: ZodSchema<T>;
@@ -51,16 +55,47 @@ export async function generateStructured<T>(options: {
   } = options;
 
   const anthropic = getAnthropicClient();
-  const modelId = getModelId(tier);
+  const token = getLoopKitToken();
 
-  const { object } = await generateObject({
-    model: anthropic(modelId),
-    schema,
-    system,
-    prompt,
-    maxTokens,
-    temperature,
-  });
+  if (!anthropic && !token) {
+    throw new Error(
+      "AI analysis requires authentication. Run `loopkit auth` or set ANTHROPIC_API_KEY."
+    );
+  }
 
-  return object;
+  if (anthropic) {
+    const modelId = getModelId(tier);
+
+    const { object } = await generateObject({
+      model: anthropic(modelId),
+      schema,
+      system,
+      prompt,
+      maxTokens,
+      temperature,
+    });
+
+    return object;
+  } else {
+    // Proxy through LoopKit API
+    const API_URL = process.env.LOOPKIT_API_URL || "http://localhost:3000";
+    const res = await fetch(`${API_URL}/api/ai/${options.command}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        system,
+        prompt,
+      }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || "Failed to generate AI response from LoopKit servers.");
+    }
+
+    return data.result as T;
+  }
 }

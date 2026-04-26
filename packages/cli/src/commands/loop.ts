@@ -123,6 +123,7 @@ export async function loopCommand(): Promise<void> {
 
   try {
     const synthesis = await generateStructured({
+      command: "loop",
       system: LOOP_SYSTEM_PROMPT,
       prompt: buildLoopPrompt({
         productName: briefData?.answers.name || slug,
