@@ -11,7 +11,9 @@ export default defineSchema({
     slug: v.string(),
     description: v.optional(v.string()),
     createdAt: v.number(),
-  }).index("by_user", ["userId"]),
+  })
+    .index("by_user", ["userId"])
+    .index("by_slug", ["slug"]),
   
   subscriptions: defineTable({
     userId: v.id("users"),
@@ -46,4 +48,12 @@ export default defineSchema({
     overrideReason: v.optional(v.string()),
     bipPost: v.optional(v.string()),
   }).index("by_project", ["projectId"]),
+
+  aiUsage: defineTable({
+    userId: v.id("users"),
+    date: v.string(),
+    count: v.number(),
+  })
+    .index("by_user_date", ["userId", "date"])
+    .index("by_user", ["userId"]),
 });

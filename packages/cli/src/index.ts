@@ -67,6 +67,7 @@ program
   .option("--raw", "Show raw responses without AI clustering")
   .option("--setup", "Explain how to set up feedback collection")
   .option("--add <text>", "Add a response inline")
+  .option("--share", "Generate a shareable feedback URL")
   .action((options) => {
     client.capture({ distinctId, event: "cli_command_pulse" });
     pulseCommand(options);

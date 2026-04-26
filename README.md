@@ -49,6 +49,16 @@ loopkit ship
 loopkit loop
 ```
 
+## Documentation
+
+| Resource | Description |
+|----------|-------------|
+| [Quick Start](docs/QUICK_START.md) | Get from zero to shipping in 15 minutes |
+| [User Guide](docs/USER_GUIDE.md) | Full philosophy, tips, and how to get the most out of LoopKit |
+| [User Stories](docs/USER_STORIES.md) | Every feature mapped to real user needs with acceptance criteria |
+| [Scenarios](docs/SCENARIOS.md) | Happy paths, edge cases, and error recovery flows |
+| [Personas](docs/PERSONAS.md) | Who LoopKit is built for and how they use it |
+
 ## How It Works
 
 ### `loopkit init` — 4 minutes to clarity

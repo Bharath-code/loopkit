@@ -10,7 +10,10 @@
 
 import type * as auth from "../auth.js";
 import type * as http from "../http.js";
+import type * as loopLogs from "../loopLogs.js";
+import type * as projects from "../projects.js";
 import type * as pulse from "../pulse.js";
+import type * as rateLimits from "../rateLimits.js";
 import type * as subscriptions from "../subscriptions.js";
 import type * as users from "../users.js";
 
@@ -23,7 +26,10 @@ import type {
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   http: typeof http;
+  loopLogs: typeof loopLogs;
+  projects: typeof projects;
   pulse: typeof pulse;
+  rateLimits: typeof rateLimits;
   subscriptions: typeof subscriptions;
   users: typeof users;
 }>;

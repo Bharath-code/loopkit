@@ -2,22 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import { generateObject } from "ai";
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { BriefSchema } from "@loopkit/shared";
+import { verifyAndRateLimit, incrementAIUsage } from "../_helpers";
 
-// Server-side Anthropic instance
 const anthropic = createAnthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
 export async function POST(req: NextRequest) {
   try {
-    const token = req.headers.get("Authorization")?.replace("Bearer ", "");
-    if (!token) {
-      return NextResponse.json({ error: "Authentication required for AI features." }, { status: 401 });
+    const auth = await verifyAndRateLimit(req);
+    if ("error" in auth) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
-
-    // In a real app, verify the token and get the user's tier from Convex.
-    // We reject if the user is on the Free tier.
-    // For this implementation, we will assume validity and proceed to proxy the AI call.
 
     const body = await req.json();
     const { prompt, system } = body;
@@ -33,6 +29,8 @@ export async function POST(req: NextRequest) {
       schema: BriefSchema,
       temperature: 0.2,
     });
+
+    await incrementAIUsage(auth.token, auth.user._id);
 
     return NextResponse.json({ result: object });
   } catch (error) {

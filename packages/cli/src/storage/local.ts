@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
+import crypto from "node:crypto";
 import {
   type Config,
   type InitAnswers,
@@ -14,6 +15,43 @@ import {
 } from "@loopkit/shared";
 
 const LOOPKIT_DIR = ".loopkit";
+
+// ─── Token Encryption ───────────────────────────────────────────
+
+const ENCRYPTION_PREFIX = "enc:";
+
+function deriveKey(): Buffer {
+  const salt = "loopkit";
+  const material = `${os.hostname()}:${os.userInfo().username}:loopkit-salt-v1`;
+  return crypto.scryptSync(material, salt, 32);
+}
+
+function encryptToken(plain: string): string {
+  const key = deriveKey();
+  const iv = crypto.randomBytes(16);
+  const cipher = crypto.createCipheriv("aes-256-gcm", key, iv);
+  const encrypted = Buffer.concat([cipher.update(plain, "utf-8"), cipher.final()]);
+  const authTag = cipher.getAuthTag();
+  const combined = Buffer.concat([iv, authTag, encrypted]);
+  return ENCRYPTION_PREFIX + combined.toString("base64");
+}
+
+function decryptToken(value: string): string | null {
+  if (!value.startsWith(ENCRYPTION_PREFIX)) return value; // plaintext fallback
+  try {
+    const key = deriveKey();
+    const combined = Buffer.from(value.slice(ENCRYPTION_PREFIX.length), "base64");
+    const iv = combined.subarray(0, 16);
+    const authTag = combined.subarray(16, 32);
+    const encrypted = combined.subarray(32);
+    const decipher = crypto.createDecipheriv("aes-256-gcm", key, iv);
+    decipher.setAuthTag(authTag);
+    const decrypted = Buffer.concat([decipher.update(encrypted), decipher.final()]);
+    return decrypted.toString("utf-8");
+  } catch {
+    return null;
+  }
+}
 
 // ─── Path Resolvers ─────────────────────────────────────────────
 
@@ -135,7 +173,18 @@ export function readConfig(): Config {
   }
   try {
     const raw = JSON.parse(fs.readFileSync(configPath, "utf-8"));
-    return ConfigSchema.parse(raw);
+    const config = ConfigSchema.parse(raw);
+    // Decrypt auth token if encrypted
+    if (config.auth?.apiKey) {
+      const decrypted = decryptToken(config.auth.apiKey);
+      if (decrypted) {
+        config.auth.apiKey = decrypted;
+      } else {
+        console.warn("⚠ Failed to decrypt auth token. Run `loopkit auth` again.");
+        delete config.auth.apiKey;
+      }
+    }
+    return config;
   } catch {
     const defaults: Config = { version: 1 };
     writeConfig(defaults);
@@ -145,7 +194,12 @@ export function readConfig(): Config {
 
 export function writeConfig(config: Config): void {
   ensureLoopkitDir();
-  fs.writeFileSync(getConfigPath(), JSON.stringify(config, null, 2));
+  const toWrite = { ...config };
+  // Encrypt auth token before writing
+  if (toWrite.auth?.apiKey && !toWrite.auth.apiKey.startsWith(ENCRYPTION_PREFIX)) {
+    toWrite.auth.apiKey = encryptToken(toWrite.auth.apiKey);
+  }
+  fs.writeFileSync(getConfigPath(), JSON.stringify(toWrite, null, 2));
 }
 
 // ─── Brief ──────────────────────────────────────────────────────

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { generateObject } from "ai";
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { PulseClusterSchema } from "@loopkit/shared";
+import { verifyAndRateLimit, incrementAIUsage } from "../_helpers";
 
 const anthropic = createAnthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -9,9 +10,9 @@ const anthropic = createAnthropic({
 
 export async function POST(req: NextRequest) {
   try {
-    const token = req.headers.get("Authorization")?.replace("Bearer ", "");
-    if (!token) {
-      return NextResponse.json({ error: "Authentication required for AI features." }, { status: 401 });
+    const auth = await verifyAndRateLimit(req);
+    if ("error" in auth) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
     const body = await req.json();
@@ -28,6 +29,8 @@ export async function POST(req: NextRequest) {
       schema: PulseClusterSchema,
       temperature: 0.2,
     });
+
+    await incrementAIUsage(auth.token, auth.user._id);
 
     return NextResponse.json({ result: object });
   } catch (error) {

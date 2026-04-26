@@ -1,4 +1,5 @@
 import * as p from "@clack/prompts";
+import QRCode from "qrcode";
 import { PulseClusterSchema } from "@loopkit/shared";
 import { generateStructured } from "../ai/client.js";
 import { PULSE_SYSTEM_PROMPT, buildPulsePrompt } from "../ai/prompts/pulse.js";
@@ -6,6 +7,7 @@ import {
   readConfig,
   readPulseResponses,
   appendPulseResponse,
+  readBriefJson,
 } from "../storage/local.js";
 import { colors, header, box, pass, warn, info, nextStep } from "../ui/theme.js";
 
@@ -13,11 +15,77 @@ interface PulseOptions {
   raw?: boolean;
   setup?: boolean;
   add?: string;
+  share?: boolean;
 }
 
 export async function pulseCommand(options: PulseOptions): Promise<void> {
   const config = readConfig();
   const slug = config.activeProject;
+
+  // ─── --share: Generate shareable feedback URL ────────────────
+  if (options.share) {
+    if (!slug) {
+      console.log(colors.danger("No active project. Run `loopkit init` first."));
+      process.exit(1);
+    }
+
+    const token = config.auth?.apiKey;
+    if (!token) {
+      console.log(colors.danger("Authentication required. Run `loopkit auth` first."));
+      process.exit(1);
+    }
+
+    const brief = readBriefJson(slug);
+    const name = brief?.answers?.name || slug;
+
+    const API_URL = process.env.LOOPKIT_API_URL || "http://localhost:3000";
+    const s = p.spinner();
+    s.start("Creating shareable feedback form...");
+
+    try {
+      const res = await fetch(`${API_URL}/api/pulse/share`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify({ name, slug }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: "Unknown error" }));
+        throw new Error(err.error || `HTTP ${res.status}`);
+      }
+
+      const { url } = await res.json();
+      s.stop("Feedback form ready!");
+
+      console.log(header("Shareable Pulse URL"));
+      console.log(box([
+        colors.primary(url),
+        "",
+        "Share this link to collect feedback:",
+        "  • Email it to beta users",
+        "  • Post it in your community",
+        "  • Embed it with the widget script",
+      ].join("\n")));
+
+      try {
+        const qr = await QRCode.toString(url, { type: "terminal", small: true });
+        console.log("\n" + qr);
+      } catch {
+        // QR generation failed, URL is already shown
+      }
+
+      console.log(colors.muted("\n  Embed widget: <script src=\"" + API_URL + "/api/pulse/widget?projectId=...\"></script>\n"));
+    } catch (err) {
+      s.stop("Failed to create share link.");
+      console.log(colors.danger(`Error: ${err instanceof Error ? err.message : "Unknown error"}`));
+      process.exit(1);
+    }
+
+    return;
+  }
 
   // ─── --add: Append a single response ─────────────────────────
   if (options.add !== undefined) {

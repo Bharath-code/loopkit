@@ -1,0 +1,52 @@
+import { query } from "./_generated/server";
+import { v } from "convex/values";
+
+export const listByProject = query({
+  args: { projectId: v.id("projects") },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("loopLogs")
+      .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
+      .order("desc")
+      .collect();
+  },
+});
+
+export const latestByProject = query({
+  args: { projectId: v.id("projects") },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("loopLogs")
+      .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
+      .order("desc")
+      .first();
+  },
+});
+
+export const streakCount = query({
+  args: { projectId: v.id("projects") },
+  handler: async (ctx, args) => {
+    const logs = await ctx.db
+      .query("loopLogs")
+      .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
+      .order("desc")
+      .collect();
+
+    let streak = 0;
+    let prevWeek: number | null = null;
+
+    for (const log of logs) {
+      if (prevWeek === null) {
+        streak = 1;
+        prevWeek = log.weekNumber;
+      } else if (log.weekNumber === prevWeek - 1) {
+        streak++;
+        prevWeek = log.weekNumber;
+      } else {
+        break;
+      }
+    }
+
+    return streak;
+  },
+});

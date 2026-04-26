@@ -1,8 +1,8 @@
 # LoopKit — Build Status
 
-**Last updated:** April 26, 2026 (Week 1 sprint: T0 + P1 + P4 + F2 ✅)  
+**Last updated:** April 26, 2026 (Week 1: T0+P1+P4+F2 ✅ · Week 2: F1+D1+S1+S4 ✅)  
 **Version:** 0.1.0  
-**Overall:** MVP complete · Full product health audit done · Improvement plan created (see §Post-v0.1 Plan)
+**Overall:** MVP complete · Week 2 improvements shipped · Improvement plan created (see §Post-v0.1 Plan)
 
 ---
 
@@ -186,6 +186,12 @@ Remaining (Phase 7+):
 - [x] `CLAUDE.md` — codebase guide for Claude AI
 - [x] `AGENTS.md` — agentic coding guidelines
 - [x] `STATUS.md` — this file
+- [x] `docs/PERSONAS.md` — 4 primary personas (Sarah, Marcus, Alex, Jordan) with goals, pain points, and interaction flows
+- [x] `docs/USER_STORIES.md` — 25+ user stories with acceptance criteria, mapped to personas and features
+- [x] `docs/SCENARIOS.md` — 30+ interaction scenarios including happy paths, edge cases, and error recovery
+- [x] `docs/USER_GUIDE.md` — end-user friendly guide explaining philosophy, 5-phase loop, tips, and FAQ
+- [x] `docs/QUICK_START.md` — 15-minute getting started guide with first-week checklist
+- [x] `docs/README.md` — documentation directory index
 
 ---
 
@@ -235,12 +241,12 @@ Remaining (Phase 7+):
 |---|---|---|
 | No automated tests (zero coverage) | High | Test infra added (vitest). Actual tests planned — see §Testing |
 | No AI streaming — users stare at spinner for 3-10s | High | ✅ Resolved — P1: `streamObject` with progress output |
-| Auth token stored unencrypted in `config.json` | Medium | Planned — see §Security S1 |
+| Auth token stored unencrypted in `config.json` | Medium | ✅ Resolved — S1: AES-256-GCM encryption with machine-derived key |
 | "Fast" and "creative" tiers use same model | Medium | ✅ Resolved — P4: Haiku for fast, Sonnet for creative |
-| Dashboard uses placeholder data, not live Convex | Medium | Planned — see §Dashboard D1 |
+| Dashboard uses placeholder data, not live Convex | Medium | ✅ Resolved — D1: Overview, Pulse Inbox, and Loop History all use live `useQuery` |
 | `config.json` parsed 2-3x per command invocation | Low | Planned — see §Performance P2 |
 | Pulse `--share` missing — no easy way to deploy feedback form | Low | Planned — see §Friction F1 |
-| No rate limiting enforcement on free tier AI calls | Medium | Planned — see §Security S4 |
+| No rate limiting enforcement on free tier AI calls | Medium | ✅ Resolved — S4: 10/day free, 100/day Solo, 1000/day Pro enforced server-side |
 | Next.js Turbopack warns about workspace root | Info | Cosmetic — no functional impact |
 
 ---
@@ -285,7 +291,7 @@ Remaining (Phase 7+):
 
 | # | Task | Pri | Effort | Files |
 |---|---|---|---|---|
-| F1 | **`loopkit pulse --share`** — Generate and return a shareable feedback URL (`https://loopkit.dev/p/[slug]`). Creates project in Convex if needed. Show QR code in terminal. | 🟡 P1 | M | `commands/pulse.ts` |
+| F1 | [x] **`loopkit pulse --share`** — Generate and return a shareable feedback URL (`https://loopkit.dev/pulse/[projectId]`). Creates project in Convex if needed. Show QR code in terminal. | 🟡 P1 | M | `commands/pulse.ts` |
 | F2 | [x] **`loopkit track --add` with `$EDITOR`** — When `--add` has no argument, open `$EDITOR` for multi-line task text. Same pattern as `ship [e]dit`. | 🟡 P1 | S | `commands/track.ts` |
 | F3 | **Keyboard shortcuts** — `?` for help, `q` to quit, `s` to skip, `Enter` for default in Clack prompts. | 🟢 P2 | M | `ui/theme.ts` |
 | F4 | **Better empty states** — When no tasks/projects/pulse data, show helpful next steps instead of blank screens. E.g., "No tasks yet. Run `loopkit track --add` to create your first task." | 🟢 P2 | S | All command files |
@@ -297,7 +303,7 @@ Remaining (Phase 7+):
 
 | # | Task | Pri | Effort | Files |
 |---|---|---|---|---|
-| D1 | **Replace placeholder data with live Convex queries** — Dashboard overview, pulse inbox, and loop history pages all use hardcoded data. Wire to real `useQuery` calls. | 🟡 P1 | L | `web/src/app/dashboard/**/*.tsx` |
+| D1 | [x] **Replace placeholder data with live Convex queries** — Dashboard overview, pulse inbox, and loop history pages all wired to real `useQuery` calls. | 🟡 P1 | L | `web/src/app/dashboard/**/*.tsx` |
 | D2 | **Real-time pulse inbox** — Use Convex subscriptions so new feedback appears without refresh. Show "New" badge with enter animation. | 🟡 P1 | M | `web/src/app/dashboard/pulse/page.tsx` |
 | D3 | **Task management in dashboard** — CRUD tasks from web UI. Sync with local `tasks.md` via Convex. Add drag-to-reorder for priority. | 🔵 P3 | L | New files in `dashboard/` |
 | D4 | **Dashboard mobile responsive** — Current dashboard is desktop-only. Add collapsible sidebar, stacked cards on mobile. | 🟢 P2 | M | All dashboard pages |
@@ -320,10 +326,10 @@ Remaining (Phase 7+):
 
 | # | Task | Pri | Effort | Files |
 |---|---|---|---|---|
-| S1 | **Encrypt auth token at rest** — Use `node:crypto` with machine-derived key (hash of hostname + username + fixed salt) or integrate `keytar` for OS keychain. Fallback: plain text with `⚠ Token stored unencrypted` warning on first write. | 🟡 P1 | M | `storage/local.ts` |
+| S1 | [x] **Encrypt auth token at rest** — Uses `node:crypto` AES-256-GCM with machine-derived key (`scryptSync` of hostname + username + salt). Backward-compatible with plaintext legacy tokens. | 🟡 P1 | M | `storage/local.ts` |
 | S2 | **Input sanitization on pulse form** — Strip HTML tags, enforce 500-char limit server-side, add IP-based rate limiting (3 req/min) on public form route. | 🟡 P1 | S | `web/src/app/pulse/*`, `web/app/api/pulse/*` |
 | S3 | **CSRF protection on API routes** — Add `Origin` / `Referer` header check to AI proxy and auth routes. | 🟢 P2 | S | `web/src/app/api/**/route.ts` |
-| S4 | **Rate limiting for free tier** — Enforce max 10 AI calls/day on free tier, 100/day on Solo. Server-side enforcement in Convex. | 🟡 P1 | M | `convex/rateLimits.ts` (new), AI proxy routes |
+| S4 | [x] **Rate limiting for free tier** — Enforces max 10 AI calls/day on free tier, 100/day on Solo, 1000/day on Pro. Server-side enforcement in Convex via `aiUsage` table. All AI proxy routes check limits before calling AI and return 429 when exceeded. | 🟡 P1 | M | `convex/rateLimits.ts` (new), AI proxy routes |
 
 ---
 
@@ -346,7 +352,7 @@ Remaining (Phase 7+):
 Week 1: T0 + P1 + P4 + F2  ✅ DONE
   → Test infra, AI streaming, Haiku tier, $EDITOR for track
 
-Week 2: F1 + D1 + S1 + S4
+Week 2: F1 + D1 + S1 + S4  ✅ DONE
   → Pulse --share, live dashboard, encrypted auth, rate limiting
 
 Week 3: T1 + T2 + T3 + S2 + D2
