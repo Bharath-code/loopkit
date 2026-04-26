@@ -27,6 +27,11 @@ export default function DashboardOverviewPage() {
     projectId ? { projectId: projectId as Id<"projects"> } : "skip"
   );
 
+  const archetype = useQuery(
+    api.analytics.getArchetype,
+    projectId ? { projectId: projectId as Id<"projects"> } : "skip"
+  );
+
   const tasksCompleted = latestLoop?.tasksCompleted ?? 0;
   const tasksTotal = latestLoop?.tasksTotal ?? 0;
   const shippingScore = latestLoop?.shippingScore ?? 0;
@@ -136,6 +141,31 @@ export default function DashboardOverviewPage() {
             )}
           </div>
         </div>
+
+        {/* Founder Archetype */}
+        {archetype && (
+          <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/20">
+            <h2 className="text-base font-semibold text-white mb-4">Founder Archetype</h2>
+            <div className="flex items-center gap-3 mb-4">
+              <span className="text-3xl">{archetype.emoji}</span>
+              <div>
+                <p className="text-lg font-bold text-white">{archetype.archetype}</p>
+                <p className="text-xs text-zinc-500">{archetype.weeksAnalyzed} weeks analyzed</p>
+              </div>
+            </div>
+            <p className="text-sm text-zinc-400 mb-4">{archetype.description}</p>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="p-3 rounded-lg bg-zinc-800/50">
+                <p className="text-xs text-zinc-500">Avg Score</p>
+                <p className="text-lg font-bold text-white">{archetype.avgScore}/100</p>
+              </div>
+              <div className="p-3 rounded-lg bg-zinc-800/50">
+                <p className="text-xs text-zinc-500">Avg Tasks</p>
+                <p className="text-lg font-bold text-white">{archetype.avgTasks}/wk</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Weekly Loop Synthesis Highlight */}
         <div className="p-6 rounded-2xl border border-violet-500/20 bg-[#0c0c0f] relative overflow-hidden glow-violet">

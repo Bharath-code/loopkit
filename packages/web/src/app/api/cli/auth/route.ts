@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { csrfCheck } from "../../ai/_helpers";
 
 // Simple mock store for CLI auth device flow
 // In production, this would be in Convex or Redis
@@ -6,6 +7,11 @@ const cliAuthSessions = new Map<string, { status: "pending" | "completed", token
 
 export async function POST(req: NextRequest) {
   try {
+    const csrf = csrfCheck(req);
+    if (csrf) {
+      return NextResponse.json({ error: csrf.error }, { status: csrf.status });
+    }
+
     const { action, code, token } = await req.json();
 
     if (action === "create") {

@@ -2,23 +2,19 @@ import { createAnthropic } from "@ai-sdk/anthropic";
 import { streamObject } from "ai";
 import { type ZodSchema } from "zod";
 import { readConfig } from "../storage/local.js";
+import { getCachedResult, setCachedResult } from "../storage/cache.js";
 
-// ─── Provider Setup ─────────────────────────────────────────────
-
-function getAnthropicClient() {
-  const config = readConfig();
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-
-  if (!apiKey) {
-    return null;
-  }
-
-  return createAnthropic({ apiKey });
+interface ResolvedAuth {
+  anthropicKey: string | null;
+  token: string | null;
 }
 
-function getLoopKitToken() {
+function resolveAuth(): ResolvedAuth {
   const config = readConfig();
-  return config.auth?.apiKey;
+  return {
+    anthropicKey: process.env.ANTHROPIC_API_KEY || null,
+    token: config.auth?.apiKey || null,
+  };
 }
 
 // ─── Model Selection ────────────────────────────────────────────
@@ -54,16 +50,25 @@ export async function generateStructured<T>(options: {
     temperature = 0.3,
   } = options;
 
-  const anthropic = getAnthropicClient();
-  const token = getLoopKitToken();
+  const { anthropicKey, token } = resolveAuth();
 
-  if (!anthropic && !token) {
+  if (!anthropicKey && !token) {
     throw new Error(
       "AI analysis requires authentication. Run `loopkit auth` or set ANTHROPIC_API_KEY."
     );
   }
 
-  if (anthropic) {
+  const schemaName = schema._def?.description || schema.constructor?.name || "unknown";
+
+  const cached = getCachedResult<T>(options.command, system, prompt, schemaName);
+  if (cached) {
+    return cached;
+  }
+
+  let result: T;
+
+  if (anthropicKey) {
+    const anthropic = createAnthropic({ apiKey: anthropicKey });
     const modelId = getModelId(tier);
 
     const { partialObjectStream, object } = streamObject({
@@ -84,8 +89,7 @@ export async function generateStructured<T>(options: {
       }
     }
 
-    const result = await object;
-    return result;
+    result = await object;
   } else {
     // Proxy through LoopKit API
     const API_URL = process.env.LOOPKIT_API_URL || "http://localhost:3000";
@@ -110,6 +114,9 @@ export async function generateStructured<T>(options: {
       throw new Error(data.error || "Failed to generate AI response from LoopKit servers.");
     }
 
-    return data.result as T;
+    result = data.result as T;
   }
+
+  setCachedResult(options.command, system, prompt, schemaName, result);
+  return result;
 }

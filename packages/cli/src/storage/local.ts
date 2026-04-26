@@ -393,7 +393,7 @@ export function listProjects(): string[] {
 
 // ─── Loop Logs — read last N weeks ──────────────────────────────
 
-export function readLastNLoopLogs(n: number): Array<{ weekNumber: number; overridden: boolean }> {
+export function readLastNLoopLogs(n: number, slug?: string): Array<{ weekNumber: number; overridden: boolean }> {
   const logsDir = getLogsDir();
   if (!fs.existsSync(logsDir)) return [];
 
@@ -403,17 +403,24 @@ export function readLastNLoopLogs(n: number): Array<{ weekNumber: number; overri
     .sort((a, b) => {
       const wA = parseInt(a.replace("week-", "").replace(".md", ""));
       const wB = parseInt(b.replace("week-", "").replace(".md", ""));
-      return wB - wA; // newest first
+      return wB - wA;
     })
     .slice(0, n);
 
-  return files.map((f) => {
-    const weekNumber = parseInt(f.replace("week-", "").replace(".md", ""));
-    const content = fs.readFileSync(path.join(logsDir, f), "utf-8");
-    // Look for override marker written by loop command
-    const overridden = content.includes("_Override:");
-    return { weekNumber, overridden };
-  });
+  return files
+    .map((f) => {
+      const weekNumber = parseInt(f.replace("week-", "").replace(".md", ""));
+      const content = fs.readFileSync(path.join(logsDir, f), "utf-8");
+      const overridden = content.includes("_Override:");
+      return { weekNumber, overridden, content };
+    })
+    .filter((log) => {
+      if (!slug) return true;
+      const projectMatch = log.content.includes(`project:${slug}`);
+      const noProjectRef = !log.content.includes("project:");
+      return projectMatch || noProjectRef;
+    })
+    .map(({ weekNumber, overridden }) => ({ weekNumber, overridden }));
 }
 
 // ─── Streak Calculation ─────────────────────────────────────────

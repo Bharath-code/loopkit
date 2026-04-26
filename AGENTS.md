@@ -20,16 +20,18 @@ node packages/cli/dist/index.js --help
 ```
 packages/cli/src/
   commands/        ← one file per command
-  analytics/       ← telemetry, benchmarks, dna, oracle modules
+  analytics/       ← telemetry, benchmarks, dna, oracle, churn, autoLoop, predictor
   ai/prompts/      ← system prompts
-  ai/client.ts     ← generateStructured() wrapper
+  ai/client.ts     ← generateStructured() wrapper (with cache + resolveAuth)
   storage/local.ts ← all .loopkit/ file I/O
+  storage/cache.ts ← AI result cache (hash-based, 7-day TTL)
   ui/theme.ts      ← terminal colors/UI helpers
 
 packages/shared/src/index.ts  ← ALL Zod schemas (single source of truth)
 
 packages/web/src/app/         ← Next.js pages
-packages/web/convex/          ← Convex backend (schema, queries, mutations)
+packages/web/src/app/api/     ← API routes (all have CSRF protection)
+packages/web/convex/          ← Convex backend (schema, queries, mutations, analytics)
 ```
 
 **Never touch:** `node_modules/`, `dist/`, `.next/`, `pnpm-lock.yaml`, `.git/hooks/`

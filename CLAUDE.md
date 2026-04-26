@@ -80,7 +80,7 @@ Never define a type in `cli` or `web` that belongs in `shared`.
 
 ```
 src/
-├── index.ts              # Entry — Commander routes 8 commands
+├── index.ts              # Entry — Commander routes 9 commands
 ├── commands/
 │   ├── init.ts           # loopkit init
 │   ├── track.ts          # loopkit track
@@ -94,9 +94,12 @@ src/
 │   ├── telemetry.ts      # Opt-in usage collection (on/off/export/delete)
 │   ├── dna.ts            # Shipping DNA profile (founder pattern detection)
 │   ├── benchmarks.ts     # Smart percentile rankings vs baseline
-│   └── oracle.ts         # Snooze completion probability oracle
+│   ├── oracle.ts         # Snooze completion probability oracle
+│   ├── churn.ts          # Churn Guardian: declining score, skipped loops, override rate
+│   ├── autoLoop.ts       # Auto-Loop: missed Sunday detection + auto-draft
+│   └── predictor.ts      # Success Predictor: revenue probability heuristic
 ├── ai/
-│   ├── client.ts         # generateStructured() wrapper
+│   ├── client.ts         # generateStructured() wrapper (resolveAuth + cache)
 │   └── prompts/
 │       ├── init.ts       # System prompt + few-shot examples
 │       ├── ship.ts       # Launch copy system prompt
@@ -104,7 +107,8 @@ src/
 │       ├── loop.ts       # Weekly synthesis system prompt
 │       └── unstuck.ts    # Micro-task generation prompt
 ├── storage/
-│   └── local.ts          # All .loopkit/ file operations
+│   ├── local.ts          # All .loopkit/ file operations
+│   └── cache.ts          # AI result cache (hash-based, 7-day TTL)
 └── ui/
     └── theme.ts           # Colors, scoreBar, box, header helpers
 ```
@@ -113,7 +117,7 @@ src/
 
 ```
 .loopkit/                        ← created in user's project root
-├── config.json                  ← ConfigSchema (activeProject, auth, prefs)
+├── config.json                  ← ConfigSchema (activeProject, auth, prefs, telemetry)
 ├── projects/
 │   └── [slug]/
 │       ├── brief.md             ← human-readable markdown
@@ -125,6 +129,8 @@ src/
 │   └── YYYY-MM-DD.md            ← ship log
 ├── logs/
 │   └── week-N.md                ← loop log
+├── cache/
+│   └── <hash>.json              ← cached AI results (7-day TTL)
 ├── telemetry/
 │   └── week-N.json              ← anonymous event records (opt-in only)
 └── pulse/
@@ -155,6 +161,10 @@ src/
 | `dna.ts` | `computeShippingDNA()` — founder pattern, velocity, strengths, risks |
 | `benchmarks.ts` | `computeBenchmarks()`, `renderBenchmarks()` — percentile rankings |
 | `oracle.ts` | `getSnoozeWarning()` — historical snooze completion stats |
+| `churn.ts` | `detectChurnRisk()`, `renderChurnWarning()` — declining score, skipped loops, overrides |
+| `autoLoop.ts` | `checkMissedSunday()`, `saveAutoLoopDraft()` — Monday auto-draft generation |
+| `predictor.ts` | `predictSuccess()`, `renderPrediction()` — 8-week revenue probability heuristic |
+| `cache.ts` | `getCachedResult()`, `setCachedResult()` — hash-based AI result reuse, 7-day TTL |
 
 ### AI Usage Pattern
 
@@ -169,6 +179,12 @@ const result = await generateStructured({
   temperature: 0.3,         // 0.3 for structured, 0.6 for creative
 });
 ```
+
+`generateStructured()` automatically:
+1. Resolves auth via `resolveAuth()` (single config read)
+2. Checks the cache for identical inputs (hash-based, 7-day TTL)
+3. Calls AI or proxy as needed
+4. Caches the result before returning
 
 Never call `generateText()` directly — always use structured output with Zod.
 
@@ -270,13 +286,15 @@ node packages/cli/dist/index.js init
 ### Git Hook Safety (CRITICAL)
 The git hook in `track.ts` MUST be append-only:
 ```typescript
-// CORRECT: append to existing hook
+// CORRECT: append to existing hook, use standalone node script
+const hookLine = `\n# ── LoopKit ──\nnode .git/hooks/loopkit-commit-msg.js "$1"\n`;
 const existing = fs.existsSync(hookPath) ? fs.readFileSync(hookPath, "utf-8") : "#!/bin/sh\n";
-fs.writeFileSync(hookPath, existing + "\n" + hookScript);
+fs.writeFileSync(hookPath, existing + hookLine);
 
 // WRONG: never overwrite
 fs.writeFileSync(hookPath, hookScript);  // ← NEVER DO THIS
 ```
+The hook writes a standalone `.js` file to `.git/hooks/loopkit-commit-msg.js` — no inline eval, no shell spawn overhead.
 
 ---
 
@@ -310,9 +328,10 @@ When adding a new AI feature:
 | 5 — `pulse` | ✅ Done (V1) | Local JSON, AI clustering, --add flag |
 | 6 — Landing page | ✅ Done | Next.js 16, dark premium design, nav bar, clipboard |
 | 7 — Auth + Payments | ✅ Done | Convex Auth, Polar.sh, AI proxy |
-| 8 — Dashboard | ✅ Done | Project overview, pulse inbox, benchmarks |
+| 8 — Dashboard | ✅ Done | Project overview, pulse inbox, benchmarks, archetypes |
 | 9 — npm publish | ✅ Done | `npx loopkit init` ready, .npmignore set |
-| 10 — Analytics | ✅ Done | Telemetry, Shipping DNA, Benchmarks CLI, Snooze Oracle |
+| 10 — Analytics Phase 1 | ✅ Done | Telemetry, Shipping DNA, Benchmarks CLI, Snooze Oracle |
+| 11 — Analytics Phase 2 | ✅ Done | CSRF, resolveAuth, AI cache, git hook opt, Archetypes, Churn, Auto-Loop, Predictor |
 
 ---
 

@@ -2,9 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { fetchMutation } from "convex/nextjs";
 import { api } from "../../../../../convex/_generated/api";
 import { Id } from "../../../../../convex/_generated/dataModel";
+import { csrfCheck } from "../../ai/_helpers";
 
 export async function POST(req: NextRequest) {
   try {
+    const csrf = csrfCheck(req);
+    if (csrf) {
+      return NextResponse.json({ error: csrf.error }, { status: csrf.status });
+    }
+
     const token = req.headers.get("Authorization")?.replace("Bearer ", "");
     if (!token) {
       return NextResponse.json({ error: "Authentication required." }, { status: 401 });

@@ -16,6 +16,9 @@ import {
 } from "../storage/local.js";
 import { recordEvent, startTelemetryPrompt, isTelemetryEnabled } from "../analytics/telemetry.js";
 import { computeShippingDNA, type ShippingDNA } from "../analytics/dna.js";
+import { detectChurnRisk, renderChurnWarning } from "../analytics/churn.js";
+import { checkMissedSunday, saveAutoLoopDraft } from "../analytics/autoLoop.js";
+import { predictSuccess, renderPrediction } from "../analytics/predictor.js";
 import { colors, header, box, pass, warn, info, nextStep, scoreBar, shortcutsHint, emptyState } from "../ui/theme.js";
 
 export async function loopCommand(): Promise<void> {
@@ -38,6 +41,30 @@ export async function loopCommand(): Promise<void> {
   // ─── Telemetry consent (once, on Sunday) ──────────────────────
   if (isSunday) {
     await startTelemetryPrompt();
+  }
+
+  // ─── Auto-Loop: missed Sunday detection (Monday only) ─────────
+  const isMonday = dayOfWeek === 1;
+  if (isMonday && !loopLogExists(weekNum)) {
+    const autoDraft = checkMissedSunday(slug);
+    if (autoDraft) {
+      console.log(colors.warning("\n  🤖 Auto-Loop: Looks like you missed Sunday's ritual."));
+      console.log(colors.dim("  I've drafted your week summary from local data.\n"));
+
+      const confirm = await p.confirm({
+        message: "Save this auto-generated loop draft?",
+      });
+
+      if (!p.isCancel(confirm) && confirm) {
+        saveAutoLoopDraft(slug, autoDraft);
+        console.log(pass(`Week ${autoDraft.weekNumber} auto-loop saved.`));
+        console.log(colors.dim("  Run `loopkit loop` again for full AI synthesis."));
+        p.outro(colors.muted("Auto-loop complete. See you next Sunday."));
+        return;
+      } else {
+        console.log(info("Skipping auto-loop. Running full loop instead."));
+      }
+    }
   }
 
   // ─── Mid-week check ──────────────────────────────────────────
@@ -122,7 +149,7 @@ export async function loopCommand(): Promise<void> {
 
     if (!p.isCancel(progress) && !p.isCancel(nextThing)) {
       const logContent = [
-        `# Week ${weekNum} — ${formatDate()}`,
+        `# Week ${weekNum} — ${formatDate()} | project:${slug}`,
         "",
         `**Progress:** ${progress}`,
         `**Next:** ${nextThing}`,
@@ -325,7 +352,7 @@ export async function loopCommand(): Promise<void> {
 
     // ─── Save loop log ──────────────────────────────────────────
     const logContent = [
-      `# Week ${weekNum} — ${formatDate()}`,
+      `# Week ${weekNum} — ${formatDate()} | project:${slug}`,
       "",
       "## Summary",
       `- Tasks completed: ${tasksCompleted.length}`,
@@ -355,6 +382,18 @@ export async function loopCommand(): Promise<void> {
       displayDNA(dna);
     }
 
+    // ─── Churn Guardian v1 ────────────────────────────────────────
+    const churnRisk = detectChurnRisk();
+    if (churnRisk) {
+      console.log(renderChurnWarning(churnRisk));
+    }
+
+    // ─── Success Predictor v1 (after 8+ weeks) ────────────────────
+    const prediction = predictSuccess(slug);
+    if (prediction) {
+      renderPrediction(prediction);
+    }
+
     // ─── Override rate warning ───────────────────────────────────
     checkOverrideRate();
   } catch (error) {
@@ -362,7 +401,7 @@ export async function loopCommand(): Promise<void> {
     console.log(colors.danger("AI unavailable. Saving week data without synthesis."));
 
     const logContent = [
-      `# Week ${weekNum} — ${formatDate()}`,
+      `# Week ${weekNum} — ${formatDate()} | project:${slug}`,
       "",
       `- Tasks completed: ${tasksCompleted.length}`,
       `- Tasks open: ${tasksOpen.length}`,
@@ -456,7 +495,7 @@ function checkOverrideRate(): void {
   const WINDOW = 4; // weeks to look back
   const THRESHOLD = 2; // ≥2 overrides in 4 weeks = warning
 
-  const logs = readLastNLoopLogs(WINDOW);
+  const logs = readLastNLoopLogs(WINDOW, slug);
   if (logs.length < WINDOW) return; // Not enough history yet
 
   const overrideCount = logs.filter((l) => l.overridden).length;

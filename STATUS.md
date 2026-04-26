@@ -1,8 +1,8 @@
 # LoopKit — Build Status
 
-**Last updated:** April 26, 2026 (Week 5 P1 sprint COMPLETE)  
+**Last updated:** April 26, 2026 (Week 6 P2 sprint COMPLETE)  
 **Version:** 0.1.0  
-**Overall:** MVP complete · Weeks 1-2 shipped · Week 3 P0 done · Week 4 P1 done · Week 5 P1 done · Strategic + IE Phase 1 shipped
+**Overall:** MVP complete · Weeks 1-2 shipped · Week 3 P0 done · Week 4 P1 done · Week 5 P1 done · Week 6 P2 done · Strategic + IE Phase 2 shipped
 
 ---
 
@@ -42,6 +42,10 @@
 - [x] Shipping DNA (`cli/src/analytics/dna.ts`) — founder pattern detection, velocity, risk warnings
 - [x] Benchmarks CLI (`cli/src/analytics/benchmarks.ts`) — percentile rankings vs baseline
 - [x] Snooze Oracle (`cli/src/analytics/oracle.ts`) — historical completion probability
+- [x] Churn Guardian (`cli/src/analytics/churn.ts`) — declining score, skipped loops, override rate detection
+- [x] Auto-Loop (`cli/src/analytics/autoLoop.ts`) — missed Sunday detection, auto-draft generation
+- [x] Success Predictor (`cli/src/analytics/predictor.ts`) — 8-week heuristic revenue probability model
+- [x] AI Cache (`cli/src/storage/cache.ts`) — hash-based result reuse, 7-day TTL
 
 ---
 
@@ -127,18 +131,18 @@
 
 ---
 
-### P2 — Ship Within 4 Weeks (Week 6)
+### P2 — Ship Within 4 Weeks (Week 6) ✅ COMPLETE
 
 | # | Task | Effort | Files | Acceptance Criteria |
 |---|---|---|---|---|
-| S3 | **CSRF protection** | S | `web/src/app/api/**/route.ts` | `Origin` / `Referer` header checks on AI proxy and auth routes. |
-| P2 | **Merge config reads** | S | `ai/client.ts` | Single `resolveAuth()` returning `{ anthropic, token }`. Eliminate duplicate `readConfig()` calls. |
-| P3 | **Cache AI results** | M | `storage/cache.ts` (new) | Hash `(command, system, prompt, schema)` → `.loopkit/cache/`. Reuse on identical calls. |
-| P5 | **Optimize git hook** | S | `commands/track.ts` | Read `.git/COMMIT_EDITMSG` directly instead of `execSync`. Target <50ms. |
-| STRAT-4 | **Founder archetype detection** | L | `convex/analytics.ts` + dashboard widget | Cluster users into 5 types (Sprinter, Marathoner, Perfectionist, Reactor, All-Star). Show in dashboard. |
-| IE-4 | **Churn Guardian v1** | M | `cli/src/analytics/churn.ts` (new), `commands/track.ts`, `commands/loop.ts` | Rule-based detection: declining shipping score for 2+ weeks, skipped loops, rising override rate. Proactive intervention with actionable suggestions. |
-| IE-5 | **Auto-Loop (Sunday Ritual Assistant)** | M | `convex/crons.ts`, `cli/src/analytics/autoLoop.ts` (new) | If user misses Sunday `loop`, auto-generate draft on Monday from tasks/ships/pulse. Email/notification with one-click confirm. |
-| IE-6 | **Success Predictor v1** | S | `cli/src/analytics/predictor.ts` (new), `commands/loop.ts` | After 8 weeks, predict probability of first revenue within 6 months based on behavioral heuristics. Show strengths, risks, and probability shift from fixes. |
+| S3 | **CSRF protection** | S | `web/src/app/api/**/route.ts`, `_helpers.ts` | ✅ `Origin` header checks on all AI proxy, auth, and pulse share routes. Rejects cross-origin requests with 403. |
+| P2 | **Merge config reads** | S | `ai/client.ts` | ✅ Single `resolveAuth()` returning `{ anthropicKey, token }`. Eliminated duplicate `readConfig()` calls. |
+| P3 | **Cache AI results** | M | `storage/cache.ts` (new), `ai/client.ts` | ✅ Hash `(command, system, prompt, schema)` → `.loopkit/cache/`. 7-day TTL. Reuse on identical calls. |
+| P5 | **Optimize git hook** | S | `commands/track.ts` | ✅ Standalone node script (`.git/hooks/loopkit-commit-msg.js`). No `execSync`. Content-hash based SHA. ~0ms overhead. |
+| STRAT-4 | **Founder archetype detection** | L | `convex/analytics.ts`, `dashboard/page.tsx` | ✅ 5 archetype types (Sprinter, Marathoner, Perfectionist, Reactor, All-Star). Dashboard widget with emoji, description, metrics. |
+| IE-4 | **Churn Guardian v1** | M | `cli/src/analytics/churn.ts` (new), `commands/loop.ts` | ✅ Rule-based detection: declining score (2+ weeks), skipped loops, rising override rate, low velocity. Proactive warnings with suggestions. |
+| IE-5 | **Auto-Loop (Sunday Ritual Assistant)** | M | `cli/src/analytics/autoLoop.ts` (new), `commands/loop.ts` | ✅ Monday detection of missed Sunday loop. Auto-generates draft from tasks/ships/pulse data. One-click confirm. |
+| IE-6 | **Success Predictor v1** | S | `cli/src/analytics/predictor.ts` (new), `commands/loop.ts` | ✅ After 8 weeks, predicts probability of first revenue within 6 months. Behavioral heuristics: consistency, score, velocity, trend, override rate, shipping habit. Shows strengths, risks, and shift factors. |
 
 **Why P2:** Security hardening (CSRF), performance wins (config merge, cache, hook), and first data products (archetypes, churn guard, auto-loop, success prediction).
 
@@ -191,15 +195,15 @@ WEEK 5 (P1 — Strategic Foundation + IE Phase 1)  ✅ COMPLETE
 ├── IE-2: Smart Benchmarks CLI             ✅ Percentile rankings in track + track --week
 └── IE-3: Snooze Oracle                    ✅ Historical completion probability, warning on snooze
 
-WEEK 6 (P2 — Performance + Security + IE Phase 2)
-├── S3: CSRF protection
-├── P2: Merge config reads
-├── P3: Cache AI results
-├── P5: Optimize git hook
-├── STRAT-4: Founder archetypes
-├── IE-4: Churn Guardian v1
-├── IE-5: Auto-Loop
-└── IE-6: Success Predictor v1
+WEEK 6 (P2 — Performance + Security + IE Phase 2)  ✅ COMPLETE
+├── S3: CSRF protection                      ✅ Origin checks on all API routes
+├── P2: Merge config reads                   ✅ resolveAuth() single call
+├── P3: Cache AI results                     ✅ Hash-based, 7-day TTL
+├── P5: Optimize git hook                    ✅ Standalone node script, no execSync
+├── STRAT-4: Founder archetypes              ✅ Convex query + dashboard widget
+├── IE-4: Churn Guardian v1                  ✅ 4 risk signals, proactive warnings
+├── IE-5: Auto-Loop                          ✅ Monday detection, auto-draft
+└── IE-6: Success Predictor v1               ✅ 8-week heuristic model
 
 WEEK 7-8 (P3 — IE Phase 3 Early)
 ├── IE-7: Anonymous Peer Inspiration
@@ -232,10 +236,11 @@ WEEK 13+ (P3 — IE Phase 4-5 ML)
 | Auth token stored unencrypted | Medium | ✅ Resolved (S1) |
 | "Fast" and "creative" tiers same model | Medium | ✅ Resolved (P4) |
 | Dashboard uses placeholder data | Medium | ✅ Resolved (D1) |
-| `config.json` parsed 2-3x per command | Low | Planned (P2 — Week 6) |
+| `config.json` parsed 2-3x per command | Low | ✅ Resolved (P2 — Week 6: resolveAuth()) |
 | Pulse `--share` missing | Low | ✅ Resolved (F1) |
 | No rate limiting on free tier | Medium | ✅ Resolved (S4) |
 | No input sanitization on pulse form | High | ✅ Resolved (S2 — Week 3) |
+| No CSRF protection on API routes | High | ✅ Resolved (S3 — Week 6) |
 | Next.js Turbopack workspace root warn | Info | Cosmetic — no functional impact |
 
 ---

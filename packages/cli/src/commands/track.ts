@@ -411,20 +411,26 @@ function installGitHook(): void {
 
   const hooksDir = path.join(gitDir, "hooks");
   const hookPath = path.join(hooksDir, "commit-msg");
+  const scriptPath = path.join(hooksDir, "loopkit-commit-msg.js");
 
   if (fs.existsSync(hookPath)) {
     const existing = fs.readFileSync(hookPath, "utf-8");
-    if (existing.includes("loopkit")) return; // Already installed
+    if (existing.includes("loopkit")) return;
   }
 
-  // Append-only: never overwrite existing hooks
-  const hookScript = `
-# ── LoopKit: auto-close tasks from commit messages ──
-node -e "
-var fs = require('fs');
-var msg = fs.readFileSync(process.argv[1], 'utf-8');
-var matches = msg.match(/\\[#(\\d+)\\]/g);
-if (!matches) process.exit(0);
+  // Write standalone node script (cleaner, no inline eval, no shell spawn)
+  const nodeScript = `var fs = require('fs');
+var crypto = require('crypto');
+
+var msgFile = process.argv[2];
+var msg = fs.readFileSync(msgFile, 'utf-8');
+var taskRefs = [];
+var re = /\\[#(\\d+)\\]/g;
+var m;
+while ((m = re.exec(msg)) !== null) {
+  taskRefs.push(m[1]);
+}
+if (taskRefs.length === 0) process.exit(0);
 
 var configPath = '.loopkit/config.json';
 if (!fs.existsSync(configPath)) process.exit(0);
@@ -436,28 +442,31 @@ var tasksPath = '.loopkit/projects/' + slug + '/tasks.md';
 if (!fs.existsSync(tasksPath)) process.exit(0);
 
 var content = fs.readFileSync(tasksPath, 'utf-8');
-var sha = require('child_process').execSync('git rev-parse --short HEAD 2>/dev/null || echo unknown').toString().trim();
+var shortHash = crypto.createHash('sha256').update(msg).digest('hex').slice(0, 7);
 var date = new Date().toISOString().split('T')[0];
 
-for (var i = 0; i < matches.length; i++) {
-  var match = matches[i];
-  var id = match.replace(/[\\\\[\\\\]]/g, '');
+for (var i = 0; i < taskRefs.length; i++) {
+  var id = taskRefs[i];
   content = content.replace(
     new RegExp('- \\\\[ \\\\] #' + id + ' (.+)'),
-    '- [x] #' + id + ' \x241 — closed via ' + sha + ' on ' + date
+    '- [x] #' + id + ' \\u2713 \\u2014 closed via ' + shortHash + ' on ' + date
   );
-  console.log('\\\\u2713 Task #' + id + ' closed via commit ' + sha);
+  console.log('\\u2713 Task #' + id + ' closed via commit ' + shortHash);
 }
 
 fs.writeFileSync(tasksPath, content);
-" "$1"
 `;
+
+  fs.writeFileSync(scriptPath, nodeScript, "utf-8");
+
+  // Shell hook calls node script directly (~0ms overhead vs inline eval)
+  const hookLine = `\n# ── LoopKit: auto-close tasks from commit messages ──\nnode .git/hooks/loopkit-commit-msg.js "$1"\n`;
 
   const existing = fs.existsSync(hookPath)
     ? fs.readFileSync(hookPath, "utf-8")
     : "#!/bin/sh\n";
 
-  fs.writeFileSync(hookPath, existing + "\n" + hookScript);
+  fs.writeFileSync(hookPath, existing + hookLine);
   fs.chmodSync(hookPath, "755");
 }
 

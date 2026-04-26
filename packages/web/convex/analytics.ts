@@ -187,3 +187,78 @@ function buildShareText(projectName: string, score: number, tasks: number, strea
     `  Built with @loopkit`,
   ].join("\n");
 }
+
+// ─── Founder Archetype Detection ─────────────────────────────────
+
+export type Archetype = "Sprinter" | "Marathoner" | "Perfectionist" | "Reactor" | "All-Star";
+
+export const getArchetype = query({
+  args: { projectId: v.id("projects") },
+  handler: async (ctx, args) => {
+    const logs = await ctx.db
+      .query("loopLogs")
+      .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
+      .order("desc")
+      .take(12);
+
+    if (logs.length < 4) {
+      return null;
+    }
+
+    const sorted = [...logs].sort((a, b) => a.weekNumber - b.weekNumber);
+    const scores = sorted.map((l) => l.shippingScore);
+    const tasks = sorted.map((l) => l.tasksCompleted);
+
+    const avgScore = scores.reduce((a, b) => a + b, 0) / scores.length;
+    const avgTasks = tasks.reduce((a, b) => a + b, 0) / tasks.length;
+    const scoreVariance = Math.max(...scores) - Math.min(...scores);
+    const taskVariance = Math.max(...tasks) - Math.min(...tasks);
+
+    let archetype: Archetype;
+    let description: string;
+    let emoji: string;
+
+    if (avgScore >= 80 && scoreVariance <= 20 && taskVariance <= 4) {
+      archetype = "All-Star";
+      emoji = "🌟";
+      description = "Rare profile — you maintain both high output and high consistency. You're in the top tier of solo founders.";
+    } else if (avgScore >= 75 && avgTasks <= 3) {
+      archetype = "Perfectionist";
+      emoji = "🎯";
+      description = "You complete what you start at a high level, but your volume is low. Consider shipping more often and iterating based on feedback.";
+    } else if (sorted.length >= 4) {
+      const firstTwo = sorted.slice(0, 2);
+      const lastTwo = sorted.slice(-2);
+      const firstAvg = firstTwo.reduce((a, b) => a + b.tasksCompleted, 0) / 2;
+      const lastAvg = lastTwo.reduce((a, b) => a + b.tasksCompleted, 0) / 2;
+      if (firstAvg > lastAvg * 1.5 && firstAvg >= 5) {
+        archetype = "Sprinter";
+        emoji = "⚡";
+        description = "High initial energy that fades over time. You start fast but struggle with pacing. Try adding fewer tasks per week.";
+      } else if (scores.every((s) => s >= 40) && scoreVariance <= 25) {
+        archetype = "Marathoner";
+        emoji = "🏃";
+        description = "Steady, consistent, and reliable. You ship at a sustainable pace and rarely miss a week. This is the highest-retention founder profile.";
+      } else {
+        archetype = "Reactor";
+        emoji = "🌊";
+        description = "Your output varies significantly week to week. Building a regular rhythm will help smooth out the volatility.";
+      }
+    } else {
+      archetype = "Reactor";
+      emoji = "🌊";
+      description = "Not enough data to determine your pattern yet. Keep tracking for more accurate insights.";
+    }
+
+    return {
+      archetype,
+      emoji,
+      description,
+      avgScore: Math.round(avgScore),
+      avgTasks: Math.round(avgTasks),
+      scoreVariance: Math.round(scoreVariance),
+      taskVariance: Math.round(taskVariance),
+      weeksAnalyzed: logs.length,
+    };
+  },
+});

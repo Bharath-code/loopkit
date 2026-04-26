@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { generateObject } from "ai";
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { PulseClusterSchema } from "@loopkit/shared";
-import { verifyAndRateLimit, incrementAIUsage } from "../_helpers";
+import { verifyAndRateLimit, incrementAIUsage, csrfCheck } from "../_helpers";
 
 const anthropic = createAnthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -10,6 +10,11 @@ const anthropic = createAnthropic({
 
 export async function POST(req: NextRequest) {
   try {
+    const csrf = csrfCheck(req);
+    if (csrf) {
+      return NextResponse.json({ error: csrf.error }, { status: csrf.status });
+    }
+
     const auth = await verifyAndRateLimit(req);
     if ("error" in auth) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
