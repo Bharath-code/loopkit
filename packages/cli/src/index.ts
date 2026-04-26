@@ -45,7 +45,7 @@ program
   .command("track")
   .description("Parse tasks.md and show project momentum")
   .option("-w, --week", "Show a summary of the current week")
-  .option("-a, --add <title>", "Add a new task inline")
+  .option("-a, --add [title]", "Add a new task inline (or open $EDITOR with no arg)")
   .option("-r, --repair", "Repair and re-sequence broken task IDs")
   .option("-p, --project <slug>", "Switch active project")
   .action((options) => {

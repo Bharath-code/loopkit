@@ -1,5 +1,5 @@
 import { createAnthropic } from "@ai-sdk/anthropic";
-import { generateObject } from "ai";
+import { streamObject } from "ai";
 import { type ZodSchema } from "zod";
 import { readConfig } from "../storage/local.js";
 
@@ -28,7 +28,7 @@ export type ModelTier = "fast" | "creative";
 function getModelId(tier: ModelTier): string {
   switch (tier) {
     case "fast":
-      return "claude-sonnet-4-20250514";
+      return "claude-3-5-haiku-latest";
     case "creative":
       return "claude-sonnet-4-20250514";
   }
@@ -66,7 +66,7 @@ export async function generateStructured<T>(options: {
   if (anthropic) {
     const modelId = getModelId(tier);
 
-    const { object } = await generateObject({
+    const { partialObjectStream, object } = streamObject({
       model: anthropic(modelId),
       schema,
       system,
@@ -75,7 +75,17 @@ export async function generateStructured<T>(options: {
       temperature,
     });
 
-    return object;
+    let keyCount = 0;
+    for await (const partial of partialObjectStream) {
+      const keys = Object.keys(partial).length;
+      if (keys > keyCount) {
+        keyCount = keys;
+        process.stdout.write(keyCount === 1 ? "  ↳ receiving..." : `  ↳ ${keyCount} fields parsed\r`);
+      }
+    }
+
+    const result = await object;
+    return result;
   } else {
     // Proxy through LoopKit API
     const API_URL = process.env.LOOPKIT_API_URL || "http://localhost:3000";

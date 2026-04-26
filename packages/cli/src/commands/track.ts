@@ -1,5 +1,7 @@
 import * as p from "@clack/prompts";
+import { spawnSync } from "node:child_process";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { formatDate, slugify } from "@loopkit/shared";
 import {
@@ -46,7 +48,11 @@ export async function trackCommand(options?: {
 
   // ─── --add: Quick task add ────────────────────────────────────
   if (options?.add) {
-    addTask(slug, options.add);
+    if (typeof options.add === "string") {
+      addTask(slug, options.add);
+    } else {
+      addTasksViaEditor(slug);
+    }
     return;
   }
 
@@ -250,6 +256,43 @@ function addTask(slug: string, title: string): void {
   lines.splice(insertIndex, 0, `- [ ] #${newId} ${title} — created:${today}`);
   writeTasksFile(slug, lines.join("\n"));
   console.log(pass(`Added #${newId}: ${title}`));
+}
+
+function addTasksViaEditor(slug: string): void {
+  const editor =
+    process.env.EDITOR ||
+    process.env.VISUAL ||
+    (process.platform === "win32" ? "notepad" : "nano");
+
+  const template = [
+    "# Enter task titles, one per line. Save and close to add them all.",
+    "# Lines starting with # are ignored. Blank lines are skipped.",
+    "",
+  ].join("\n");
+
+  const tmpFile = path.join(os.tmpdir(), `loopkit-tasks-${Date.now()}.md`);
+  fs.writeFileSync(tmpFile, template, "utf-8");
+
+  const result = spawnSync(editor, [tmpFile], { stdio: "inherit" });
+
+  if (result.error) {
+    console.log(colors.danger(`Could not open ${editor}: ${result.error.message}`));
+    return;
+  }
+
+  const content = fs.readFileSync(tmpFile, "utf-8");
+  const lines = content.split("\n")
+    .map((l) => l.trim())
+    .filter((l) => l.length > 0 && !l.startsWith("#"));
+
+  if (lines.length === 0) {
+    console.log(colors.muted("No tasks entered."));
+    return;
+  }
+
+  for (const title of lines) {
+    addTask(slug, title);
+  }
 }
 
 /**
