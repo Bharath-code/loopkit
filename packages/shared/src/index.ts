@@ -133,6 +133,30 @@ export type LoopLog = z.infer<typeof LoopLogSchema>;
 
 // ─── Config ─────────────────────────────────────────────────────
 
+export const TelemetryEventSchema = z.object({
+  id: z.string(),
+  command: z.string(),
+  timestamp: z.string(),
+  durationMs: z.number().optional(),
+  error: z.string().optional(),
+  weekNumber: z.number().optional(),
+  projectType: z.string().optional(),
+  hasShipLog: z.boolean().optional(),
+  tasksCompleted: z.number().optional(),
+  tasksTotal: z.number().optional(),
+});
+
+export type TelemetryEvent = z.infer<typeof TelemetryEventSchema>;
+
+export const TelemetryExportSchema = z.object({
+  exportedAt: z.string(),
+  distinctId: z.string(),
+  weekCount: z.number(),
+  events: z.array(TelemetryEventSchema),
+});
+
+export type TelemetryExport = z.infer<typeof TelemetryExportSchema>;
+
 export const ConfigSchema = z.object({
   version: z.number().default(1),
   activeProject: z.string().optional(),
@@ -146,6 +170,13 @@ export const ConfigSchema = z.object({
     .object({
       defaultEditor: z.string().optional(),
       autoOpenDashboard: z.boolean().default(true),
+    })
+    .optional(),
+  telemetry: z
+    .object({
+      optedIn: z.boolean().default(false),
+      prompted: z.boolean().default(false),
+      promptWeek: z.number().optional(),
     })
     .optional(),
 });

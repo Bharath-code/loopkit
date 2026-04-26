@@ -8,21 +8,7 @@ import { pulseCommand } from "./commands/pulse.js";
 import { loopCommand } from "./commands/loop.js";
 import { authCommand } from "./commands/auth.js";
 import { celebrateCommand } from "./commands/celebrate.js";
-import { PostHog } from "posthog-node";
-import { randomUUID } from "node:crypto";
-import { readConfig } from "./storage/local.js";
-
-const client = new PostHog("phc_dummy_key", {
-  host: "https://us.i.posthog.com",
-});
-
-const config = readConfig();
-let distinctId = config.distinctId;
-if (!distinctId) {
-  distinctId = randomUUID();
-  config.distinctId = distinctId;
-  import("./storage/local.js").then((m) => m.writeConfig(config));
-}
+import { recordEvent, telemetryCommand } from "./analytics/telemetry.js";
 
 const program = new Command();
 
@@ -38,7 +24,7 @@ program
   .description("Turn a fuzzy idea into a scored, falsifiable brief")
   .option("--analyze <name>", "Run AI analysis on a previously saved session")
   .action((name, options) => {
-    client.capture({ distinctId, event: "cli_command_init" });
+    recordEvent({ command: "init" });
     initCommand(name, options);
   });
 
@@ -50,7 +36,7 @@ program
   .option("-r, --repair", "Repair and re-sequence broken task IDs")
   .option("-p, --project <slug>", "Switch active project")
   .action((options) => {
-    client.capture({ distinctId, event: "cli_command_track" });
+    recordEvent({ command: "track" });
     trackCommand(options);
   });
 
@@ -58,7 +44,7 @@ program
   .command("ship")
   .description("AI generates drafts for HN, Twitter, and Indie Hackers")
   .action(() => {
-    client.capture({ distinctId, event: "cli_command_ship" });
+    recordEvent({ command: "ship" });
     shipCommand();
   });
 
@@ -70,7 +56,7 @@ program
   .option("--add <text>", "Add a response inline")
   .option("--share", "Generate a shareable feedback URL")
   .action((options) => {
-    client.capture({ distinctId, event: "cli_command_pulse" });
+    recordEvent({ command: "pulse" });
     pulseCommand(options);
   });
 
@@ -78,7 +64,7 @@ program
   .command("loop")
   .description("The Sunday ritual: AI synthesizes your week")
   .action(() => {
-    client.capture({ distinctId, event: "cli_command_loop" });
+    recordEvent({ command: "loop" });
     loopCommand();
   });
 
@@ -88,13 +74,15 @@ program
   .command("celebrate")
   .description("ASCII confetti + your shipping score, streak, and shareable card")
   .action(() => {
-    client.capture({ distinctId, event: "cli_command_celebrate" });
+    recordEvent({ command: "celebrate" });
     celebrateCommand();
   });
 
-program.parse(process.argv);
+program
+  .command("telemetry [action]")
+  .description("Manage anonymous usage telemetry")
+  .action((action) => {
+    telemetryCommand(action);
+  });
 
-// Ensure PostHog flushes before exit
-process.on("exit", () => {
-  client.shutdown();
-});
+program.parse(process.argv);

@@ -9,7 +9,7 @@ Read `CLAUDE.md` for full architecture context. This file adds agent-specific ru
 ```bash
 # Verify build before touching anything
 pnpm --filter @loopkit/shared build
-pnpm --filter @loopkit/cli build
+pnpm --filter loopkit build
 node packages/cli/dist/index.js --help
 ```
 
@@ -20,6 +20,7 @@ node packages/cli/dist/index.js --help
 ```
 packages/cli/src/
   commands/        ← one file per command
+  analytics/       ← telemetry, benchmarks, dna, oracle modules
   ai/prompts/      ← system prompts
   ai/client.ts     ← generateStructured() wrapper
   storage/local.ts ← all .loopkit/ file I/O
@@ -28,6 +29,7 @@ packages/cli/src/
 packages/shared/src/index.ts  ← ALL Zod schemas (single source of truth)
 
 packages/web/src/app/         ← Next.js pages
+packages/web/convex/          ← Convex backend (schema, queries, mutations)
 ```
 
 **Never touch:** `node_modules/`, `dist/`, `.next/`, `pnpm-lock.yaml`, `.git/hooks/`
@@ -38,7 +40,7 @@ packages/web/src/app/         ← Next.js pages
 
 ```bash
 pnpm --filter @loopkit/shared build   # if schemas changed
-pnpm --filter @loopkit/cli build      # always
+pnpm --filter loopkit build           # always
 node packages/cli/dist/index.js --help
 ```
 
@@ -88,15 +90,16 @@ const result = await generateStructured({
 - Team collaboration
 - Mobile app / VS Code extension
 - Zapier/Make integrations
-- Any 7th command beyond init/track/ship/pulse/loop/auth
+- Any 9th command beyond init/track/ship/pulse/loop/auth/celebrate/telemetry
 - New npm deps that duplicate existing functionality
 
 ---
 
 ## Definition of Done
 
-- [ ] `pnpm --filter @loopkit/cli build` → 0 errors
+- [ ] `pnpm --filter loopkit build` → 0 errors
 - [ ] Web changed? → `cd packages/web && npx next build` → clean
+- [ ] Tests pass: `pnpm --filter loopkit test` (94 tests)
 - [ ] Acceptance criteria from relevant PRD section pass
 - [ ] Ctrl+C exits gracefully at every prompt
 - [ ] AI failure is handled gracefully (fallback, not crash)

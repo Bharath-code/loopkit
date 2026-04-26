@@ -1,8 +1,8 @@
 # LoopKit — Build Status
 
-**Last updated:** April 26, 2026 (Week 4 P1 sprint COMPLETE)  
+**Last updated:** April 26, 2026 (Week 5 P1 sprint COMPLETE)  
 **Version:** 0.1.0  
-**Overall:** MVP complete · Weeks 1-2 shipped · Week 3 P0 done · Week 4 P1 done · Delight + polish shipped
+**Overall:** MVP complete · Weeks 1-2 shipped · Week 3 P0 done · Week 4 P1 done · Week 5 P1 done · Strategic + IE Phase 1 shipped
 
 ---
 
@@ -32,13 +32,23 @@
 - [x] `loopkit pulse` — Feedback Phase (local storage, AI clustering, tag-to-sprint, `--raw`, `--setup`, `--add`, `--share` with QR code)
 - [x] `loopkit loop` — Iterate Phase (local aggregation, week summary, AI synthesis, tension detection, override tracking, BIP post)
 - [x] `loopkit auth` — Login via browser OAuth, encrypted token storage
+- [x] `loopkit celebrate` — ASCII confetti + ship score card, streak, shareable text
+- [x] `loopkit telemetry` — Opt-in anonymous usage collection (on/off/export/delete/status)
+
+---
+
+### Analytics Engine
+- [x] Telemetry module (`cli/src/analytics/telemetry.ts`) — opt-in, local-first, exportable
+- [x] Shipping DNA (`cli/src/analytics/dna.ts`) — founder pattern detection, velocity, risk warnings
+- [x] Benchmarks CLI (`cli/src/analytics/benchmarks.ts`) — percentile rankings vs baseline
+- [x] Snooze Oracle (`cli/src/analytics/oracle.ts`) — historical completion probability
 
 ---
 
 ### Web Dashboard
 - [x] Next.js 16 App Router, Tailwind v4, dark theme
 - [x] Landing page (hero, demo, pricing, footer, SEO, animations)
-- [x] Dashboard routes (overview, pulse inbox, loop history) with live Convex queries
+- [x] Dashboard routes (overview, pulse inbox, loop history, benchmarks) with live Convex queries
 - [x] Auth pages (login, signup via Convex)
 - [x] Public pulse form (`/pulse/[projectId]`) + embed widget
 - [x] Free tier read-only dashboard with upgrade CTA
@@ -52,6 +62,7 @@
 - [x] Rate limiting: 10/day free, 100/day Solo, 1000/day Pro
 - [x] AI proxy routes: `/api/ai/{init,ship,pulse,loop}` with real auth + rate limiting
 - [x] Token encryption: AES-256-GCM with machine-derived key
+- [x] Analytics: `convex/analytics.ts` — aggregate benchmark queries, percentile computation
 
 ---
 
@@ -103,14 +114,14 @@
 | W2 | **"Unstuck me" mode** | M | `commands/loop.ts`, `ai/prompts/unstuck.ts` (new) | ✅ Detect 0 tasks this week → offer 3 micro-tasks from brief context. Added to tasks.md on confirm. |
 | F3 | **Keyboard shortcuts** | M | `ui/theme.ts` | ✅ `?` help, `q` quit, `s` skip, `Enter` default hint shown in all Clack prompts. |
 | F4 | **Better empty states** | S | All command files | ✅ Helpful next steps when no data: `emptyState()` utility with actionable commands. |
-| D4 | **Dashboard mobile responsive** | M | All dashboard pages | Collapsible sidebar, stacked cards, touch-friendly on <768px. |
-| STRAT-1 | **Telemetry module** | M | `cli/src/analytics/telemetry.ts` | Opt-in anonymous collection. Local by default, aggregated only, exportable/deletable. |
-| STRAT-2 | **Benchmark tool** | M | `web/src/app/dashboard/benchmarks/` | "How do you compare?" Percentile rankings vs anonymized data. Shareable cards. |
-| STRAT-3 | **Monthly Insights #1** | S | `docs/content/` (new) | First data-driven piece: "What [N] founders taught us in [Month]". Blog + Twitter + newsletter. |
+| D4 | **Dashboard mobile responsive** | M | All dashboard pages | ✅ Hamburger menu, slide-in sidebar overlay, 44px touch targets, scroll-lock on mobile, backdrop blur. |
+| STRAT-1 | **Telemetry module** | M | `cli/src/analytics/telemetry.ts` | ✅ Opt-in consent at `loop`, local-first, export/delete, `telemetry` command. |
+| STRAT-2 | **Benchmark tool** | M | `web/src/app/dashboard/benchmarks/`, `convex/analytics.ts` | ✅ Percentile rankings, shareable stat cards, overall score, trend indicators. |
+| STRAT-3 | **Monthly Insights #1** | S | `docs/content/monthly-insights-001.md` | ✅ Blog post "Shipping Consistency Beats Brilliance" + 10-tweet thread + newsletter. |
 
-| IE-1 | **Shipping DNA v1** | M | `cli/src/analytics/dna.ts` (new), `commands/loop.ts` | After 4 weeks, generate "Shipping DNA" profile: pattern (Marathoner/Sprinter/etc.), velocity trend, peak day, completion styles, risk warnings. |
-| IE-2 | **Smart Benchmarks CLI** | S | `cli/src/analytics/benchmarks.ts` (new), `commands/track.ts` | Show percentile rankings vs anonymized founders (same project type, same week). "You ship faster than 72% of SaaS founders." |
-| IE-3 | **Snooze Oracle** | S | `commands/track.ts`, `cli/src/analytics/oracle.ts` (new) | When snoozing, show probability of completion based on historical data. "67% of snoozed tasks are never done." |
+| IE-1 | **Shipping DNA v1** | M | `cli/src/analytics/dna.ts` (new), `commands/loop.ts` | ✅ After 4 weeks, generates profile: Marathoner/Sprinter/Perfectionist/Reactor/All-Star pattern, velocity trend, strengths, risk warnings. |
+| IE-2 | **Smart Benchmarks CLI** | S | `cli/src/analytics/benchmarks.ts` (new), `commands/track.ts` | ✅ Percentile rankings in track + track --week. "You ship faster than X% of founders." |
+| IE-3 | **Snooze Oracle** | S | `commands/track.ts`, `cli/src/analytics/oracle.ts` (new) | ✅ Historical snooze completion analysis. Warning on snooze: "X% of snoozed tasks never done." |
 
 **Why P1:** Delight moments (celebrate/unstuck) drive retention. Telemetry unblocks all metrics. Benchmarks + content build the data moat. Intelligence Engine features create identity attachment and switching costs.
 
@@ -171,20 +182,14 @@ WEEK 4 (P1 — Delight + Polish)          ✅ COMPLETE
 ├── F3: Keyboard shortcuts               ✅ ?/q/s/Enter hints in all commands
 └── F4: Better empty states              ✅ emptyState() utility across all commands
 
-WEEK 5 (P1 — Strategic Foundation + IE Phase 1)  ← NEXT SPRINT
-├── W1: loopkit celebrate
-├── W2: "Unstuck me" mode
-├── F3: Keyboard shortcuts
-└── F4: Better empty states
-
-WEEK 5 (P1 — Strategic Foundation + IE Phase 1)
-├── STRAT-1: Telemetry module
-├── STRAT-2: Benchmark tool
-├── STRAT-3: Monthly Insights #1
-├── IE-1: Shipping DNA v1
-├── IE-2: Smart Benchmarks CLI
-├── IE-3: Snooze Oracle
-└── D4: Dashboard mobile responsive
+WEEK 5 (P1 — Strategic Foundation + IE Phase 1)  ✅ COMPLETE
+├── STRAT-1: Telemetry module              ✅ Opt-in, local-first, export/delete, consent at loop
+├── STRAT-2: Benchmark tool                ✅ Dashboard /benchmarks, Convex analytics, share cards
+├── STRAT-3: Monthly Insights #1           ✅ Blog + Twitter thread + newsletter in docs/content/
+├── D4: Dashboard mobile responsive        ✅ Hamburger menu, slide-in sidebar, 44px touch targets
+├── IE-1: Shipping DNA v1                  ✅ 5 patterns, velocity trend, strengths, risk warnings
+├── IE-2: Smart Benchmarks CLI             ✅ Percentile rankings in track + track --week
+└── IE-3: Snooze Oracle                    ✅ Historical completion probability, warning on snooze
 
 WEEK 6 (P2 — Performance + Security + IE Phase 2)
 ├── S3: CSRF protection
@@ -240,11 +245,11 @@ WEEK 13+ (P3 — IE Phase 4-5 ML)
 | Metric | Target | Current | Tracking Method |
 |---|---|---|---|
 | Break-even paid users | 10 | 0 (pre-launch) | Polar.sh dashboard |
-| `init` session completion | ≥ 70% | Unknown | Telemetry (STRAT-1) |
-| `track` weekly active retention | ≥ 65% | Unknown | Telemetry (STRAT-1) |
-| `ship` draft use rate | ≥ 50% | Unknown | Telemetry (STRAT-1) |
+| `init` session completion | ≥ 70% | Measuring | Telemetry (STRAT-1) |
+| `track` weekly active retention | ≥ 65% | Measuring | Telemetry (STRAT-1) |
+| `ship` draft use rate | ≥ 50% | Measuring | Telemetry (STRAT-1) |
 | `pulse` widget response rate | ≥ 8% | 0 (form ready) | Convex pulseResponses count |
-| `loop` Sunday run rate | ≥ 75% | Unknown | Telemetry (STRAT-1) |
+| `loop` Sunday run rate | ≥ 75% | Measuring | Telemetry (STRAT-1) |
 | Month 3 paid users | 35 | 0 (pre-launch) | Polar.sh dashboard |
 
 ### Strategic Metrics (Month 3-6)

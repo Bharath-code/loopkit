@@ -80,20 +80,29 @@ Never define a type in `cli` or `web` that belongs in `shared`.
 
 ```
 src/
-├── index.ts              # Entry — Commander routes 5 commands
+├── index.ts              # Entry — Commander routes 8 commands
 ├── commands/
 │   ├── init.ts           # loopkit init
 │   ├── track.ts          # loopkit track
 │   ├── ship.ts           # loopkit ship
 │   ├── pulse.ts          # loopkit pulse
-│   └── loop.ts           # loopkit loop
+│   ├── loop.ts           # loopkit loop
+│   ├── auth.ts           # loopkit auth
+│   ├── celebrate.ts      # loopkit celebrate
+│   └── telemetry.ts      # loopkit telemetry
+├── analytics/
+│   ├── telemetry.ts      # Opt-in usage collection (on/off/export/delete)
+│   ├── dna.ts            # Shipping DNA profile (founder pattern detection)
+│   ├── benchmarks.ts     # Smart percentile rankings vs baseline
+│   └── oracle.ts         # Snooze completion probability oracle
 ├── ai/
 │   ├── client.ts         # generateStructured() wrapper
 │   └── prompts/
 │       ├── init.ts       # System prompt + few-shot examples
 │       ├── ship.ts       # Launch copy system prompt
 │       ├── pulse.ts      # Clustering system prompt
-│       └── loop.ts       # Weekly synthesis system prompt
+│       ├── loop.ts       # Weekly synthesis system prompt
+│       └── unstuck.ts    # Micro-task generation prompt
 ├── storage/
 │   └── local.ts          # All .loopkit/ file operations
 └── ui/
@@ -116,6 +125,8 @@ src/
 │   └── YYYY-MM-DD.md            ← ship log
 ├── logs/
 │   └── week-N.md                ← loop log
+├── telemetry/
+│   └── week-N.json              ← anonymous event records (opt-in only)
 └── pulse/
     └── responses.json           ← local feedback array (V1)
 ```
@@ -134,6 +145,16 @@ src/
 | `saveShipLog(content, date)` | Writes ship log |
 | `saveLoopLog(weekNum, content)` | Writes loop log |
 | `readLastNLoopLogs(n)` | Returns last N loop logs with override status |
+| `getConsecutiveWeeksStreak(weekNum)` | Counts unbroken loop log streak |
+
+### Analytics Helpers (`analytics/`)
+
+| Module | Purpose |
+|---|---|
+| `telemetry.ts` | `startTelemetryPrompt()`, `recordEvent()`, `isTelemetryEnabled()`, `telemetryCommand()` |
+| `dna.ts` | `computeShippingDNA()` — founder pattern, velocity, strengths, risks |
+| `benchmarks.ts` | `computeBenchmarks()`, `renderBenchmarks()` — percentile rankings |
+| `oracle.ts` | `getSnoozeWarning()` — historical snooze completion stats |
 
 ### AI Usage Pattern
 
@@ -289,8 +310,9 @@ When adding a new AI feature:
 | 5 — `pulse` | ✅ Done (V1) | Local JSON, AI clustering, --add flag |
 | 6 — Landing page | ✅ Done | Next.js 16, dark premium design, nav bar, clipboard |
 | 7 — Auth + Payments | ✅ Done | Convex Auth, Polar.sh, AI proxy |
-| 8 — Dashboard | ✅ Done | Project overview, pulse inbox |
+| 8 — Dashboard | ✅ Done | Project overview, pulse inbox, benchmarks |
 | 9 — npm publish | ✅ Done | `npx loopkit init` ready, .npmignore set |
+| 10 — Analytics | ✅ Done | Telemetry, Shipping DNA, Benchmarks CLI, Snooze Oracle |
 
 ---
 

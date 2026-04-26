@@ -14,6 +14,8 @@ import {
   appendToCut,
   projectExists,
 } from "../storage/local.js";
+import { computeBenchmarks, renderBenchmarks } from "../analytics/benchmarks.js";
+import { getSnoozeWarning } from "../analytics/oracle.js";
 import { colors, header, pass, warn, info, nextStep, shortcutsHint, emptyState } from "../ui/theme.js";
 
 export async function trackCommand(options?: {
@@ -147,6 +149,13 @@ export async function trackCommand(options?: {
     `\n  ${colors.white.bold("Shipping")} ${renderProgressBar(shippingScore)} ${colors.white.bold(`${shippingScore}%`)}`
   );
 
+  // ─── Smart Benchmarks ──────────────────────────────────────────
+  const benchmarks = computeBenchmarks();
+  if (benchmarks && benchmarks.metrics.totalWeeks >= 2) {
+    console.log(header("Benchmarks"));
+    console.log(renderBenchmarks(benchmarks));
+  }
+
   // ─── Stale Task Detection ─────────────────────────────────────
   for (const task of visibleOpen) {
     const age = getTaskAgeDays(task.createdAt);
@@ -165,6 +174,10 @@ export async function trackCommand(options?: {
           cutTask(slug, task.id, task.title, today);
         } else if (action === "snooze") {
           snoozeTask(slug, task.id, 3, today);
+          const oracleWarning = getSnoozeWarning();
+          if (oracleWarning) {
+            console.log(colors.dim(`\n  🔮 Snooze Oracle: ${oracleWarning}`));
+          }
         }
       }
     }
@@ -189,14 +202,19 @@ function parseTasks(content: string): ParsedTask[] {
   const lines = content.split("\n");
   const tasks: ParsedTask[] = [];
   let currentSection: "week" | "backlog" = "week";
-  let nextId = 1;
 
-  // Find max existing ID
+  // Collect all explicit IDs to avoid collisions
+  const takenIds = new Set<number>();
   for (const line of lines) {
-    const match = line.match(/#(\d+)\s/);
-    if (match) {
-      nextId = Math.max(nextId, parseInt(match[1]) + 1);
-    }
+    const match = line.match(/^-\s*\[[ x]\]\s*#(\d+)\s/);
+    if (match) takenIds.add(parseInt(match[1]));
+  }
+
+  let nextId = 1;
+  function nextFreeId(): number {
+    while (takenIds.has(nextId)) nextId++;
+    takenIds.add(nextId);
+    return nextId++;
   }
 
   for (const line of lines) {
@@ -213,7 +231,7 @@ function parseTasks(content: string): ParsedTask[] {
     const taskMatch = line.match(/^-\s*\[([ x])\]\s*(?:#(\d+)\s)?(.+?)(?:\s*—\s*(.+))?$/);
     if (taskMatch) {
       const done = taskMatch[1] === "x";
-      const id = taskMatch[2] ? parseInt(taskMatch[2]) : nextId++;
+      const id = taskMatch[2] ? parseInt(taskMatch[2]) : nextFreeId();
       const title = taskMatch[3].trim();
       const meta = taskMatch[4] || "";
 
@@ -283,10 +301,13 @@ function addTasksViaEditor(slug: string): void {
 
   if (result.error) {
     console.log(colors.danger(`Could not open ${editor}: ${result.error.message}`));
+    try { fs.unlinkSync(tmpFile); } catch { /* ignore */ }
     return;
   }
 
   const content = fs.readFileSync(tmpFile, "utf-8");
+  try { fs.unlinkSync(tmpFile); } catch { /* ignore */ }
+
   const lines = content.split("\n")
     .map((l) => l.trim())
     .filter((l) => l.length > 0 && !l.startsWith("#"));
@@ -400,35 +421,36 @@ function installGitHook(): void {
   const hookScript = `
 # ── LoopKit: auto-close tasks from commit messages ──
 node -e "
-const fs = require('fs');
-const msg = fs.readFileSync(process.argv[1], 'utf-8');
-const matches = msg.match(/\\\\[#(\\\\d+)\\\\]/g);
+var fs = require('fs');
+var msg = fs.readFileSync(process.argv[1], 'utf-8');
+var matches = msg.match(/\\[#(\\d+)\\]/g);
 if (!matches) process.exit(0);
 
-const configPath = '.loopkit/config.json';
+var configPath = '.loopkit/config.json';
 if (!fs.existsSync(configPath)) process.exit(0);
-const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
-const slug = config.activeProject;
+var config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+var slug = config.activeProject;
 if (!slug) process.exit(0);
 
-const tasksPath = '.loopkit/projects/' + slug + '/tasks.md';
+var tasksPath = '.loopkit/projects/' + slug + '/tasks.md';
 if (!fs.existsSync(tasksPath)) process.exit(0);
 
-let content = fs.readFileSync(tasksPath, 'utf-8');
-const sha = require('child_process').execSync('git rev-parse --short HEAD 2>/dev/null || echo unknown').toString().trim();
-const date = new Date().toISOString().split('T')[0];
+var content = fs.readFileSync(tasksPath, 'utf-8');
+var sha = require('child_process').execSync('git rev-parse --short HEAD 2>/dev/null || echo unknown').toString().trim();
+var date = new Date().toISOString().split('T')[0];
 
-for (const match of matches) {
-  const id = match.replace(/[\\\\[#\\\\]]/g, '');
+for (var i = 0; i < matches.length; i++) {
+  var match = matches[i];
+  var id = match.replace(/[\\\\[\\\\]]/g, '');
   content = content.replace(
     new RegExp('- \\\\[ \\\\] #' + id + ' (.+)'),
-    '- [x] #' + id + ' \$1 — closed via ' + sha + ' on ' + date
+    '- [x] #' + id + ' \x241 — closed via ' + sha + ' on ' + date
   );
-  console.log('✓ Task #' + id + ' closed via commit ' + sha);
+  console.log('\\\\u2713 Task #' + id + ' closed via commit ' + sha);
 }
 
 fs.writeFileSync(tasksPath, content);
-" "\$1"
+" "$1"
 `;
 
   const existing = fs.existsSync(hookPath)
@@ -476,6 +498,13 @@ function renderWeekSummary(
   console.log(
     `\n  ${colors.white.bold("Shipping Score")} ${renderProgressBar(score)} ${colors.white.bold(`${score}%`)}`
   );
+
+  // Benchmarks in week summary
+  const benchmarks = computeBenchmarks();
+  if (benchmarks && benchmarks.metrics.totalWeeks >= 2) {
+    console.log(header("Benchmarks"));
+    console.log(renderBenchmarks(benchmarks));
+  }
 
   if (done.length > 0) {
     console.log(header("Completed"));

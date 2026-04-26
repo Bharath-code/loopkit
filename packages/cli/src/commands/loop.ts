@@ -14,6 +14,8 @@ import {
   readLastNLoopLogs,
   getConsecutiveWeeksStreak,
 } from "../storage/local.js";
+import { recordEvent, startTelemetryPrompt, isTelemetryEnabled } from "../analytics/telemetry.js";
+import { computeShippingDNA, type ShippingDNA } from "../analytics/dna.js";
 import { colors, header, box, pass, warn, info, nextStep, scoreBar, shortcutsHint, emptyState } from "../ui/theme.js";
 
 export async function loopCommand(): Promise<void> {
@@ -32,6 +34,11 @@ export async function loopCommand(): Promise<void> {
 
   p.intro(colors.primary.bold(`LoopKit — Week ${weekNum} Review`));
   console.log(shortcutsHint());
+
+  // ─── Telemetry consent (once, on Sunday) ──────────────────────
+  if (isSunday) {
+    await startTelemetryPrompt();
+  }
 
   // ─── Mid-week check ──────────────────────────────────────────
   if (!isSunday) {
@@ -64,6 +71,21 @@ export async function loopCommand(): Promise<void> {
     totalTasks > 0
       ? Math.round((tasksCompleted.length / totalTasks) * 100)
       : 0;
+
+  // ─── Record telemetry (anonymous, opt-in only) ────────────────
+  if (isTelemetryEnabled()) {
+    const projectType = briefData?.answers?.mvp
+      ? detectProjectType(briefData.answers.mvp)
+      : undefined;
+
+    recordEvent({
+      command: "loop:data",
+      tasksCompleted: tasksCompleted.length,
+      tasksTotal: totalTasks,
+      hasShipLog: !!shipLog,
+      projectType,
+    });
+  }
 
   // ─── Week Summary (instant, local data) ──────────────────────
   console.log(header("Week in Numbers"));
@@ -270,7 +292,16 @@ export async function loopCommand(): Promise<void> {
       }
 
       if (action === "accept" || action === "change") {
-        // TODO: Add task to track
+        const existing = readTasksFile(slug) || "";
+        const newTask = `- [ ] #W${weekNum}-p ${finalOneThing} — created:${formatDate()}`;
+        let updated: string;
+        if (existing.includes("## This Week")) {
+          updated = existing.replace("## This Week\n", `## This Week\n${newTask}\n`);
+        } else {
+          updated = `# ${briefData?.answers.name || slug} — Tasks\n\n## This Week\n${newTask}\n\n## Backlog\n`;
+        }
+        const { writeTasksFile } = await import("../storage/local.js");
+        writeTasksFile(slug, updated);
         console.log(pass(`Set as next week's #1: "${finalOneThing}"`));
       }
     }
@@ -318,8 +349,14 @@ export async function loopCommand(): Promise<void> {
     saveLoopLog(weekNum, logContent);
     console.log(info(`Loop log saved → .loopkit/logs/week-${weekNum}.md`));
 
+    // ─── Shipping DNA (after 4+ weeks) ────────────────────────────
+    const dna = computeShippingDNA();
+    if (dna) {
+      displayDNA(dna);
+    }
+
     // ─── Override rate warning ───────────────────────────────────
-    checkOverrideRate(weekNum);
+    checkOverrideRate();
   } catch (error) {
     s.stop("Synthesis failed.");
     console.log(colors.danger("AI unavailable. Saving week data without synthesis."));
@@ -341,9 +378,81 @@ export async function loopCommand(): Promise<void> {
   p.outro(colors.muted(`Week ${weekNum} complete. See you next Sunday.`));
 }
 
+// ─── Shipping DNA Display ────────────────────────────────────────
+
+function displayDNA(dna: ShippingDNA): void {
+  if (!dna) return;
+
+  const patternEmoji: Record<string, string> = {
+    Marathoner: "🏃",
+    Sprinter: "⚡",
+    Perfectionist: "🎯",
+    Reactor: "🌊",
+    "All-Star": "🌟",
+  };
+
+  const emoji = patternEmoji[dna.pattern] || "📊";
+
+  console.log(header(`${emoji} Your Shipping DNA`));
+
+  const dnaLines = [
+    colors.white.bold(`Pattern: ${dna.pattern}`),
+    colors.dim(`  ${dna.patternDescription}`),
+    "",
+    colors.white.bold("Metrics"),
+    `  ${colors.secondary("Average tasks/week:")} ${dna.avgTasksCompleted}`,
+    `  ${colors.secondary("Average score:")} ${dna.avgScore}/100`,
+    `  ${colors.secondary("Velocity:")} ${colors.warning(dna.velocityTrend)}`,
+    `  ${colors.secondary("Completion style:")} ${dna.completionStyle}`,
+    `  ${colors.secondary("Weeks tracked:")} ${dna.totalWeeks}`,
+    `  ${colors.warning("Streak:")} ${dna.streak} weeks 🔥`,
+  ];
+
+  if (dna.strengths.length > 0) {
+    dnaLines.push("");
+    dnaLines.push(colors.white.bold("Strengths"));
+    for (const s of dna.strengths) {
+      dnaLines.push(`  ${pass(s)}`);
+    }
+  }
+
+  if (dna.riskWarnings.length > 0) {
+    dnaLines.push("");
+    dnaLines.push(colors.warning.bold("Watch Out"));
+    for (const r of dna.riskWarnings) {
+      dnaLines.push(`  ${warn(r)}`);
+    }
+  }
+
+  console.log(box(dnaLines.join("\n"), `Week ${dna.totalWeeks} DNA`));
+}
+
+// ─── Project Type Detection ─────────────────────────────────────
+
+const PROJECT_KEYWORDS: Record<string, string[]> = {
+  saas: ["saas", "subscription", "b2b", "platform", "dashboard", "crm"],
+  mobile: ["app", "ios", "android", "mobile", "flutter", "react native"],
+  cli: ["cli", "command", "terminal", "tool", "npm", "script"],
+  api: ["api", "backend", "endpoint", "microservice"],
+  newsletter: ["newsletter", "blog", "content", "writing", "media"],
+  marketplace: ["marketplace", "two-sided", "matching", "booking"],
+  ai: ["ai ", "llm", "gpt", "machine learning", "ml", "model"],
+  ecommerce: ["shop", "store", "ecommerce", "checkout", "cart"],
+};
+
+function detectProjectType(mvpDescription: string): string | undefined {
+  const lower = mvpDescription.toLowerCase();
+  for (const [type, keywords] of Object.entries(PROJECT_KEYWORDS)) {
+    if (keywords.some((kw) => lower.includes(kw))) {
+      return type;
+    }
+  }
+  return "other";
+}
+
 // ─── Override Rate Warning ──────────────────────────────────────
 
-function checkOverrideRate(currentWeekNum: number): void {
+function checkOverrideRate(): void {
   const WINDOW = 4; // weeks to look back
   const THRESHOLD = 2; // ≥2 overrides in 4 weeks = warning
 

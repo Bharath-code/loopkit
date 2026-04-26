@@ -143,3 +143,27 @@
 .animate-slideIn {
   animation: slideIn 0.4s ease-out forwards;
 }
+
+/* ─── Slide in from left (mobile sidebar) ─────────────────── */
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft 0.25s ease-out forwards;
+}
+
+/* ─── Hide scrollbar utility ──────────────────────────────── */
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
