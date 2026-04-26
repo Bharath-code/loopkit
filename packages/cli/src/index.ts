@@ -7,6 +7,7 @@ import { shipCommand } from "./commands/ship.js";
 import { pulseCommand } from "./commands/pulse.js";
 import { loopCommand } from "./commands/loop.js";
 import { authCommand } from "./commands/auth.js";
+import { celebrateCommand } from "./commands/celebrate.js";
 import { PostHog } from "posthog-node";
 import { randomUUID } from "node:crypto";
 import { readConfig } from "./storage/local.js";
@@ -82,6 +83,14 @@ program
   });
 
 program.addCommand(authCommand);
+
+program
+  .command("celebrate")
+  .description("ASCII confetti + your shipping score, streak, and shareable card")
+  .action(() => {
+    client.capture({ distinctId, event: "cli_command_celebrate" });
+    celebrateCommand();
+  });
 
 program.parse(process.argv);
 

@@ -3,6 +3,7 @@ import { buildInitPrompt, INIT_SYSTEM_PROMPT } from "../prompts/init";
 import { buildLoopPrompt, LOOP_SYSTEM_PROMPT } from "../prompts/loop";
 import { buildPulsePrompt, PULSE_SYSTEM_PROMPT } from "../prompts/pulse";
 import { buildShipPrompt, SHIP_SYSTEM_PROMPT } from "../prompts/ship";
+import { buildUnstuckPrompt, UNSTUCK_SYSTEM_PROMPT } from "../prompts/unstuck";
 
 describe("INIT_SYSTEM_PROMPT", () => {
   it("contains scoring rules", () => {
@@ -272,5 +273,51 @@ describe("buildShipPrompt", () => {
       whatShipped: "Feature",
     });
     expect(prompt).toContain("Generate all three platform drafts");
+  });
+});
+
+describe("UNSTUCK_SYSTEM_PROMPT", () => {
+  it("mentions micro-task constraints", () => {
+    expect(UNSTUCK_SYSTEM_PROMPT).toContain("30-90 minutes");
+    expect(UNSTUCK_SYSTEM_PROMPT).toContain("exactly 3");
+  });
+
+  it("specifies JSON-only output", () => {
+    expect(UNSTUCK_SYSTEM_PROMPT).toContain("ONLY a JSON object");
+  });
+});
+
+describe("buildUnstuckPrompt", () => {
+  it("includes product name", () => {
+    const prompt = buildUnstuckPrompt({ productName: "MyApp" });
+    expect(prompt).toContain("MyApp");
+  });
+
+  it("includes brief context when available", () => {
+    const prompt = buildUnstuckPrompt({
+      productName: "MyApp",
+      problem: "Devs waste time",
+      icp: "Solo founders",
+      bet: "CLI tools are underserved",
+      riskiestAssumption: "People will pay",
+      mvpPlainEnglish: "A task tracker",
+    });
+    expect(prompt).toContain("Devs waste time");
+    expect(prompt).toContain("Solo founders");
+    expect(prompt).toContain("CLI tools are underserved");
+    expect(prompt).toContain("People will pay");
+    expect(prompt).toContain("A task tracker");
+  });
+
+  it("mentions 0 tasks context", () => {
+    const prompt = buildUnstuckPrompt({ productName: "MyApp" });
+    expect(prompt).toContain("0 tasks completed");
+  });
+
+  it("omits undefined fields", () => {
+    const prompt = buildUnstuckPrompt({ productName: "MyApp" });
+    expect(prompt).not.toContain("undefined");
+    expect(prompt).not.toContain("Problem:");
+    expect(prompt).not.toContain("ICP:");
   });
 });

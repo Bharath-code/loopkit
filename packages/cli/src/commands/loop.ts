@@ -1,7 +1,8 @@
 import * as p from "@clack/prompts";
-import { LoopSynthesisSchema, getWeekNumber, formatDate } from "@loopkit/shared";
+import { LoopSynthesisSchema, UnstuckTasksSchema, getWeekNumber, formatDate } from "@loopkit/shared";
 import { generateStructured } from "../ai/client.js";
 import { LOOP_SYSTEM_PROMPT, buildLoopPrompt } from "../ai/prompts/loop.js";
+import { UNSTUCK_SYSTEM_PROMPT, buildUnstuckPrompt } from "../ai/prompts/unstuck.js";
 import {
   readConfig,
   writeConfig,
@@ -13,7 +14,7 @@ import {
   readLastNLoopLogs,
   getConsecutiveWeeksStreak,
 } from "../storage/local.js";
-import { colors, header, box, pass, warn, info, nextStep, scoreBar } from "../ui/theme.js";
+import { colors, header, box, pass, warn, info, nextStep, scoreBar, shortcutsHint, emptyState } from "../ui/theme.js";
 
 export async function loopCommand(): Promise<void> {
   const config = readConfig();
@@ -30,6 +31,7 @@ export async function loopCommand(): Promise<void> {
   const isSunday = dayOfWeek === 0;
 
   p.intro(colors.primary.bold(`LoopKit — Week ${weekNum} Review`));
+  console.log(shortcutsHint());
 
   // ─── Mid-week check ──────────────────────────────────────────
   if (!isSunday) {
@@ -79,7 +81,11 @@ export async function loopCommand(): Promise<void> {
   // ─── Handle no data (first week) ─────────────────────────────
   if (tasksCompleted.length === 0 && !shipLog) {
     console.log(
-      colors.muted("\n  No tracking data yet — that's fine for week 1.\n")
+      emptyState(
+        "No tracking data yet — that's fine for week 1. Everyone starts somewhere.",
+        "Start tracking tasks",
+        "loopkit track --add \"First task\""
+      )
     );
 
     const progress = await p.text({
@@ -110,6 +116,71 @@ export async function loopCommand(): Promise<void> {
 
     p.outro(colors.muted(`Week ${weekNum} baseline set. See you next Sunday.`));
     return;
+  }
+
+  // ─── Unstuck Mode: 0 tasks this week ──────────────────────────
+  if (totalTasks === 0 && tasksCompleted.length === 0) {
+    console.log(colors.warning("\n  No tasks this week. Feeling stuck?\n"));
+
+    const wantUnstuck = await p.confirm({
+      message: "Generate 3 micro-tasks to get unstuck? (30-90 min each)",
+    });
+
+    if (!p.isCancel(wantUnstuck) && wantUnstuck) {
+      const us = p.spinner();
+      us.start("Generating micro-tasks from your brief...");
+
+      try {
+        const unstuck = await generateStructured({
+          command: "loop",
+          system: UNSTUCK_SYSTEM_PROMPT,
+          prompt: buildUnstuckPrompt({
+            productName: briefData?.answers.name || slug,
+            problem: briefData?.answers.problem,
+            icp: briefData?.answers.icp,
+            bet: briefData?.brief?.bet,
+            riskiestAssumption: briefData?.brief?.riskiestAssumption,
+            mvpPlainEnglish: briefData?.brief?.mvpPlainEnglish,
+          }),
+          schema: UnstuckTasksSchema,
+          tier: "fast",
+          temperature: 0.4,
+        });
+
+        us.stop("Micro-tasks ready.");
+
+        console.log(header("Your 3 Micro-Tasks"));
+        for (let i = 0; i < unstuck.microTasks.length; i++) {
+          console.log(`  ${colors.success(`${i + 1}.`)} ${unstuck.microTasks[i]}`);
+        }
+        console.log(colors.dim(`\n  ${unstuck.encouragement}`));
+
+        const wantAdd = await p.confirm({
+          message: "Add these to your tasks.md?",
+        });
+
+        if (!p.isCancel(wantAdd) && wantAdd) {
+          const existing = readTasksFile(slug) || "";
+          const newTasks = unstuck.microTasks
+            .map((t, i) => `- [ ] #W${weekNum}-${i + 1} ${t}`)
+            .join("\n");
+
+          let updated = existing;
+          if (updated.includes("## This Week")) {
+            updated = updated.replace("## This Week\n", `## This Week\n${newTasks}\n`);
+          } else {
+            updated += `\n## This Week\n${newTasks}\n`;
+          }
+
+          const { writeTasksFile } = await import("../storage/local.js");
+          writeTasksFile(slug, updated);
+          console.log(pass("Micro-tasks added to tasks.md"));
+        }
+      } catch {
+        us.stop("Failed.");
+        console.log(warn("AI unavailable. Try again when connected."));
+      }
+    }
   }
 
   // ─── Mid-week: no AI by default ──────────────────────────────

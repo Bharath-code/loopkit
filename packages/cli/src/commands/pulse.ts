@@ -9,7 +9,7 @@ import {
   appendPulseResponse,
   readBriefJson,
 } from "../storage/local.js";
-import { colors, header, box, pass, warn, info, nextStep } from "../ui/theme.js";
+import { colors, header, box, pass, warn, info, nextStep, shortcutsHint, emptyState } from "../ui/theme.js";
 
 interface PulseOptions {
   raw?: boolean;
@@ -134,13 +134,18 @@ export async function pulseCommand(options: PulseOptions): Promise<void> {
   }
 
   p.intro(colors.primary.bold("LoopKit — Pulse"));
+  console.log(shortcutsHint());
 
   // ─── Read responses ───────────────────────────────────────────
   const responses = readPulseResponses();
 
   if (responses.length === 0) {
     console.log(
-      warn("No responses yet. Run `loopkit pulse --setup` to start collecting.")
+      emptyState(
+        "No feedback responses yet. Your users have thoughts — you just need to ask.",
+        "Set up your feedback channel",
+        "loopkit pulse --setup"
+      )
     );
     console.log(
       colors.muted("  After 7 days with 0 responses: is your feedback channel visible?\n")

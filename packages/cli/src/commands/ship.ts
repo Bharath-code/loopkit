@@ -13,7 +13,8 @@ import {
   saveShipLog,
   shipLogExists,
 } from "../storage/local.js";
-import { colors, header, pass, fail, warn, box, nextStep, info } from "../ui/theme.js";
+import { colors, header, pass, fail, warn, box, nextStep, info, shortcutsHint, emptyState } from "../ui/theme.js";
+import { celebrateCommand } from "./celebrate.js";
 
 // ─── Context shape passed to AI ────────────────────────────────
 interface ShipContext {
@@ -91,6 +92,7 @@ export async function shipCommand(): Promise<void> {
   const slug = config.activeProject;
 
   p.intro(colors.primary.bold("LoopKit — Ship it"));
+  console.log(shortcutsHint());
 
   // ─── Gather context ──────────────────────────────────────────
   let productName = slug || "your product";
@@ -129,6 +131,16 @@ export async function shipCommand(): Promise<void> {
     const who = await p.text({ message: "Who is it for?" });
     if (p.isCancel(who)) { p.cancel("Cancelled."); process.exit(0); }
     icp = who;
+  }
+
+  if (tasksCompleted.length === 0) {
+    console.log(
+      emptyState(
+        "No completed tasks this week. You can still ship — even small wins count.",
+        "Track your progress first",
+        "loopkit track"
+      )
+    );
   }
 
   // ─── What shipped ────────────────────────────────────────────
@@ -278,8 +290,10 @@ export async function shipCommand(): Promise<void> {
   saveShipLog(logContent, today);
   console.log(info(`Ship log saved → .loopkit/ships/${today}.md`));
 
-  console.log(nextStep("loop"));
-  p.outro(colors.muted("Shipped. Now close the loop Sunday."));
+  console.log(nextStep("celebrate"));
+
+  // Auto-trigger celebration
+  await celebrateCommand();
 }
 
 // ─── Helpers ──────────────────────────────────────────────────

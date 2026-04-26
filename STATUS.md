@@ -1,8 +1,8 @@
 # LoopKit — Build Status
 
-**Last updated:** April 26, 2026 (Week 3 P0 sprint COMPLETE)  
+**Last updated:** April 26, 2026 (Week 4 P1 sprint COMPLETE)  
 **Version:** 0.1.0  
-**Overall:** MVP complete · Weeks 1-2 shipped · Week 3 P0 done · Ready for public launch
+**Overall:** MVP complete · Weeks 1-2 shipped · Week 3 P0 done · Week 4 P1 done · Delight + polish shipped
 
 ---
 
@@ -99,16 +99,16 @@
 
 | # | Task | Effort | Files | Acceptance Criteria |
 |---|---|---|---|---|
-| W1 | **`loopkit celebrate`** | S | `commands/celebrate.ts` (new) | ASCII confetti + "You shipped!" card with score, streak, shareable text. Auto-triggered after `ship`. |
-| W2 | **"Unstuck me" mode** | M | `commands/loop.ts` | Detect 0 tasks this week → offer 3 micro-tasks from brief context. |
-| F3 | **Keyboard shortcuts** | M | `ui/theme.ts` | `?` help, `q` quit, `s` skip, `Enter` default in Clack prompts. |
-| F4 | **Better empty states** | S | All command files | Helpful next steps when no data: "No tasks yet. Run `loopkit track --add`." |
+| W1 | **`loopkit celebrate`** | S | `commands/celebrate.ts` (new) | ✅ ASCII confetti + "You shipped!" card with score, streak, shareable text. Auto-triggered after `ship`. |
+| W2 | **"Unstuck me" mode** | M | `commands/loop.ts`, `ai/prompts/unstuck.ts` (new) | ✅ Detect 0 tasks this week → offer 3 micro-tasks from brief context. Added to tasks.md on confirm. |
+| F3 | **Keyboard shortcuts** | M | `ui/theme.ts` | ✅ `?` help, `q` quit, `s` skip, `Enter` default hint shown in all Clack prompts. |
+| F4 | **Better empty states** | S | All command files | ✅ Helpful next steps when no data: `emptyState()` utility with actionable commands. |
 | D4 | **Dashboard mobile responsive** | M | All dashboard pages | Collapsible sidebar, stacked cards, touch-friendly on <768px. |
 | STRAT-1 | **Telemetry module** | M | `cli/src/analytics/telemetry.ts` | Opt-in anonymous collection. Local by default, aggregated only, exportable/deletable. |
 | STRAT-2 | **Benchmark tool** | M | `web/src/app/dashboard/benchmarks/` | "How do you compare?" Percentile rankings vs anonymized data. Shareable cards. |
 | STRAT-3 | **Monthly Insights #1** | S | `docs/content/` (new) | First data-driven piece: "What [N] founders taught us in [Month]". Blog + Twitter + newsletter. |
 
-| IE-1 | **Shipping DNA v1** | M | `cli/src/analytics/dna.ts` (new), `commands/loop.ts` | After 4 weeks, generate "Shipping DNA" profile: pattern (Marathoner/Sprinter/etc.), velocity trend, peak day, completion style, risk warnings. |
+| IE-1 | **Shipping DNA v1** | M | `cli/src/analytics/dna.ts` (new), `commands/loop.ts` | After 4 weeks, generate "Shipping DNA" profile: pattern (Marathoner/Sprinter/etc.), velocity trend, peak day, completion styles, risk warnings. |
 | IE-2 | **Smart Benchmarks CLI** | S | `cli/src/analytics/benchmarks.ts` (new), `commands/track.ts` | Show percentile rankings vs anonymized founders (same project type, same week). "You ship faster than 72% of SaaS founders." |
 | IE-3 | **Snooze Oracle** | S | `commands/track.ts`, `cli/src/analytics/oracle.ts` (new) | When snoozing, show probability of completion based on historical data. "67% of snoozed tasks are never done." |
 
@@ -165,7 +165,13 @@ WEEK 3 (P0 — Launch Blockers)     ✅ COMPLETE
 ├── S2: Input sanitization               ✅ HTML strip + 500-char limit + rate limit
 └── D2: Real-time pulse inbox            ✅ Convex subscription + slide-in animation
 
-WEEK 4 (P1 — Delight + Polish)          ← NEXT SPRINT
+WEEK 4 (P1 — Delight + Polish)          ✅ COMPLETE
+├── W1: loopkit celebrate                ✅ ASCII confetti + ship card + auto-trigger
+├── W2: "Unstuck me" mode               ✅ 3 AI-generated micro-tasks from brief
+├── F3: Keyboard shortcuts               ✅ ?/q/s/Enter hints in all commands
+└── F4: Better empty states              ✅ emptyState() utility across all commands
+
+WEEK 5 (P1 — Strategic Foundation + IE Phase 1)  ← NEXT SPRINT
 ├── W1: loopkit celebrate
 ├── W2: "Unstuck me" mode
 ├── F3: Keyboard shortcuts
@@ -216,7 +222,7 @@ WEEK 13+ (P3 — IE Phase 4-5 ML)
 
 | Issue | Severity | Status |
 |---|---|---|
-| No automated tests (zero coverage) | High | ✅ Resolved — 129 tests (41 shared + 88 CLI) |
+| No automated tests (zero coverage) | High | ✅ Resolved — 135 tests (41 shared + 94 CLI) |
 | No AI streaming | High | ✅ Resolved (P1) |
 | Auth token stored unencrypted | Medium | ✅ Resolved (S1) |
 | "Fast" and "creative" tiers same model | Medium | ✅ Resolved (P4) |
@@ -261,7 +267,7 @@ WEEK 13+ (P3 — IE Phase 4-5 ML)
 - [ ] Web changed? → `cd packages/web && npx next build` → clean
 - [ ] New AI paths: `generateStructured()` works for both auth paths
 - [ ] Ctrl+C exits gracefully at every prompt
-- [ ] Tests pass: `pnpm --filter @loopkit/cli test` (129 tests total)
+- [ ] Tests pass: `pnpm --filter @loopkit/cli test` (135 tests total)
 - [ ] `STATUS.md` updated with task completion checkmark
 
 ---

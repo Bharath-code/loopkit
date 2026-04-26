@@ -110,6 +110,13 @@ export const LoopSynthesisSchema = z.object({
 
 export type LoopSynthesis = z.infer<typeof LoopSynthesisSchema>;
 
+export const UnstuckTasksSchema = z.object({
+  microTasks: z.array(z.string()).length(3),
+  encouragement: z.string(),
+});
+
+export type UnstuckTasks = z.infer<typeof UnstuckTasksSchema>;
+
 export const LoopLogSchema = z.object({
   weekNumber: z.number(),
   date: z.string(),

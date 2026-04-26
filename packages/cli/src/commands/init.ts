@@ -11,7 +11,7 @@ import {
   saveBrief,
   readConfig,
 } from "../storage/local.js";
-import { colors, scoreBar, box, header, nextStep, info } from "../ui/theme.js";
+import { colors, scoreBar, box, header, nextStep, info, shortcutsHint } from "../ui/theme.js";
 
 export async function initCommand(
   resumeName?: string,
@@ -26,6 +26,7 @@ export async function initCommand(
   ensureLoopkitDir();
 
   p.intro(colors.primary.bold("LoopKit — Define your product"));
+  console.log(shortcutsHint());
   console.log(colors.muted("This takes 4 minutes. Be honest, not optimistic.\n"));
 
   // ─── Check for resume ────────────────────────────────────────

@@ -90,3 +90,20 @@ function stripAnsi(str: string): string {
 export function nextStep(command: string): string {
   return `\n${colors.muted("Next:")} ${colors.primary(`loopkit ${command}`)}\n`;
 }
+
+// ─── Keyboard Shortcuts Hint ────────────────────────────────────
+
+export function shortcutsHint(): string {
+  return colors.dim("  ? help · q quit · s skip · Enter confirm\n");
+}
+
+// ─── Empty State ────────────────────────────────────────────────
+
+export function emptyState(message: string, action: string, command: string): string {
+  return [
+    colors.muted(`  ${message}`),
+    colors.muted(`  ${action}:`),
+    colors.primary(`  ${command}`),
+    "",
+  ].join("\n");
+}

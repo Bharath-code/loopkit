@@ -14,7 +14,7 @@ import {
   appendToCut,
   projectExists,
 } from "../storage/local.js";
-import { colors, header, pass, warn, info, nextStep } from "../ui/theme.js";
+import { colors, header, pass, warn, info, nextStep, shortcutsHint, emptyState } from "../ui/theme.js";
 
 export async function trackCommand(options?: {
   add?: string;
@@ -101,11 +101,17 @@ export async function trackCommand(options?: {
   }
 
   // ─── Board View ───────────────────────────────────────────────
+  console.log(shortcutsHint());
   console.log(header("This Week"));
 
   if (visibleOpen.length === 0 && done.length === 0 && snoozedActive.length === 0) {
-    console.log(colors.muted("  No tasks yet. Add one:"));
-    console.log(colors.primary('  loopkit track --add "Build the thing"'));
+    console.log(
+      emptyState(
+        "No tasks yet — every journey starts with a single step.",
+        "Add your first task",
+        'loopkit track --add "Build the landing page"'
+      )
+    );
   } else {
     for (const task of done) {
       console.log(`  ${pass(`#${task.id} ${task.title}`)} ${colors.dim(task.closedVia || "")}`);
