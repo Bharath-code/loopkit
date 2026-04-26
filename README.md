@@ -79,7 +79,7 @@ Five questions. AI scoring. A brief that stings when it should.
 
 ### `loopkit pulse` — feedback that comes to you
 
-- **Hosted Form & Widget**: Collect feedback async via your own `/pulse/[projectId]` hosted page or an embeddable JS widget on your landing page.
+- **Hosted Form & Widget**: Collect feedback async via your own `/pulse/[projectId]` hosted page or an embeddable JS widget on your landing page. Fully supports offline submission with automatic real-time sync.
 - Add responses from the CLI: `loopkit pulse --add "user said this"`
 - AI clusters responses into: Fix now / Validate later / Noise
 - Requires 5+ responses for clustering; shows raw list below threshold
@@ -88,6 +88,7 @@ Five questions. AI scoring. A brief that stings when it should.
 ### `loopkit loop` — the Sunday ritual
 
 - Aggregates your week: tasks, feedback, ship logs
+- Tracks your consecutive **Loop Streak** (e.g. `🔥 4 consecutive weeks`)
 - AI recommends the single highest-leverage thing for next week
 - Override rate tracked — warns if you're overriding AI > 50% of the time
 - Generates a build-in-public post (280-char checked)

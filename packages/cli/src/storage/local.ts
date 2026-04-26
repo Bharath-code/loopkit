@@ -361,3 +361,21 @@ export function readLastNLoopLogs(n: number): Array<{ weekNumber: number; overri
     return { weekNumber, overridden };
   });
 }
+
+// ─── Streak Calculation ─────────────────────────────────────────
+
+export function getConsecutiveWeeksStreak(currentWeekNum: number): number {
+  let streak = 0;
+  let checkWeek = currentWeekNum - 1;
+  
+  while (checkWeek > 0) {
+    if (loopLogExists(checkWeek)) {
+      streak++;
+      checkWeek--;
+    } else {
+      break;
+    }
+  }
+  
+  return streak;
+}

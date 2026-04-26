@@ -52,7 +52,7 @@ All Zod schemas defined and building:
 - [x] Anti-hallucination rules (word caps, JSON output only, no sycophancy)
 
 Remaining:
-- [ ] Free vs paid tier gating (scores shown, notes hidden for free)
+- [x] Free vs paid tier gating (scores shown, notes hidden for free)
 
 ---
 
@@ -76,7 +76,7 @@ Remaining:
 - [x] `cut.md` archive — cut tasks moved to `.loopkit/projects/[slug]/cut.md` (never deleted)
 
 Remaining:
-- [ ] `loopkit track --project [name]` for switching active project
+- [x] `loopkit track --project [name]` for switching active project
 
 ---
 
@@ -119,7 +119,7 @@ Remaining (Phase 7):
 - [x] Hosted feedback form URL (`/pulse/[projectId]`)
 - [x] Convex write for realtime response collection
 - [x] JS embed widget (`/api/pulse/widget`)
-- [ ] localStorage retry queue for offline submissions
+- [x] Convex offline queueing for form submissions
 
 ---
 
@@ -213,7 +213,7 @@ Remaining (Phase 7+):
 | Project overview page | 🟡 Medium | [x] Active project, shipping score trend, last loop |
 | Pulse inbox page | 🟡 Medium | [x] Responses + clusters, tag-to-sprint |
 | Loop history page | 🟡 Medium | [x] Week-over-week: shipped, decided, BIP posts, 4-week streak |
-| Free tier read-only dashboard | 🟢 Low | [ ] 1 project, no export — conversion trigger |
+| Free tier read-only dashboard | 🟢 Low | [x] Read-only mode for free tier with upgrade CTA |
 
 ---
 
@@ -221,9 +221,9 @@ Remaining (Phase 7+):
 
 | Task | Priority | Notes |
 |---|---|---|
-| `loopkit auth` token refresh | 🟡 Medium | Handle expired sessions gracefully |
+| `loopkit auth` token refresh | 🟡 Medium | [x] Catch 401 and handle expired sessions gracefully |
 | `loopkit track --project [name]` | 🟡 Medium | [x] Switch active project from CLI |
-| Streak visualization in `loopkit loop` | 🟢 Low | 4-week streak rate metric |
+| Streak visualization in `loopkit loop` | 🟢 Low | [x] 4-week streak rate metric |
 | PostHog analytics events | 🟢 Low | [x] Track command usage, upgrade triggers |
 | Free vs paid tier gating | 🔴 High | [x] Implemented in Phase 7 with Polar.sh + Convex |
 

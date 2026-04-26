@@ -1,13 +1,33 @@
 "use client";
 
+import { useQuery } from "convex/react";
+import { api } from "../../../convex/_generated/api";
+
 export default function DashboardOverviewPage() {
+  const user = useQuery(api.users.me);
+  const isFreeTier = user?.tier === "free";
   return (
     <div className="space-y-8 fade-up">
-      <header>
-        <h1 className="text-2xl font-bold tracking-tight text-white mb-2">Project Overview</h1>
-        <p className="text-zinc-400 text-sm">
-          Welcome back. Here&apos;s what&apos;s happening across your projects.
-        </p>
+      <header className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-white mb-2 flex items-center gap-3">
+            Project Overview
+            {isFreeTier && (
+              <span className="px-2 py-0.5 rounded text-xs bg-zinc-800 text-zinc-400 font-medium border border-zinc-700">
+                Read-Only Mode
+              </span>
+            )}
+          </h1>
+          <p className="text-zinc-400 text-sm">
+            Welcome back. Here&apos;s what&apos;s happening across your projects.
+          </p>
+        </div>
+        
+        {isFreeTier && (
+          <button className="hidden sm:block px-4 py-2 bg-white text-black text-sm font-medium rounded-lg hover:bg-zinc-200 transition-colors">
+            Upgrade for full access
+          </button>
+        )}
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

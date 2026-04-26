@@ -11,6 +11,7 @@ import {
   saveLoopLog,
   loopLogExists,
   readLastNLoopLogs,
+  getConsecutiveWeeksStreak,
 } from "../storage/local.js";
 import { colors, header, box, pass, warn, info, nextStep, scoreBar } from "../ui/theme.js";
 
@@ -68,6 +69,12 @@ export async function loopCommand(): Promise<void> {
   console.log(`  ${colors.warning("Open:")} ${tasksOpen.length}`);
   console.log(`  ${colors.white("Shipped:")} ${shipLog ? "Yes" : "Not yet"}`);
   console.log(`  ${colors.white.bold("Score:")} ${scoreBar(shippingScore, 100)}`);
+
+  const pastStreak = getConsecutiveWeeksStreak(weekNum);
+  const currentStreak = pastStreak + 1;
+  if (currentStreak >= 2) {
+    console.log(`  ${colors.primary.bold("Streak:")} 🔥 ${currentStreak} consecutive weeks`);
+  }
 
   // ─── Handle no data (first week) ─────────────────────────────
   if (tasksCompleted.length === 0 && !shipLog) {

@@ -91,6 +91,10 @@ export async function generateStructured<T>(options: {
       }),
     });
 
+    if (res.status === 401) {
+      throw new Error("Your session has expired. Please run `loopkit auth` to log in again.");
+    }
+
     const data = await res.json();
     if (!res.ok) {
       throw new Error(data.error || "Failed to generate AI response from LoopKit servers.");
