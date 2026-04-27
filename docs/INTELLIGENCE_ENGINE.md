@@ -359,44 +359,40 @@ Week 8 Synthesis
 
 ## Phase 3: Network Intelligence (Month 6-12)
 
-### Feature 3.1: Anonymous Peer Inspiration
+### Feature 3.1: Anonymous Peer Inspiration ✅ IMPLEMENTED
 
 **What it does:** Shows what anonymized founders with similar projects shipped this week.
 
 **Example:**
 ```bash
-$ loopkit loop
+$ loopkit ship
 
-Week 12 Synthesis
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+What's the main thing you shipped? Added PDF export for invoices
 
-🎯 The One Thing: Implement API rate limiting
+🚀 Peer Inspiration — This week in saas:
+   • "Stripe billing portal integration"
+   • "Webhook retry logic with exponential backoff"
+   • "Public API docs with Swagger"
 
-👥 Founders like you (SaaS, Week 12) shipped this week:
-   • "Stripe billing portal integration" (shipping score: 80%)
-   • "Webhook retry logic with exponential backoff" (score: 75%)
-   • "Public API docs with Swagger" (score: 90%)
-
-   Most common task added this week: "Add basic auth to API"
-
-   Feeling stuck? See what others prioritized:
-   [View Week 12 SaaS Leaderboard]
+  You're not alone. Keep shipping.
 ```
 
+**How it works:**
+- After you run `loopkit ship`, LoopKit stores an anonymized record of what you shipped (category + one-line description)
+- When you or other founders ship in the same category, those records are surfaced
+- Only shown if telemetry is opted in. No usernames, project names, or identifying details
+
 **Data used:**
-- Anonymized task lists by project type and week number
-- Anonymized ship logs
-- Aggregate "most common tasks" per week/project type
+- Anonymized ship descriptions by project category
+- Category matching via brief ICP/MVP keywords
 
 **Why it wows:**
 - "I'm not alone." Solo founders are isolated. Peer visibility reduces loneliness.
 - Inspiration. "If they shipped API docs, maybe I should too."
-- Gentle competition. Leaderboards motivate without being toxic.
 
 **How it retains:**
 - Community feeling without community overhead.
 - Weekly novelty. "What did others ship?" creates anticipation.
-- Social proof. "Most common task = validated priority."
 
 **How it builds moat:**
 - Requires critical mass (100+ active users per project type).
@@ -579,42 +575,52 @@ $ loopkit init
 
 ## Phase 4: Coaching Intelligence (Month 9-18)
 
-### Feature 4.1: Pattern Interrupt
+### Feature 4.1: Pattern Interrupt ✅ IMPLEMENTED
 
-**What it does:** Detects when a user is repeating a past mistake and interrupts the pattern.
+**What it does:** Detects recurring failure patterns from your local loop/task history and surfaces them with data-backed suggestions.
 
 **Example:**
 ```bash
-$ loopkit init side-project
+$ loopkit loop
 
-🛑 Pattern Interrupt
+Week 8 Review
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-This is your 4th project in 6 months. Your pattern:
-   Project 1: 8 weeks, then abandoned
-   Project 2: 5 weeks, then abandoned
-   Project 3: 3 weeks, then abandoned
-   Project 4: Starting now...
+  Done: 2  Open: 6  Shipped: Not yet
+  Score: ██░░░░░░░░ 20/100
 
-Founders with this pattern have a 15% success rate.
-The #1 cause: ICP too broad (avg score: 4.2/10)
+⚡ Pattern Interrupt — 5 weeks of data
 
-Your new project's ICP score: 5/10
+📋 OVERPLANNER (3 weeks)
+   You plan 8+ tasks but finish ~25% of them.
+   → Plan 3 must-do tasks per week. Everything else goes to backlog.
+   → If a task has been open 2+ weeks, cut it or ship it.
 
-Recommendation: Spend 30 minutes narrowing your ICP before building.
-Run `loopkit init --narrow` for guided ICP refinement.
-
-Still want to proceed? [Yes, I'm committed] [Refine ICP first]
+🚢 SHIP AVOIDER (3 weeks)
+   You haven't shipped in 3 weeks. Building without shipping is just inventory.
+   → Next week's #1 priority: ship anything, even if it's imperfect.
+   → Set a Friday 4pm 'ship alarm'. No exceptions.
 ```
 
+**5 Pattern Detectors:**
+
+| Pattern | Trigger | Suggestion |
+|---|---|---|
+| **Overplanner** | 8+ tasks planned, ≤30% completion for 3+ weeks | "Plan 3 must-do tasks only" |
+| **Snooze Loop** | Low completion + recurring snoozed tasks | "Batch annoying tasks Monday morning" |
+| **Ship Avoider** | 3+ weeks no ship + score ≤40% | "Ship anything by Friday 4pm" |
+| **ICP Drift** | Declining score + "Fix now" pulse clusters | "Run `loopkit init --analyze` to re-examine ICP" |
+| **Scope Creep** | Mid-week task additions ≥3 times in 4 weeks | "Lock scope on Sunday" |
+
 **Data used:**
-- Historical project data per user
-- Abandonment patterns
-- ICP scores of failed vs. successful projects
+- Local loop logs (shipping scores, task counts, override history)
+- Local tasks.md (snoozed items, mid-week additions)
+- Pulse responses (negative feedback signals)
 
 **Why it wows:**
 - Brutal honesty from a tool that cares.
 - Prevents repeated mistakes. "I didn't realize I was doing this again."
-- Actionable alternative ( `--narrow` flag).
+- Actionable, not vague. Every pattern comes with 2 specific suggestions.
 
 **How it retains:**
 - Prevents churn by preventing failure.
@@ -738,19 +744,21 @@ Still want to proceed? [Yes, I'm committed] [Refine ICP first]
 - [ ] Success Predictor v1 (simple heuristics)
 
 ### Month 4: Network
-- [ ] Anonymous peer inspiration (opt-in)
+- [x] Anonymous peer inspiration (opt-in) — shipped
+- [x] Trending validations — shipped
 - [ ] Monthly Insights content engine
-- [ ] Trending validations (content only)
 
-### Month 5: ML
+### Month 5: Signal Intelligence
+- [x] Competitor Ship Radar — shipped
+- [x] Keyword Opportunity Finder — shipped
+- [x] Market Timing Signal — shipped
 - [ ] Churn Guardian v2 (ML model)
 - [ ] Success Predictor v2 (ML model)
-- [ ] Smart task prioritization
 
 ### Month 6: Coaching
-- [ ] AI Coach v1 (rule-based interventions)
-- [ ] Pattern Interrupt
-- [ ] Founder archetype detection
+- [x] AI Coach v1 (rule-based interventions) — shipped
+- [x] Pattern Interrupt — shipped
+- [x] Founder archetype detection — shipped
 
 ### Month 9: Scale
 - [ ] AI Coach v2 (ML-powered)

@@ -20,7 +20,7 @@ node packages/cli/dist/index.js --help
 ```
 packages/cli/src/
   commands/        ← one file per command
-  analytics/       ← telemetry, benchmarks, dna, oracle, churn, autoLoop, predictor
+  analytics/       ← telemetry, benchmarks, dna, oracle, churn, autoLoop, predictor, competitorRadar, keywordFinder, marketTiming, patterns, peers
   ai/prompts/      ← system prompts
   ai/client.ts     ← generateStructured() wrapper (with cache + resolveAuth)
   storage/local.ts ← all .loopkit/ file I/O

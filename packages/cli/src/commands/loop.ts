@@ -1,5 +1,5 @@
 import * as p from "@clack/prompts";
-import { LoopSynthesisSchema, UnstuckTasksSchema, getWeekNumber, formatDate } from "@loopkit/shared";
+import { LoopSynthesisSchema, UnstuckTasksSchema, getWeekNumber, formatDate, detectProjectCategory } from "@loopkit/shared";
 import { generateStructured } from "../ai/client.js";
 import { LOOP_SYSTEM_PROMPT, buildLoopPrompt } from "../ai/prompts/loop.js";
 import { UNSTUCK_SYSTEM_PROMPT, buildUnstuckPrompt } from "../ai/prompts/unstuck.js";
@@ -19,7 +19,8 @@ import { computeShippingDNA, type ShippingDNA } from "../analytics/dna.js";
 import { detectChurnRisk, renderChurnWarning } from "../analytics/churn.js";
 import { checkMissedSunday, saveAutoLoopDraft } from "../analytics/autoLoop.js";
 import { predictSuccess, renderPrediction } from "../analytics/predictor.js";
-import { colors, header, box, pass, warn, info, nextStep, scoreBar, shortcutsHint, emptyState } from "../ui/theme.js";
+import { detectPatterns, renderPatternInterrupt } from "../analytics/patterns.js";
+import { colors, header, box, pass, warn, info, nextStep, scoreBar, shortcutsHint, emptyState, patternCard } from "../ui/theme.js";
 
 export async function loopCommand(): Promise<void> {
   const config = readConfig();
@@ -102,7 +103,7 @@ export async function loopCommand(): Promise<void> {
   // ─── Record telemetry (anonymous, opt-in only) ────────────────
   if (isTelemetryEnabled()) {
     const projectType = briefData?.answers?.mvp
-      ? detectProjectType(briefData.answers.mvp)
+      ? detectProjectCategory(briefData.answers.mvp)
       : undefined;
 
     recordEvent({
@@ -388,6 +389,12 @@ export async function loopCommand(): Promise<void> {
       console.log(renderChurnWarning(churnRisk));
     }
 
+    // ─── Pattern Interrupt (IE-9) ─────────────────────────────────
+    const patternResult = detectPatterns(slug);
+    if (patternResult) {
+      console.log(patternCard(patternResult.patterns, patternResult.totalWeeks));
+    }
+
     // ─── Success Predictor v1 (after 8+ weeks) ────────────────────
     const prediction = predictSuccess(slug);
     if (prediction) {
@@ -411,6 +418,12 @@ export async function loopCommand(): Promise<void> {
     ].join("\n");
 
     saveLoopLog(weekNum, logContent);
+
+    // Still show pattern interrupt even when AI is down
+    const patternResultOffline = detectPatterns(slug);
+    if (patternResultOffline) {
+      console.log(patternCard(patternResultOffline.patterns, patternResultOffline.totalWeeks));
+    }
   }
 
   console.log(nextStep("init"));
@@ -464,29 +477,6 @@ function displayDNA(dna: ShippingDNA): void {
   }
 
   console.log(box(dnaLines.join("\n"), `Week ${dna.totalWeeks} DNA`));
-}
-
-// ─── Project Type Detection ─────────────────────────────────────
-
-const PROJECT_KEYWORDS: Record<string, string[]> = {
-  saas: ["saas", "subscription", "b2b", "platform", "dashboard", "crm"],
-  mobile: ["app", "ios", "android", "mobile", "flutter", "react native"],
-  cli: ["cli", "command", "terminal", "tool", "npm", "script"],
-  api: ["api", "backend", "endpoint", "microservice"],
-  newsletter: ["newsletter", "blog", "content", "writing", "media"],
-  marketplace: ["marketplace", "two-sided", "matching", "booking"],
-  ai: ["ai ", "llm", "gpt", "machine learning", "ml", "model"],
-  ecommerce: ["shop", "store", "ecommerce", "checkout", "cart"],
-};
-
-function detectProjectType(mvpDescription: string): string | undefined {
-  const lower = mvpDescription.toLowerCase();
-  for (const [type, keywords] of Object.entries(PROJECT_KEYWORDS)) {
-    if (keywords.some((kw) => lower.includes(kw))) {
-      return type;
-    }
-  }
-  return "other";
 }
 
 // ─── Override Rate Warning ──────────────────────────────────────

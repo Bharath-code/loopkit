@@ -289,6 +289,57 @@ export const MarketTimingResponseSchema = z.object({
 
 export type MarketTimingResponse = z.infer<typeof MarketTimingResponseSchema>;
 
+// ─── IE-9: Pattern Interrupt ────────────────────────────────────
+
+export const PatternTypeSchema = z.enum([
+  "overplanner",
+  "snooze_loop",
+  "ship_avoider",
+  "icp_drift",
+  "scope_creep",
+]);
+
+export type PatternType = z.infer<typeof PatternTypeSchema>;
+
+export const DetectedPatternSchema = z.object({
+  type: PatternTypeSchema,
+  severity: z.enum(["warning", "critical"]),
+  message: z.string(),
+  suggestions: z.array(z.string()).max(2),
+  weeksObserved: z.number().min(1),
+});
+
+export type DetectedPattern = z.infer<typeof DetectedPatternSchema>;
+
+export const PatternInterruptResponseSchema = z.object({
+  patterns: z.array(DetectedPatternSchema),
+  totalWeeks: z.number(),
+  scannedAt: z.string(),
+});
+
+export type PatternInterruptResponse = z.infer<typeof PatternInterruptResponseSchema>;
+
+// ─── IE-7: Anonymous Peer Inspiration ───────────────────────────
+
+export const PeerShipSchema = z.object({
+  id: z.string(),
+  category: z.string(),
+  whatShipped: z.string(),
+  weekNumber: z.number(),
+  createdAt: z.string(),
+});
+
+export type PeerShip = z.infer<typeof PeerShipSchema>;
+
+export const PeerInspirationResponseSchema = z.object({
+  category: z.string(),
+  peers: z.array(PeerShipSchema),
+  totalPeers: z.number(),
+  fetchedAt: z.string(),
+});
+
+export type PeerInspirationResponse = z.infer<typeof PeerInspirationResponseSchema>;
+
 // ─── Helpers ────────────────────────────────────────────────────
 
 export function slugify(name: string): string {
@@ -306,4 +357,27 @@ export function getWeekNumber(date: Date = new Date()): number {
 
 export function formatDate(date: Date = new Date()): string {
   return date.toISOString().split("T")[0];
+}
+
+// ─── Project Category Detection ─────────────────────────────────
+
+const PROJECT_KEYWORDS: Record<string, string[]> = {
+  saas: ["saas", "subscription", "b2b", "platform", "dashboard", "crm"],
+  mobile: ["app", "ios", "android", "mobile", "flutter", "react native"],
+  cli: ["cli", "command", "terminal", "tool", "npm", "script"],
+  api: ["api", "backend", "endpoint", "microservice"],
+  newsletter: ["newsletter", "blog", "content", "writing", "media"],
+  marketplace: ["marketplace", "two-sided", "matching", "booking"],
+  ai: ["ai ", "llm", "gpt", "machine learning", "ml", "model"],
+  ecommerce: ["shop", "store", "ecommerce", "checkout", "cart"],
+};
+
+export function detectProjectCategory(text: string): string {
+  const lower = text.toLowerCase();
+  for (const [type, keywords] of Object.entries(PROJECT_KEYWORDS)) {
+    if (keywords.some((kw) => lower.includes(kw))) {
+      return type;
+    }
+  }
+  return "general";
 }

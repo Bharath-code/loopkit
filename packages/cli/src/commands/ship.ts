@@ -15,6 +15,7 @@ import {
 } from "../storage/local.js";
 import { colors, header, pass, fail, warn, box, nextStep, info, shortcutsHint, emptyState } from "../ui/theme.js";
 import { celebrateCommand } from "./celebrate.js";
+import { fetchPeerShips, recordPeerShip, renderPeerInspiration } from "../analytics/peers.js";
 
 // ─── Context shape passed to AI ────────────────────────────────
 interface ShipContext {
@@ -289,6 +290,20 @@ export async function shipCommand(): Promise<void> {
   const logContent = buildLogContent(today, productName, whatShipped, checklist, usedDrafts);
   saveShipLog(logContent, today);
   console.log(info(`Ship log saved → .loopkit/ships/${today}.md`));
+
+  // ─── Record anonymized peer ship (opt-in) ─────────────────────
+  if (slug) {
+    await recordPeerShip(slug, whatShipped);
+  }
+
+  // ─── Peer Inspiration (IE-7) ──────────────────────────────────
+  if (slug) {
+    const peers = await fetchPeerShips(slug, 3);
+    const peerOutput = renderPeerInspiration(peers, slug);
+    if (peerOutput) {
+      console.log(peerOutput);
+    }
+  }
 
   console.log(nextStep("celebrate"));
 

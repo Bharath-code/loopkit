@@ -37,8 +37,10 @@ Welcome to the LoopKit documentation. This directory contains everything you nee
 | Intelligence Engine Phase 1-2 | ✅ Shipped | DNA, benchmarks, oracle, churn, auto-loop, predictor | Overview, Benchmarks |
 | **IE-8: Trending Validations** | ✅ **Shipped** | Hint in `init` | `/trends` |
 | **IE-15: Competitor Ship Radar** | ✅ **Shipped** | `loopkit radar` | Overview widget |
-| IE-16: Keyword Opportunity Finder | Planned | `loopkit keywords` | `/keywords` |
-| IE-17: Market Timing Signal | Planned | Hint in `init`/`loop` | Overview widget |
+| **IE-16: Keyword Opportunity Finder** | ✅ **Shipped** | `loopkit keywords` | `/keywords` |
+| **IE-17: Market Timing Signal** | ✅ **Shipped** | `loopkit timing` | Overview widget |
+| **IE-9: Pattern Interrupt** | ✅ **Shipped** | Shown in `loop` | Overview widget |
+| **IE-7: Anonymous Peer Inspiration** | ✅ **Shipped** | Shown in `ship` | Overview widget |
 
 ## Document Relationships
 

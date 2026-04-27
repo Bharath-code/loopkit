@@ -105,4 +105,26 @@ export default defineSchema({
   })
     .index("by_category", ["category"])
     .index("by_lastUpdated", ["lastUpdated"]),
+
+  patternInterrupts: defineTable({
+    projectId: v.id("projects"),
+    type: v.string(),
+    severity: v.string(),
+    message: v.string(),
+    suggestions: v.array(v.string()),
+    weeksObserved: v.number(),
+    resolved: v.boolean(),
+    detectedAt: v.number(),
+  })
+    .index("by_project", ["projectId"])
+    .index("by_project_resolved", ["projectId", "resolved"]),
+
+  peerShips: defineTable({
+    category: v.string(),
+    whatShipped: v.string(),
+    weekNumber: v.number(),
+    createdAt: v.number(),
+  })
+    .index("by_category", ["category"])
+    .index("by_category_createdAt", ["category", "createdAt"]),
 });

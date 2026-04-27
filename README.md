@@ -27,6 +27,9 @@ Solo founders are strong builders but weak shippers. The loop — define → dev
 | `loopkit ship` | Deliver | AI writes your HN post, Twitter thread, and IH update |
 | `loopkit pulse` | Feedback | Async feedback, AI-clustered, no meetings required |
 | `loopkit loop` | Iterate | Sunday ritual — one decision, one post, loop closed |
+| `loopkit radar` | Intelligence | Scan PH & HN for competitor launches in your category |
+| `loopkit keywords` | Intelligence | Find low-competition keywords for content strategy |
+| `loopkit timing` | Intelligence | Market timing signal — is your space heating up? |
 
 ## Quick Start
 

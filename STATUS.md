@@ -1,8 +1,8 @@
 # LoopKit — Build Status
 
-**Last updated:** April 27, 2026 (Week 6 P2 sprint COMPLETE · IE Phase 3: IE-8 + IE-15 IMPLEMENTED + AUDIT FIXES · IE-16 COMPLETE · IE-17 COMPLETE)  
+**Last updated:** April 27, 2026 (Week 6 P2 sprint COMPLETE · IE Phase 3: IE-8 + IE-15 IMPLEMENTED + AUDIT FIXES · IE-16 COMPLETE · IE-17 COMPLETE · IE-9 COMPLETE · IE-7 COMPLETE)  
 **Version:** 0.1.0  
-**Overall:** MVP complete · Weeks 1-2 shipped · Week 3 P0 done · Week 4 P1 done · Week 5 P1 done · Week 6 P2 done · Strategic + IE Phase 2 shipped · IE Phase 3: IE-8 (Trending Validations) + IE-15 (Competitor Ship Radar) implemented · Audit fixes applied (17 issues resolved, 5 nice-to-haves shipped) · IE-16 (Keyword Opportunity Finder) COMPLETE · IE-17 (Market Timing Signal) COMPLETE
+**Overall:** MVP complete · Weeks 1-2 shipped · Week 3 P0 done · Week 4 P1 done · Week 5 P1 done · Week 6 P2 done · Strategic + IE Phase 2 shipped · IE Phase 3: IE-8 (Trending Validations) + IE-15 (Competitor Ship Radar) implemented · Audit fixes applied (17 issues resolved, 5 nice-to-haves shipped) · IE-16 (Keyword Opportunity Finder) COMPLETE · IE-17 (Market Timing Signal) COMPLETE · IE-9 (Pattern Interrupt) COMPLETE · IE-7 (Anonymous Peer Inspiration) COMPLETE
 
 ---
 
@@ -202,8 +202,8 @@
 | W4 | **Public ship log** | L | `commands/ship.ts`, new web route | `loopkit ship --public` → shareable URL (`loopkit.dev/@username/ships`). |
 | W5 | **GitHub Issues sync** | L | `commands/track.ts`, `sync/` module | `loopkit track --sync` two-way sync. ID mapping table. |
 | STRAT-5 | **Annual report framework** | L | `web/src/app/state-of-solo-founders/` | Landing page + data pipeline for "State of Solo Founders 2027". Launch Month 9. |
-| IE-7 | **Anonymous Peer Inspiration** | M | `cli/src/analytics/peers.ts` (new), `commands/loop.ts` | Show what anonymized founders with similar projects shipped this week. Opt-in. |
-| IE-9 | **Pattern Interrupt** | M | `commands/init.ts`, `cli/src/analytics/patterns.ts` (new) | Detect repeated failure patterns. Interrupt with data. Suggest `--narrow` ICP refinement. |
+| IE-7 | **Anonymous Peer Inspiration** | M | `cli/src/analytics/peers.ts` (new), `commands/ship.ts` | ✅ Show what anonymized founders with similar projects shipped this week. Opt-in. Fetched from Convex via `/api/peers`. Dashboard widget + CLI output. |
+| IE-9 | **Pattern Interrupt** | M | `cli/src/analytics/patterns.ts` (new), `commands/loop.ts` | ✅ Detect 5 repeated failure patterns (overplanner, snooze loop, ship avoider, ICP drift, scope creep). Interrupt with data in `loop` command. Dashboard widget. Suggest `--narrow` ICP refinement. |
 | IE-10 | **AI Coach v1** | L | `cli/src/analytics/coach.ts` (new), all command files | Rule-based coaching layer. Week 3/8/16 contextual suggestions. |
 | IE-11 | **Churn Guardian v2 (ML)** | L | `convex/analytics.ts` + model training pipeline | Replace rule-based with ML model trained on proprietary behavioral data. |
 | IE-12 | **Success Predictor v2 (ML)** | L | `convex/analytics.ts` + model training pipeline | Replace heuristics with ML model correlating behavior with revenue/outcome reports. |
@@ -248,7 +248,7 @@ WEEK 6 (P2 — Performance + Security + IE Phase 2)  ✅ COMPLETE
 ├── IE-5: Auto-Loop                          ✅ Monday detection, auto-draft
 └── IE-6: Success Predictor v1               ✅ 8-week heuristic model
 
-WEEK 7-8 (P3 — IE Phase 3: Trending + Radar)  ✅ COMPLETE
+WEEK 7-8 (P3 — IE Phase 3: Trending + Radar + Peers)  ✅ COMPLETE
 ├── IE-8: Trending Validations (4 sub-tasks)     ✅ ALL DONE
 │   ├── IE-8.1: Telemetry ICP extraction         ✅ recordBriefCategories() + local aggregates
 │   ├── IE-8.2: Convex trending query            ✅ getTrendingValidations + getTrendingForCategory
@@ -260,9 +260,12 @@ WEEK 7-8 (P3 — IE Phase 3: Trending + Radar)  ✅ COMPLETE
 │   ├── IE-15.3: Cached scan results             ✅ 24h TTL via existing cache.ts
 │   ├── IE-15.4: CLI radar command               ✅ loopkit radar with auto-detect from brief
 │   └── IE-15.5: Dashboard radar widget          ✅ Trending widget on overview page
-└── IE-7: Anonymous Peer Inspiration             (next)
+└── IE-7: Anonymous Peer Inspiration (3 sub-tasks) ✅ ALL DONE
+    ├── IE-7.1: Convex peerShips table + API     ✅ /api/peers GET/POST, category matching
+    ├── IE-7.2: CLI peers module                 ✅ fetchPeerShips + recordPeerShip, telemetry gated
+    └── IE-7.3: Dashboard + CLI integration      ✅ PeerInspirationWidget on overview, shown after ship
 
-WEEK 9-10 (P3 — IE Phase 3: Keywords + Timing)  ✅ COMPLETE
+WEEK 9-10 (P3 — IE Phase 3: Keywords + Timing + Patterns)  ✅ COMPLETE
 ├── IE-16: Keyword Opportunity Finder (5 sub-tasks)
 │   ├── IE-16.1: SEO data source adapters            ✅ DONE
 │   ├── IE-16.2: Keyword scoring algorithm            ✅ DONE
@@ -275,7 +278,11 @@ WEEK 9-10 (P3 — IE Phase 3: Keywords + Timing)  ✅ COMPLETE
 │   ├── IE-17.3: Zod schema + Convex storage          ✅ DONE (marketSignals table)
 │   ├── IE-17.4: CLI timing command                   ✅ DONE (loopkit timing)
 │   └── IE-17.5: Dashboard signal widget              ✅ DONE (overview page card)
-└── IE-9: Pattern Interrupt                           (next)
+└── IE-9: Pattern Interrupt (4 sub-tasks)             ✅ ALL DONE
+    ├── IE-9.1: Pattern detection engine              ✅ 5 pattern detectors, rule-based, local data
+    ├── IE-9.2: CLI integration                       ✅ Shown in `loop` after churn check
+    ├── IE-9.3: Dashboard widget                      ✅ PatternInterruptWidget on overview page
+    └── IE-9.4: Zod schema + Convex storage           ✅ PatternInterrupts table, getActivePatterns query
 
 WEEK 11-12 (P3 — Platform Expansion)
 ├── D3: Dashboard task CRUD

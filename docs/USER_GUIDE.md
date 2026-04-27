@@ -342,6 +342,50 @@ loopkit keywords --category "ecommerce"
 
 Results are cached for 7 days. No API keys required.
 
+### Pattern Interrupt
+
+Detects recurring failure patterns from your local history and surfaces them with actionable suggestions during your Sunday `loop`.
+
+**When it appears:** After 4+ weeks of data, if any of these patterns are detected:
+
+| Pattern | What it means |
+|---|---|
+| **Overplanner** | You plan 8+ tasks but consistently finish <30% |
+| **Snooze Loop** | You keep snoozing or leaving the same tasks open |
+| **Ship Avoider** | 3+ weeks with no ship + low score |
+| **ICP Drift** | Score declining + feedback says wrong problem |
+| **Scope Creep** | Adding tasks mid-week repeatedly |
+
+**Example:**
+```bash
+$ loopkit loop
+
+⚡ Pattern Interrupt — 5 weeks of data
+
+📋 OVERPLANNER (3 weeks)
+   You plan 8+ tasks but finish ~25% of them.
+   → Plan 3 must-do tasks per week. Everything else goes to backlog.
+   → If a task has been open 2+ weeks, cut it or ship it.
+```
+
+### Anonymous Peer Inspiration
+
+After you ship, see what anonymized founders in your category shipped this week.
+
+**Example:**
+```bash
+$ loopkit ship
+
+🚀 Peer Inspiration — This week in saas:
+   • "Stripe billing portal integration"
+   • "Webhook retry logic with exponential backoff"
+   • "Public API docs with Swagger"
+
+  You're not alone. Keep shipping.
+```
+
+Only appears if telemetry is opted in. No usernames or identifying details — category and ship description only.
+
 ### Telemetry & Privacy
 
 LoopKit's intelligence features require opt-in telemetry:

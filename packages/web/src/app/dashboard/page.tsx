@@ -298,15 +298,127 @@ export default function DashboardOverviewPage() {
         )}
 
         {/* Market Timing Signal (IE-17) */}
-        <MarketTimingWidget />
+        <MarketTimingWidget activeProject={activeProject} />
+
+        {/* Pattern Interrupt (IE-9) */}
+        <PatternInterruptWidget activeProject={activeProject} />
+
+        {/* Peer Inspiration (IE-7) */}
+        <PeerInspirationWidget activeProject={activeProject} />
       </div>
     </div>
   );
 }
 
-function MarketTimingWidget() {
-  const projects = useQuery(api.projects.list);
-  const activeProject = projects?.[0];
+function PatternInterruptWidget({ activeProject }: { activeProject: { _id: string; name: string } | undefined }) {
+  const projectId = activeProject?._id;
+  const patterns = useQuery(
+    api.patterns.getActivePatterns,
+    projectId ? { projectId: projectId as Id<"projects"> } : "skip"
+  );
+
+  // Stable loading state — don't return null to avoid layout shift
+  if (patterns === undefined) {
+    return (
+      <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/20 animate-pulse">
+        <div className="h-5 w-40 bg-zinc-800 rounded mb-4"></div>
+        <div className="space-y-3">
+          <div className="h-4 bg-zinc-800 rounded w-full"></div>
+          <div className="h-4 bg-zinc-800 rounded w-3/4"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (patterns.length === 0) return null;
+
+  const emojiMap: Record<string, string> = {
+    overplanner: "📋",
+    snooze_loop: "⏸",
+    ship_avoider: "🚢",
+    icp_drift: "🎯",
+    scope_creep: "📈",
+  };
+
+  return (
+    <div className="p-6 rounded-2xl border border-amber-500/20 bg-zinc-900/20">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-base font-semibold text-white">⚡ Pattern Interrupt</h2>
+        <span className="text-xs text-amber-400 font-medium">{patterns.length} detected</span>
+      </div>
+      <div className="space-y-4">
+        {patterns.slice(0, 3).map((p) => (
+          <div key={p._id} className="flex gap-3">
+            <span className="text-lg shrink-0">{emojiMap[p.type] || "⚡"}</span>
+            <div>
+              <p className={`text-sm font-medium ${p.severity === "critical" ? "text-red-400" : "text-amber-400"}`}>
+                {p.type.replace(/_/g, " ").toUpperCase()}
+              </p>
+              <p className="text-xs text-zinc-400 mt-1">{p.message}</p>
+              {p.suggestions.length > 0 && (
+                <p className="text-xs text-zinc-500 mt-1">→ {p.suggestions[0]}</p>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function PeerInspirationWidget({ activeProject }: { activeProject: { name: string } | undefined }) {
+  const category = activeProject?.name.toLowerCase() || "general";
+  const peers = useQuery(api.peers.getPeerShips, { category, limit: 3 });
+
+  // Loading state — don't show empty-state copy while data loads
+  if (peers === undefined) {
+    return (
+      <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/20 animate-pulse">
+        <div className="h-5 w-40 bg-zinc-800 rounded mb-4"></div>
+        <div className="space-y-3">
+          <div className="h-4 bg-zinc-800 rounded w-full"></div>
+          <div className="h-4 bg-zinc-800 rounded w-3/4"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (peers.length === 0) {
+    return (
+      <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/20">
+        <h2 className="text-base font-semibold text-white mb-2">🚀 Peer Inspiration</h2>
+        <p className="text-xs text-zinc-500">
+          Be the first in <span className="text-violet-400">{category}</span> to ship this week. Run{" "}
+          <code className="text-violet-400">loopkit ship</code> to share anonymized progress.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/20">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-base font-semibold text-white">🚀 Peer Inspiration</h2>
+        <span className="text-xs text-zinc-500">This week in {category}</span>
+      </div>
+      <div className="space-y-3">
+        {peers.map((p) => (
+          <div key={p._id} className="flex gap-3 items-start">
+            <span className="w-6 h-6 rounded-full bg-violet-500/10 flex items-center justify-center text-xs text-violet-400 shrink-0">
+              🚀
+            </span>
+            <div>
+              <p className="text-sm text-zinc-300">{p.whatShipped}</p>
+              <p className="text-xs text-zinc-500 mt-0.5">Week {p.weekNumber}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function MarketTimingWidget({ activeProject }: { activeProject: { name: string } | undefined }) {
   const category = activeProject?.name.toLowerCase() || "general";
   const signal = useQuery(api.marketTiming.getMarketSignal, { category });
 

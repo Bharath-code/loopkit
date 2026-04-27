@@ -107,3 +107,43 @@ export function emptyState(message: string, action: string, command: string): st
     "",
   ].join("\n");
 }
+
+// ─── Pattern Interrupt Card ─────────────────────────────────────
+
+export function patternCard(
+  patterns: Array<{
+    type: string;
+    severity: "warning" | "critical";
+    message: string;
+    suggestions: string[];
+    weeksObserved: number;
+  }>,
+  totalWeeks: number
+): string {
+  const emojiMap: Record<string, string> = {
+    overplanner: "📋",
+    snooze_loop: "⏸",
+    ship_avoider: "🚢",
+    icp_drift: "🎯",
+    scope_creep: "📈",
+  };
+
+  const lines: string[] = [];
+  lines.push(colors.secondary.bold(`Pattern Interrupt — ${totalWeeks} weeks of data`));
+  lines.push("");
+
+  for (const p of patterns) {
+    const emoji = emojiMap[p.type] || "⚡";
+    const label = p.type.replace(/_/g, " ").toUpperCase();
+    const color = p.severity === "critical" ? colors.danger : colors.warning;
+
+    lines.push(`${emoji} ${color.bold(label)} (${p.weeksObserved}w)`);
+    lines.push(`   ${p.message}`);
+    for (const s of p.suggestions) {
+      lines.push(`   ${colors.muted("→")} ${s}`);
+    }
+    lines.push("");
+  }
+
+  return box(lines.join("\n"), "⚡ Pattern Interrupt");
+}

@@ -141,6 +141,8 @@ loopkit radar                          # Scan PH & HN for competitor launches
 loopkit radar --category "saas"        # Scan a specific category
 loopkit keywords                       # Find low-competition keywords in your niche
 loopkit keywords --category "saas"     # Find keywords for a specific category
+loopkit timing                         # Market timing signal for your category
+loopkit timing --category "saas"       # Check timing for a specific category
 loopkit telemetry on                   # Opt-in to anonymous usage data
 loopkit telemetry off                  # Opt-out
 loopkit telemetry status               # Check current status
@@ -148,4 +150,4 @@ loopkit telemetry status               # Check current status
 
 ---
 
-*Last updated: April 2026 · v0.1.0 (IE-8 + IE-15 shipped · Audit fixes + nice-to-haves complete)*
+*Last updated: April 2026 · v0.1.0 (IE-7 through IE-17 shipped · Pattern Interrupt + Peer Inspiration + Keywords + Timing + Radar + Trending all complete)*
