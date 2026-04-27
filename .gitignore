@@ -10,3 +10,8 @@ dist/
 .DS_Store
 .agents
 .claude
+
+# coverage
+coverage/
+*.lcov
+.nyc_output/

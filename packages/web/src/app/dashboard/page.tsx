@@ -3,6 +3,15 @@
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import {
+  SkeletonMetric,
+  SkeletonCard,
+  SkeletonActivity,
+  SkeletonLoopSynthesis,
+  SkeletonArchetype,
+  SkeletonMarketTiming,
+} from "@/components/skeletons";
 
 export default function DashboardOverviewPage() {
   const user = useQuery(api.users.me);
@@ -14,22 +23,22 @@ export default function DashboardOverviewPage() {
 
   const latestLoop = useQuery(
     api.loopLogs.latestByProject,
-    projectId ? { projectId: projectId as Id<"projects"> } : "skip"
+    projectId ? { projectId: projectId as Id<"projects"> } : "skip",
   );
 
   const pulseCount = useQuery(
     api.pulse.countResponses,
-    projectId ? { projectId: projectId as Id<"projects"> } : "skip"
+    projectId ? { projectId: projectId as Id<"projects"> } : "skip",
   );
 
   const streak = useQuery(
     api.loopLogs.streakCount,
-    projectId ? { projectId: projectId as Id<"projects"> } : "skip"
+    projectId ? { projectId: projectId as Id<"projects"> } : "skip",
   );
 
   const archetype = useQuery(
     api.analytics.getArchetype,
-    projectId ? { projectId: projectId as Id<"projects"> } : "skip"
+    projectId ? { projectId: projectId as Id<"projects"> } : "skip",
   );
 
   const trending = useQuery(api.analytics.getTrendingValidations, {});
@@ -66,82 +75,98 @@ export default function DashboardOverviewPage() {
 
       {!activeProject && (
         <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/20 text-center">
-          <p className="text-zinc-400 text-sm mb-4">No projects yet. Run <code className="text-violet-400">loopkit init</code> in your CLI to get started.</p>
+          <p className="text-zinc-400 text-sm mb-4">
+            No projects yet. Run{" "}
+            <code className="text-violet-400">loopkit init</code> in your CLI to
+            get started.
+          </p>
         </div>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Metric 1 */}
-        <div className="p-5 rounded-2xl border border-zinc-800 bg-zinc-900/30">
-          <div className="flex items-center gap-2 mb-3">
-            <span className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-sm">✓</span>
-            <span className="text-sm text-zinc-400 font-medium">Tasks Completed</span>
-          </div>
-          {tasksCompleted !== undefined ? (
-            <>
-              <div className="text-3xl font-bold text-white">{tasksCompleted}</div>
-              <div className="mt-2 text-xs text-zinc-500">
-                {tasksTotal > 0 ? `${Math.round((tasksCompleted / tasksTotal) * 100)}% of weekly plan` : "No tasks tracked yet"}
-              </div>
-            </>
-          ) : (
-            <div className="animate-pulse">
-              <div className="h-8 bg-zinc-800 rounded w-16 mb-2"></div>
-              <div className="h-3 bg-zinc-800 rounded w-32"></div>
+        {tasksCompleted !== undefined ? (
+          <div className="p-5 rounded-2xl border border-zinc-800 bg-zinc-900/30">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-sm">
+                ✓
+              </span>
+              <span className="text-sm text-zinc-400 font-medium">
+                Tasks Completed
+              </span>
             </div>
-          )}
-        </div>
+            <div className="text-3xl font-bold text-white">
+              {tasksCompleted}
+            </div>
+            <div className="mt-2 text-xs text-zinc-500">
+              {tasksTotal > 0
+                ? `${Math.round((tasksCompleted / tasksTotal) * 100)}% of weekly plan`
+                : "No tasks tracked yet"}
+            </div>
+          </div>
+        ) : (
+          <SkeletonMetric />
+        )}
 
         {/* Metric 2 */}
-        <div className="p-5 rounded-2xl border border-zinc-800 bg-zinc-900/30">
-          <div className="flex items-center gap-2 mb-3">
-            <span className="w-8 h-8 rounded-lg bg-violet-500/10 text-violet-400 flex items-center justify-center text-sm">▲</span>
-            <span className="text-sm text-zinc-400 font-medium">Shipping Score</span>
-          </div>
-          {shippingScore !== undefined ? (
-            <>
-              <div className="text-3xl font-bold text-white">{shippingScore}<span className="text-sm text-zinc-500">/100</span></div>
-              <div className="mt-2 text-xs text-zinc-500">
-                Based on completed vs planned tasks
-              </div>
-            </>
-          ) : (
-            <div className="animate-pulse">
-              <div className="h-8 bg-zinc-800 rounded w-24 mb-2"></div>
-              <div className="h-3 bg-zinc-800 rounded w-28"></div>
+        {shippingScore !== undefined ? (
+          <div className="p-5 rounded-2xl border border-zinc-800 bg-zinc-900/30">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="w-8 h-8 rounded-lg bg-violet-500/10 text-violet-400 flex items-center justify-center text-sm">
+                ▲
+              </span>
+              <span className="text-sm text-zinc-400 font-medium">
+                Shipping Score
+              </span>
             </div>
-          )}
-        </div>
+            <div className="text-3xl font-bold text-white">
+              {shippingScore}
+              <span className="text-sm text-zinc-500">/100</span>
+            </div>
+            <div className="mt-2 text-xs text-zinc-500">
+              Based on completed vs planned tasks
+            </div>
+          </div>
+        ) : (
+          <SkeletonMetric />
+        )}
 
         {/* Metric 3 */}
-        <div className="p-5 rounded-2xl border border-zinc-800 bg-zinc-900/30">
-          <div className="flex items-center gap-2 mb-3">
-            <span className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center text-sm">●</span>
-            <span className="text-sm text-zinc-400 font-medium">Pulse Responses</span>
-          </div>
-          {pulseCount !== undefined ? (
-            <>
-              <div className="text-3xl font-bold text-white">{pulseCount ?? 0}</div>
-              <div className="mt-2 text-xs text-amber-400 flex items-center gap-1">
-                <span>{pulseCount && pulseCount > 0 ? "Collecting feedback" : "No responses yet"}</span>
-              </div>
-            </>
-          ) : (
-            <div className="animate-pulse">
-              <div className="h-8 bg-zinc-800 rounded w-12 mb-2"></div>
-              <div className="h-3 bg-zinc-800 rounded w-24"></div>
+        {pulseCount !== undefined ? (
+          <div className="p-5 rounded-2xl border border-zinc-800 bg-zinc-900/30">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center text-sm">
+                ●
+              </span>
+              <span className="text-sm text-zinc-400 font-medium">
+                Pulse Responses
+              </span>
             </div>
-          )}
-        </div>
+            <div className="text-3xl font-bold text-white">
+              {pulseCount ?? 0}
+            </div>
+            <div className="mt-2 text-xs text-amber-400 flex items-center gap-1">
+              <span>
+                {pulseCount && pulseCount > 0
+                  ? "Collecting feedback"
+                  : "No responses yet"}
+              </span>
+            </div>
+          </div>
+        ) : (
+          <SkeletonMetric />
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Recent Activity */}
-        <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/20">
-          <h2 className="text-base font-semibold text-white mb-6">Recent Activity</h2>
-          <div className="space-y-6">
-            {latestLoop !== undefined ? (
-              latestLoop ? (
+        {latestLoop !== undefined ? (
+          <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/20">
+            <h2 className="text-base font-semibold text-white mb-6">
+              Recent Activity
+            </h2>
+            <div className="space-y-6">
+              {latestLoop ? (
                 <div className="flex gap-4">
                   <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-xs text-zinc-400 shrink-0">
                     ↻
@@ -150,92 +175,114 @@ export default function DashboardOverviewPage() {
                     <p className="text-sm text-zinc-300">
                       Completed loop for Week {latestLoop.weekNumber}
                     </p>
-                    <p className="text-xs text-zinc-500 mt-1">{latestLoop.date}</p>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      {latestLoop.date}
+                    </p>
                   </div>
                 </div>
               ) : (
-                <p className="text-sm text-zinc-500">No recent activity. Run <code className="text-violet-400">loopkit loop</code> to start tracking.</p>
-              )
-            ) : (
-              <div className="animate-pulse space-y-4">
+                <p className="text-sm text-zinc-500">
+                  No recent activity. Run{" "}
+                  <code className="text-violet-400">loopkit loop</code> to start
+                  tracking.
+                </p>
+              )}
+              {streak !== undefined && streak > 0 && (
                 <div className="flex gap-4">
-                  <div className="w-8 h-8 rounded-full bg-zinc-800 shrink-0"></div>
-                  <div className="flex-1 space-y-2">
-                    <div className="h-4 bg-zinc-800 rounded w-3/4"></div>
-                    <div className="h-3 bg-zinc-800 rounded w-1/4"></div>
+                  <div className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center text-xs text-amber-400 shrink-0">
+                    🔥
+                  </div>
+                  <div>
+                    <p className="text-sm text-zinc-300">
+                      {streak}-week streak active
+                    </p>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      Keep shipping every Sunday
+                    </p>
                   </div>
                 </div>
-              </div>
-            )}
-            {streak !== undefined && streak > 0 && (
-              <div className="flex gap-4">
-                <div className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center text-xs text-amber-400 shrink-0">
-                  🔥
-                </div>
-                <div>
-                  <p className="text-sm text-zinc-300">
-                    {streak}-week streak active
-                  </p>
-                  <p className="text-xs text-zinc-500 mt-1">Keep shipping every Sunday</p>
-                </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
-        </div>
+        ) : (
+          <SkeletonActivity />
+        )}
 
         {/* Founder Archetype */}
-        {archetype && (
-          <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/20">
-            <h2 className="text-base font-semibold text-white mb-4">Founder Archetype</h2>
-            <div className="flex items-center gap-3 mb-4">
-              <span className="text-3xl">{archetype.emoji}</span>
-              <div>
-                <p className="text-lg font-bold text-white">{archetype.archetype}</p>
-                <p className="text-xs text-zinc-500">{archetype.weeksAnalyzed} weeks analyzed</p>
+        {archetype !== undefined ? (
+          archetype ? (
+            <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/20">
+              <h2 className="text-base font-semibold text-white mb-4">
+                Founder Archetype
+              </h2>
+              <div className="flex items-center gap-3 mb-4">
+                <span className="text-3xl">{archetype.emoji}</span>
+                <div>
+                  <p className="text-lg font-bold text-white">
+                    {archetype.archetype}
+                  </p>
+                  <p className="text-xs text-zinc-500">
+                    {archetype.weeksAnalyzed} weeks analyzed
+                  </p>
+                </div>
+              </div>
+              <p className="text-sm text-zinc-400 mb-4">
+                {archetype.description}
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 rounded-lg bg-zinc-800/50">
+                  <p className="text-xs text-zinc-500">Avg Score</p>
+                  <p className="text-lg font-bold text-white">
+                    {archetype.avgScore}/100
+                  </p>
+                </div>
+                <div className="p-3 rounded-lg bg-zinc-800/50">
+                  <p className="text-xs text-zinc-500">Avg Tasks</p>
+                  <p className="text-lg font-bold text-white">
+                    {archetype.avgTasks}/wk
+                  </p>
+                </div>
               </div>
             </div>
-            <p className="text-sm text-zinc-400 mb-4">{archetype.description}</p>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="p-3 rounded-lg bg-zinc-800/50">
-                <p className="text-xs text-zinc-500">Avg Score</p>
-                <p className="text-lg font-bold text-white">{archetype.avgScore}/100</p>
-              </div>
-              <div className="p-3 rounded-lg bg-zinc-800/50">
-                <p className="text-xs text-zinc-500">Avg Tasks</p>
-                <p className="text-lg font-bold text-white">{archetype.avgTasks}/wk</p>
-              </div>
-            </div>
-          </div>
+          ) : null
+        ) : (
+          <SkeletonArchetype />
         )}
 
         {/* Weekly Loop Synthesis Highlight */}
-        <div className="p-6 rounded-2xl border border-violet-500/20 bg-[#0c0c0f] relative overflow-hidden glow-violet">
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-violet-600 to-cyan-500"></div>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-base font-semibold text-white">Last Sunday&apos;s Loop</h2>
-            {latestLoop !== undefined ? (
+        {latestLoop !== undefined ? (
+          <div className="p-6 rounded-2xl border border-violet-500/20 bg-[#0c0c0f] relative overflow-hidden glow-violet">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-violet-600 to-cyan-500"></div>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-base font-semibold text-white">
+                Last Sunday&apos;s Loop
+              </h2>
               <span className="px-2 py-1 rounded text-xs bg-violet-500/10 text-violet-400 font-medium border border-violet-500/20">
                 {latestLoop ? `Week ${latestLoop.weekNumber}` : "No loops yet"}
               </span>
-            ) : (
-              <div className="animate-pulse w-16 h-5 bg-zinc-800 rounded"></div>
-            )}
-          </div>
+            </div>
 
-          {latestLoop !== undefined ? (
-            latestLoop?.synthesis ? (
+            {latestLoop?.synthesis ? (
               <div className="space-y-4">
                 <div>
-                  <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-2">The One Thing</p>
+                  <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-2">
+                    The One Thing
+                  </p>
                   <p className="text-sm text-white font-medium bg-zinc-800/50 p-3 rounded-lg border border-zinc-800">
                     {latestLoop.synthesis.oneThing}
                   </p>
                 </div>
 
                 <div>
-                  <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-2">Build in Public Draft</p>
+                  <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-2">
+                    Build in Public Draft
+                  </p>
                   <p className="text-sm text-zinc-400 italic border-l-2 border-zinc-700 pl-3">
-                    &quot;{latestLoop.synthesis.bipPost || latestLoop.bipPost || "No BIP post generated."}&quot;
+                    &quot;
+                    {latestLoop.synthesis.bipPost ||
+                      latestLoop.bipPost ||
+                      "No BIP post generated."}
+                    &quot;
                   </p>
                 </div>
               </div>
@@ -245,92 +292,103 @@ export default function DashboardOverviewPage() {
                   ? "Loop completed but no synthesis available."
                   : "No loops yet. Run loopkit loop on Sunday to generate your first synthesis."}
               </p>
-            )
-          ) : (
-            <div className="animate-pulse space-y-4">
-              <div className="h-3 bg-zinc-800 rounded w-24"></div>
-              <div className="h-12 bg-zinc-800 rounded"></div>
-              <div className="h-3 bg-zinc-800 rounded w-32"></div>
-              <div className="h-10 bg-zinc-800 rounded"></div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        ) : (
+          <SkeletonLoopSynthesis />
+        )}
 
         {/* Trending Validations (IE-8) */}
-        {trending ? (
-          trending.totalFounders > 0 ? (
+        {trending !== undefined ? (
+          trending?.totalFounders > 0 ? (
             <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/20">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-base font-semibold text-white">Trending Validations</h2>
-                <a href="/dashboard/trends" className="text-xs text-violet-400 hover:text-violet-300 transition-colors">
+                <h2 className="text-base font-semibold text-white">
+                  Trending Validations
+                </h2>
+                <a
+                  href="/dashboard/trends"
+                  className="text-xs text-violet-400 hover:text-violet-300 transition-colors"
+                >
                   View all →
                 </a>
               </div>
               <div className="space-y-3">
                 {trending.icp.slice(0, 3).map((item, i) => (
                   <div key={item.category} className="flex items-center gap-3">
-                    <span className="w-5 text-center text-xs text-zinc-500 font-mono">{i + 1}</span>
-                    <span className="flex-1 text-sm text-zinc-300 capitalize">{item.category}</span>
-                    <span className="text-xs text-zinc-500">{item.count} founders</span>
+                    <span className="w-5 text-center text-xs text-zinc-500 font-mono">
+                      {i + 1}
+                    </span>
+                    <span className="flex-1 text-sm text-zinc-300 capitalize">
+                      {item.category}
+                    </span>
+                    <span className="text-xs text-zinc-500">
+                      {item.count} founders
+                    </span>
                     {item.count7d >= 2 && (
                       <span className="text-xs text-emerald-400">↑</span>
                     )}
                   </div>
                 ))}
               </div>
-              <p className="text-xs text-zinc-600 mt-4">{trending.totalFounders} founders opted into telemetry</p>
+              <p className="text-xs text-zinc-600 mt-4">
+                {trending.totalFounders} founders opted into telemetry
+              </p>
             </div>
           ) : (
             <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/20">
-              <h2 className="text-base font-semibold text-white mb-2">Trending Validations</h2>
-              <p className="text-xs text-zinc-500">Not enough data yet. Run <code className="text-violet-400">loopkit init</code> and opt into telemetry to contribute.</p>
+              <h2 className="text-base font-semibold text-white mb-2">
+                Trending Validations
+              </h2>
+              <p className="text-xs text-zinc-500">
+                Not enough data yet. Run{" "}
+                <code className="text-violet-400">loopkit init</code> and opt
+                into telemetry to contribute.
+              </p>
             </div>
           )
         ) : (
-          <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/20 animate-pulse">
-            <div className="h-5 w-40 bg-zinc-800 rounded mb-4"></div>
-            <div className="space-y-3">
-              <div className="h-4 bg-zinc-800 rounded w-full"></div>
-              <div className="h-4 bg-zinc-800 rounded w-3/4"></div>
-              <div className="h-4 bg-zinc-800 rounded w-1/2"></div>
-            </div>
-          </div>
+          <SkeletonCard lines={3} titleWidth="w-40" />
         )}
 
         {/* Market Timing Signal (IE-17) */}
-        <MarketTimingWidget activeProject={activeProject} />
+        <ErrorBoundary>
+          <MarketTimingWidget activeProject={activeProject} />
+        </ErrorBoundary>
 
         {/* Pattern Interrupt (IE-9) */}
-        <PatternInterruptWidget activeProject={activeProject} />
+        <ErrorBoundary>
+          <PatternInterruptWidget activeProject={activeProject} />
+        </ErrorBoundary>
 
         {/* Peer Inspiration (IE-7) */}
-        <PeerInspirationWidget activeProject={activeProject} />
+        <ErrorBoundary>
+          <PeerInspirationWidget activeProject={activeProject} />
+        </ErrorBoundary>
 
         {/* AI Coach v1 (IE-10) */}
-        <CoachingWidget activeProject={activeProject} loopLogs={latestLoop} />
+        <ErrorBoundary>
+          <CoachingWidget activeProject={activeProject} loopLogs={latestLoop} />
+        </ErrorBoundary>
       </div>
     </div>
   );
 }
 
-function PatternInterruptWidget({ activeProject }: { activeProject: { _id: string; name: string } | undefined }) {
+function PatternInterruptWidget({
+  activeProject,
+}: {
+  activeProject: { _id: string; name: string } | undefined;
+}) {
   const projectId = activeProject?._id;
   const patterns = useQuery(
     api.patterns.getActivePatterns,
-    projectId ? { projectId: projectId as Id<"projects"> } : "skip"
+    projectId ? { projectId: projectId as Id<"projects"> } : "skip",
   );
 
   // Stable loading state — don't return null to avoid layout shift
   if (patterns === undefined) {
-    return (
-      <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/20 animate-pulse">
-        <div className="h-5 w-40 bg-zinc-800 rounded mb-4"></div>
-        <div className="space-y-3">
-          <div className="h-4 bg-zinc-800 rounded w-full"></div>
-          <div className="h-4 bg-zinc-800 rounded w-3/4"></div>
-        </div>
-      </div>
-    );
+    return <SkeletonCard lines={2} titleWidth="w-40" />;
   }
 
   if (patterns.length === 0) return null;
@@ -346,20 +404,28 @@ function PatternInterruptWidget({ activeProject }: { activeProject: { _id: strin
   return (
     <div className="p-6 rounded-2xl border border-amber-500/20 bg-zinc-900/20">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-base font-semibold text-white">⚡ Pattern Interrupt</h2>
-        <span className="text-xs text-amber-400 font-medium">{patterns.length} detected</span>
+        <h2 className="text-base font-semibold text-white">
+          ⚡ Pattern Interrupt
+        </h2>
+        <span className="text-xs text-amber-400 font-medium">
+          {patterns.length} detected
+        </span>
       </div>
       <div className="space-y-4">
         {patterns.slice(0, 3).map((p) => (
           <div key={p._id} className="flex gap-3">
             <span className="text-lg shrink-0">{emojiMap[p.type] || "⚡"}</span>
             <div>
-              <p className={`text-sm font-medium ${p.severity === "critical" ? "text-red-400" : "text-amber-400"}`}>
+              <p
+                className={`text-sm font-medium ${p.severity === "critical" ? "text-red-400" : "text-amber-400"}`}
+              >
                 {p.type.replace(/_/g, " ").toUpperCase()}
               </p>
               <p className="text-xs text-zinc-400 mt-1">{p.message}</p>
               {p.suggestions.length > 0 && (
-                <p className="text-xs text-zinc-500 mt-1">→ {p.suggestions[0]}</p>
+                <p className="text-xs text-zinc-500 mt-1">
+                  → {p.suggestions[0]}
+                </p>
               )}
             </div>
           </div>
@@ -369,30 +435,30 @@ function PatternInterruptWidget({ activeProject }: { activeProject: { _id: strin
   );
 }
 
-function PeerInspirationWidget({ activeProject }: { activeProject: { name: string } | undefined }) {
+function PeerInspirationWidget({
+  activeProject,
+}: {
+  activeProject: { name: string } | undefined;
+}) {
   const category = activeProject?.name.toLowerCase() || "general";
   const peers = useQuery(api.peers.getPeerShips, { category, limit: 3 });
 
   // Loading state — don't show empty-state copy while data loads
   if (peers === undefined) {
-    return (
-      <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/20 animate-pulse">
-        <div className="h-5 w-40 bg-zinc-800 rounded mb-4"></div>
-        <div className="space-y-3">
-          <div className="h-4 bg-zinc-800 rounded w-full"></div>
-          <div className="h-4 bg-zinc-800 rounded w-3/4"></div>
-        </div>
-      </div>
-    );
+    return <SkeletonCard lines={2} titleWidth="w-40" />;
   }
 
   if (peers.length === 0) {
     return (
       <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/20">
-        <h2 className="text-base font-semibold text-white mb-2">🚀 Peer Inspiration</h2>
+        <h2 className="text-base font-semibold text-white mb-2">
+          🚀 Peer Inspiration
+        </h2>
         <p className="text-xs text-zinc-500">
-          Be the first in <span className="text-violet-400">{category}</span> to ship this week. Run{" "}
-          <code className="text-violet-400">loopkit ship</code> to share anonymized progress.
+          Be the first in <span className="text-violet-400">{category}</span> to
+          ship this week. Run{" "}
+          <code className="text-violet-400">loopkit ship</code> to share
+          anonymized progress.
         </p>
       </div>
     );
@@ -401,7 +467,9 @@ function PeerInspirationWidget({ activeProject }: { activeProject: { name: strin
   return (
     <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/20">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-base font-semibold text-white">🚀 Peer Inspiration</h2>
+        <h2 className="text-base font-semibold text-white">
+          🚀 Peer Inspiration
+        </h2>
         <span className="text-xs text-zinc-500">This week in {category}</span>
       </div>
       <div className="space-y-3">
@@ -412,7 +480,9 @@ function PeerInspirationWidget({ activeProject }: { activeProject: { name: strin
             </span>
             <div>
               <p className="text-sm text-zinc-300">{p.whatShipped}</p>
-              <p className="text-xs text-zinc-500 mt-0.5">Week {p.weekNumber}</p>
+              <p className="text-xs text-zinc-500 mt-0.5">
+                Week {p.weekNumber}
+              </p>
             </div>
           </div>
         ))}
@@ -426,24 +496,24 @@ function CoachingWidget({
   loopLogs,
 }: {
   activeProject: { _id: string; name: string } | undefined;
-  loopLogs: { weekNumber: number; shippingScore: number; tasksCompleted: number; tasksTotal: number } | null | undefined;
+  loopLogs:
+    | {
+        weekNumber: number;
+        shippingScore: number;
+        tasksCompleted: number;
+        tasksTotal: number;
+      }
+    | null
+    | undefined;
 }) {
   const projectId = activeProject?._id;
   const allLoops = useQuery(
     api.loopLogs.listByProject,
-    projectId ? { projectId: projectId as Id<"projects"> } : "skip"
+    projectId ? { projectId: projectId as Id<"projects"> } : "skip",
   );
 
   if (allLoops === undefined) {
-    return (
-      <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/20 animate-pulse">
-        <div className="h-5 w-40 bg-zinc-800 rounded mb-4"></div>
-        <div className="space-y-3">
-          <div className="h-4 bg-zinc-800 rounded w-full"></div>
-          <div className="h-4 bg-zinc-800 rounded w-3/4"></div>
-        </div>
-      </div>
-    );
+    return <SkeletonCard lines={2} titleWidth="w-40" />;
   }
 
   const totalWeeks = allLoops?.length ?? 0;
@@ -495,7 +565,8 @@ function CoachingWidget({
       id: "dashboard_week_3",
       priority: "info",
       title: "Week 3 Milestone",
-      message: "73% of founders who ship by week 4 reach revenue within 6 months.",
+      message:
+        "73% of founders who ship by week 4 reach revenue within 6 months.",
       action: "Make this the week you ship something public.",
       command: "loopkit ship",
     });
@@ -504,7 +575,8 @@ function CoachingWidget({
       id: "dashboard_week_8",
       priority: "info",
       title: "Week 8 Check-In",
-      message: "You've been at this for 8 weeks. Time to review what's working.",
+      message:
+        "You've been at this for 8 weeks. Time to review what's working.",
       action: "Run the success predictor to see your trajectory.",
       command: "loopkit loop",
     });
@@ -513,7 +585,8 @@ function CoachingWidget({
       id: "dashboard_week_16",
       priority: "info",
       title: "Week 16 — Archetype Check",
-      message: "You're building real momentum. Does your brief still match user feedback?",
+      message:
+        "You're building real momentum. Does your brief still match user feedback?",
       action: "Revisit your brief and verify your riskiest assumption.",
       command: "loopkit init --analyze",
     });
@@ -524,7 +597,9 @@ function CoachingWidget({
 
   // Sort by priority
   const priorityOrder = { critical: 0, warning: 1, info: 2 };
-  const sorted = [...moments].sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+  const sorted = [...moments].sort(
+    (a, b) => priorityOrder[a.priority] - priorityOrder[b.priority],
+  );
   const top = sorted[0];
 
   const priorityColor = {
@@ -543,26 +618,41 @@ function CoachingWidget({
     <div className={`p-6 rounded-2xl border ${priorityColor[top.priority]}`}>
       <div className="flex items-center justify-between mb-4">
         <h2 className={`text-base font-semibold ${titleColor[top.priority]}`}>
-          {top.priority === "critical" ? "🚨" : top.priority === "warning" ? "⚠️" : "💡"} Coach
+          {top.priority === "critical"
+            ? "🚨"
+            : top.priority === "warning"
+              ? "⚠️"
+              : "💡"}{" "}
+          Coach
         </h2>
-        <span className="text-xs text-zinc-500">{totalWeeks} weeks tracked</span>
+        <span className="text-xs text-zinc-500">
+          {totalWeeks} weeks tracked
+        </span>
       </div>
       <p className="text-sm text-white font-medium mb-2">{top.title}</p>
       <p className="text-sm text-zinc-400 mb-4">{top.message}</p>
       <div className="flex items-center justify-between">
         <p className="text-xs text-zinc-300">→ {top.action}</p>
         {top.command && (
-          <code className="text-xs text-violet-400 bg-zinc-800/50 px-2 py-1 rounded">{top.command}</code>
+          <code className="text-xs text-violet-400 bg-zinc-800/50 px-2 py-1 rounded">
+            {top.command}
+          </code>
         )}
       </div>
       {sorted.length > 1 && (
-        <p className="text-xs text-zinc-600 mt-3">+{sorted.length - 1} more coaching moments</p>
+        <p className="text-xs text-zinc-600 mt-3">
+          +{sorted.length - 1} more coaching moments
+        </p>
       )}
     </div>
   );
 }
 
-function MarketTimingWidget({ activeProject }: { activeProject: { name: string } | undefined }) {
+function MarketTimingWidget({
+  activeProject,
+}: {
+  activeProject: { name: string } | undefined;
+}) {
   const category = activeProject?.name.toLowerCase() || "general";
   const signal = useQuery(api.marketTiming.getMarketSignal, { category });
 
@@ -595,29 +685,25 @@ function MarketTimingWidget({ activeProject }: { activeProject: { name: string }
   };
 
   if (!signal) {
-    return (
-      <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/20 animate-pulse">
-        <div className="h-5 w-40 bg-zinc-800 rounded mb-4"></div>
-        <div className="h-8 bg-zinc-800 rounded w-24 mb-3"></div>
-        <div className="space-y-2">
-          <div className="h-4 bg-zinc-800 rounded w-full"></div>
-          <div className="h-4 bg-zinc-800 rounded w-3/4"></div>
-        </div>
-      </div>
-    );
+    return <SkeletonMarketTiming />;
   }
 
   return (
     <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/20">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-base font-semibold text-white">Market Timing</h2>
-        <a href="#" className="text-xs text-violet-400 hover:text-violet-300 transition-colors">
+        <a
+          href="#"
+          className="text-xs text-violet-400 hover:text-violet-300 transition-colors"
+        >
           Run loopkit timing →
         </a>
       </div>
 
       <div className="flex items-center gap-4 mb-4">
-        <div className={`text-3xl font-bold ${scoreColor(signal.compositeScore)}`}>
+        <div
+          className={`text-3xl font-bold ${scoreColor(signal.compositeScore)}`}
+        >
           {signal.compositeScore}
           <span className="text-sm text-zinc-500 font-normal">/100</span>
         </div>

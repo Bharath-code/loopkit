@@ -14,15 +14,17 @@ export default defineSchema({
   })
     .index("by_user", ["userId"])
     .index("by_slug", ["slug"]),
-  
+
   subscriptions: defineTable({
     userId: v.id("users"),
     polarId: v.string(),
     polarPriceId: v.string(),
     status: v.string(),
     currentPeriodEnd: v.optional(v.number()),
-  }).index("by_user", ["userId"]).index("by_polar_id", ["polarId"]),
-  
+  })
+    .index("by_user", ["userId"])
+    .index("by_polar_id", ["polarId"]),
+
   pulseResponses: defineTable({
     projectId: v.id("projects"),
     text: v.string(),
@@ -34,7 +36,7 @@ export default defineSchema({
     windowStart: v.number(),
     count: v.number(),
   }).index("by_key", ["key"]),
-  
+
   loopLogs: defineTable({
     projectId: v.id("projects"),
     weekNumber: v.number(),
@@ -48,12 +50,15 @@ export default defineSchema({
         rationale: v.string(),
         tension: v.union(v.string(), v.null()),
         bipPost: v.string(),
-      })
+      }),
     ),
     overridden: v.boolean(),
     overrideReason: v.optional(v.string()),
     bipPost: v.optional(v.string()),
-  }).index("by_project", ["projectId"]),
+  })
+    .index("by_project", ["projectId"])
+    .index("by_project_date", ["projectId", "date"])
+    .index("by_date", ["date"]),
 
   aiUsage: defineTable({
     userId: v.id("users"),
@@ -146,14 +151,16 @@ export default defineSchema({
         hn: v.optional(v.object({ title: v.string(), body: v.string() })),
         twitter: v.optional(v.object({ tweets: v.array(v.string()) })),
         ih: v.optional(v.object({ body: v.string() })),
-      })
+      }),
     ),
-    checklist: v.optional(v.object({
-      readmeUpdated: v.boolean(),
-      landingPageLive: v.boolean(),
-      analyticsPresent: v.boolean(),
-      feedbackWidgetInstalled: v.boolean(),
-    })),
+    checklist: v.optional(
+      v.object({
+        readmeUpdated: v.boolean(),
+        landingPageLive: v.boolean(),
+        analyticsPresent: v.boolean(),
+        feedbackWidgetInstalled: v.boolean(),
+      }),
+    ),
     createdAt: v.number(),
   })
     .index("by_project", ["projectId"])

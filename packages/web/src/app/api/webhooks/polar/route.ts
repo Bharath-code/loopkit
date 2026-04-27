@@ -6,6 +6,19 @@ import { Id } from "../../../../../convex/_generated/dataModel";
 
 const webhookSecret = process.env.POLAR_WEBHOOK_SECRET!;
 
+interface PolarWebhookEvent {
+  type: string;
+  data: {
+    id: string;
+    priceId: string;
+    status: string;
+    currentPeriodEnd?: string;
+    customerMetadata?: {
+      userId?: string;
+    };
+  };
+}
+
 export async function POST(req: NextRequest) {
   try {
     const rawBody = await req.text();
@@ -18,14 +31,14 @@ export async function POST(req: NextRequest) {
     const wh = new Webhook(webhookSecret);
     const event = wh.verify(rawBody, {
       "webhook-signature": signature,
-    }) as any;
+    }) as PolarWebhookEvent;
 
     switch (event.type) {
       case "subscription.created":
       case "subscription.updated":
         const sub = event.data;
         const userId = sub.customerMetadata?.userId;
-        
+
         if (!userId) {
           console.error("No userId in customer metadata", sub.id);
           break;
@@ -36,10 +49,12 @@ export async function POST(req: NextRequest) {
           polarId: sub.id,
           polarPriceId: sub.priceId,
           status: sub.status,
-          currentPeriodEnd: sub.currentPeriodEnd ? new Date(sub.currentPeriodEnd).getTime() : undefined,
+          currentPeriodEnd: sub.currentPeriodEnd
+            ? new Date(sub.currentPeriodEnd).getTime()
+            : undefined,
         });
         break;
-      
+
       case "subscription.canceled":
         // Handle cancel
         break;

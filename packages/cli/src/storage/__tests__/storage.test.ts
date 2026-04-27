@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
@@ -71,51 +71,85 @@ describe("Path Resolvers", () => {
   }
 
   it("getRoot returns .loopkit in cwd", () => {
-    expect(normalizePath(getRoot())).toBe(normalizePath(path.join(TEST_BASE, ".loopkit")));
+    expect(normalizePath(getRoot())).toBe(
+      normalizePath(path.join(TEST_BASE, ".loopkit")),
+    );
   });
 
   it("getConfigPath returns correct path", () => {
-    expect(normalizePath(getConfigPath())).toBe(normalizePath(path.join(TEST_BASE, ".loopkit", "config.json")));
+    expect(normalizePath(getConfigPath())).toBe(
+      normalizePath(path.join(TEST_BASE, ".loopkit", "config.json")),
+    );
   });
 
   it("getProjectDir returns projects/slug", () => {
-    expect(normalizePath(getProjectDir("my-app"))).toBe(normalizePath(path.join(TEST_BASE, ".loopkit", "projects", "my-app")));
+    expect(normalizePath(getProjectDir("my-app"))).toBe(
+      normalizePath(path.join(TEST_BASE, ".loopkit", "projects", "my-app")),
+    );
   });
 
   it("getBriefPath returns brief.md", () => {
-    expect(normalizePath(getBriefPath("my-app"))).toBe(normalizePath(path.join(TEST_BASE, ".loopkit", "projects", "my-app", "brief.md")));
+    expect(normalizePath(getBriefPath("my-app"))).toBe(
+      normalizePath(
+        path.join(TEST_BASE, ".loopkit", "projects", "my-app", "brief.md"),
+      ),
+    );
   });
 
   it("getBriefJsonPath returns brief.json", () => {
-    expect(normalizePath(getBriefJsonPath("my-app"))).toBe(normalizePath(path.join(TEST_BASE, ".loopkit", "projects", "my-app", "brief.json")));
+    expect(normalizePath(getBriefJsonPath("my-app"))).toBe(
+      normalizePath(
+        path.join(TEST_BASE, ".loopkit", "projects", "my-app", "brief.json"),
+      ),
+    );
   });
 
   it("getTasksPath returns tasks.md", () => {
-    expect(normalizePath(getTasksPath("my-app"))).toBe(normalizePath(path.join(TEST_BASE, ".loopkit", "projects", "my-app", "tasks.md")));
+    expect(normalizePath(getTasksPath("my-app"))).toBe(
+      normalizePath(
+        path.join(TEST_BASE, ".loopkit", "projects", "my-app", "tasks.md"),
+      ),
+    );
   });
 
   it("getCutPath returns cut.md", () => {
-    expect(normalizePath(getCutPath("my-app"))).toBe(normalizePath(path.join(TEST_BASE, ".loopkit", "projects", "my-app", "cut.md")));
+    expect(normalizePath(getCutPath("my-app"))).toBe(
+      normalizePath(
+        path.join(TEST_BASE, ".loopkit", "projects", "my-app", "cut.md"),
+      ),
+    );
   });
 
   it("getShipDir returns ships dir", () => {
-    expect(normalizePath(getShipDir())).toBe(normalizePath(path.join(TEST_BASE, ".loopkit", "ships")));
+    expect(normalizePath(getShipDir())).toBe(
+      normalizePath(path.join(TEST_BASE, ".loopkit", "ships")),
+    );
   });
 
   it("getShipLogPath returns dated file", () => {
-    expect(normalizePath(getShipLogPath("2026-04-25"))).toBe(normalizePath(path.join(TEST_BASE, ".loopkit", "ships", "2026-04-25.md")));
+    expect(normalizePath(getShipLogPath("2026-04-25"))).toBe(
+      normalizePath(path.join(TEST_BASE, ".loopkit", "ships", "2026-04-25.md")),
+    );
   });
 
   it("getLoopLogPath returns week file", () => {
-    expect(normalizePath(getLoopLogPath(3))).toBe(normalizePath(path.join(TEST_BASE, ".loopkit", "logs", "week-3.md")));
+    expect(normalizePath(getLoopLogPath(3))).toBe(
+      normalizePath(path.join(TEST_BASE, ".loopkit", "logs", "week-3.md")),
+    );
   });
 
   it("getPulseDir returns pulse dir", () => {
-    expect(normalizePath(getPulseDir())).toBe(normalizePath(path.join(TEST_BASE, ".loopkit", "pulse")));
+    expect(normalizePath(getPulseDir())).toBe(
+      normalizePath(path.join(TEST_BASE, ".loopkit", "pulse")),
+    );
   });
 
   it("getPulseResponsesPath returns responses.json", () => {
-    expect(normalizePath(getPulseResponsesPath())).toBe(normalizePath(path.join(TEST_BASE, ".loopkit", "pulse", "responses.json")));
+    expect(normalizePath(getPulseResponsesPath())).toBe(
+      normalizePath(
+        path.join(TEST_BASE, ".loopkit", "pulse", "responses.json"),
+      ),
+    );
   });
 });
 
@@ -245,25 +279,29 @@ describe("Brief I/O", () => {
   });
 
   it("saveBrief with brief data includes scores", () => {
-    saveBrief("my-app", {
-      name: "TestApp",
-      problem: "test",
-      icp: "test",
-      whyUnsolved: "test",
-      mvp: "test",
-    }, {
-      bet: "test bet",
-      icpScore: 8,
-      icpNote: "good",
-      problemScore: 7,
-      problemNote: "ok",
-      mvpScore: 6,
-      mvpNote: "narrow",
-      overallScore: 7,
-      riskiestAssumption: "risk",
-      validateAction: "action",
-      mvpPlainEnglish: "simple",
-    });
+    saveBrief(
+      "my-app",
+      {
+        name: "TestApp",
+        problem: "test",
+        icp: "test",
+        whyUnsolved: "test",
+        mvp: "test",
+      },
+      {
+        bet: "test bet",
+        icpScore: 8,
+        icpNote: "good",
+        problemScore: 7,
+        problemNote: "ok",
+        mvpScore: 6,
+        mvpNote: "narrow",
+        overallScore: 7,
+        riskiestAssumption: "risk",
+        validateAction: "action",
+        mvpPlainEnglish: "simple",
+      },
+    );
     const data = readBriefJson("my-app");
     expect(data?.brief?.icpScore).toBe(8);
   });
@@ -566,5 +604,81 @@ describe("projectExists", () => {
 
   it("returns false for missing project", () => {
     expect(projectExists("nonexistent")).toBe(false);
+  });
+});
+
+describe("Token Encryption", () => {
+  beforeEach(() => {
+    cleanupTestDir();
+    fs.mkdirSync(TEST_BASE);
+    setCwdToTestDir();
+  });
+
+  afterEach(() => cleanupTestDir());
+
+  it("encrypts API key on write and decrypts on read", () => {
+    const apiKey = "sk-ant-test12345";
+    writeConfig({ version: 1, auth: { apiKey } });
+    const config = readConfig();
+    expect(config.auth?.apiKey).toBe(apiKey);
+  });
+
+  it("stores encrypted value on disk, not plaintext", () => {
+    const apiKey = "sk-ant-secret";
+    writeConfig({ version: 1, auth: { apiKey } });
+    const rawOnDisk = fs.readFileSync(getConfigPath(), "utf-8");
+    expect(rawOnDisk).not.toContain(apiKey);
+    expect(rawOnDisk).toContain("enc:");
+  });
+
+  it("strips corrupted encrypted token and warns", () => {
+    ensureLoopkitDir();
+    fs.writeFileSync(
+      getConfigPath(),
+      JSON.stringify({
+        version: 1,
+        auth: { apiKey: "enc:corrupted!!!" },
+        encryptionSalt: "abc123",
+      }),
+    );
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const config = readConfig();
+    expect(config.auth?.apiKey).toBeUndefined();
+    expect(warnSpy).toHaveBeenCalled();
+    warnSpy.mockRestore();
+  });
+
+  it("passes through plaintext token without enc: prefix", () => {
+    ensureLoopkitDir();
+    fs.writeFileSync(
+      getConfigPath(),
+      JSON.stringify({ version: 1, auth: { apiKey: "plain-api-key" } }),
+    );
+    const config = readConfig();
+    expect(config.auth?.apiKey).toBe("plain-api-key");
+  });
+
+  it("generates salt on first write and reuses it", () => {
+    writeConfig({ version: 1, auth: { apiKey: "key1" } });
+    const config1 = readConfig();
+    expect(config1.encryptionSalt).toBeDefined();
+    const salt1 = config1.encryptionSalt;
+
+    writeConfig({
+      version: 1,
+      auth: { apiKey: "key2" },
+      encryptionSalt: salt1,
+    });
+    const config2 = readConfig();
+    expect(config2.encryptionSalt).toBe(salt1);
+  });
+
+  it("can re-encrypt and re-decrypt multiple times", () => {
+    const keys = ["key-a", "key-b", "key-c"];
+    for (const key of keys) {
+      writeConfig({ version: 1, auth: { apiKey: key } });
+      const config = readConfig();
+      expect(config.auth?.apiKey).toBe(key);
+    }
   });
 });

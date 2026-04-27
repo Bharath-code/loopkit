@@ -30,7 +30,9 @@ export const ensureProject = mutation({
       if (existing.userId === userId) {
         return { projectId: existing._id, created: false };
       }
-      throw new Error("Forbidden: project slug already exists under a different owner");
+      throw new Error(
+        "Forbidden: project slug already exists under a different owner",
+      );
     }
 
     const projectId = await ctx.db.insert("projects", {
@@ -103,16 +105,20 @@ export const incrementRateLimit = mutation({
 });
 
 export const getResponses = query({
-  args: { projectId: v.id("projects") },
+  args: {
+    projectId: v.id("projects"),
+    limit: v.optional(v.number()),
+  },
   handler: async (ctx, args) => {
     const authorized = await userOwnsProject(ctx, args.projectId);
     if (!authorized) return [];
 
+    const limit = Math.min(args.limit ?? 100, 100);
     return await ctx.db
       .query("pulseResponses")
       .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
       .order("desc")
-      .collect();
+      .take(limit);
   },
 });
 

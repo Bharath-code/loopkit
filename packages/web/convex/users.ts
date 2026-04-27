@@ -20,9 +20,14 @@ export const me = query({
       .filter((q) => q.eq(q.field("status"), "active"))
       .first();
 
+    const isPro =
+      subscription &&
+      subscription.currentPeriodEnd &&
+      subscription.currentPeriodEnd > Date.now();
+
     return {
       ...user,
-      tier: subscription ? "pro" : "free", // simplified tier resolution for MVP
+      tier: isPro ? "pro" : "free",
     };
   },
 });

@@ -3,16 +3,20 @@ import { v } from "convex/values";
 import { userOwnsProject } from "./authHelpers";
 
 export const listByProject = query({
-  args: { projectId: v.id("projects") },
+  args: {
+    projectId: v.id("projects"),
+    limit: v.optional(v.number()),
+  },
   handler: async (ctx, args) => {
     const authorized = await userOwnsProject(ctx, args.projectId);
     if (!authorized) return [];
 
+    const limit = Math.min(args.limit ?? 100, 100);
     return await ctx.db
       .query("loopLogs")
       .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
       .order("desc")
-      .collect();
+      .take(limit);
   },
 });
 

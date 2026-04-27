@@ -21,18 +21,32 @@ export const getBenchmarks = query({
       return { user: null, message: "Unauthorized." };
     }
 
+    const ninetyDaysAgo = new Date();
+    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+    const cutoffDate = ninetyDaysAgo.toISOString().split("T")[0];
+
     const logs = await ctx.db
       .query("loopLogs")
-      .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
+      .withIndex("by_project_date", (q) =>
+        q.eq("projectId", args.projectId).gte("date", cutoffDate),
+      )
       .order("desc")
       .take(12);
 
     if (logs.length === 0) {
-      return { user: null, message: "Not enough data yet. Complete your first weekly loop to see benchmarks." };
+      return {
+        user: null,
+        message:
+          "Not enough data yet. Complete your first weekly loop to see benchmarks.",
+      };
     }
 
-    // All logs across all projects (anonymized aggregation)
-    const allLogs = await ctx.db.query("loopLogs").order("desc").take(500);
+    // All logs across all projects (anonymized aggregation, last 90 days only)
+    const allLogs = await ctx.db
+      .query("loopLogs")
+      .withIndex("by_date", (q) => q.gte("date", cutoffDate))
+      .order("desc")
+      .take(500);
 
     const allCompletionRates = allLogs
       .filter((l) => l.tasksTotal > 0)
@@ -46,18 +60,25 @@ export const getBenchmarks = query({
 
     // Latest user metrics
     const latest = logs[0];
-    const userCompletionRate = latest.tasksTotal > 0
-      ? Math.round((latest.tasksCompleted / latest.tasksTotal) * 100)
-      : 0;
+    const userCompletionRate =
+      latest.tasksTotal > 0
+        ? Math.round((latest.tasksCompleted / latest.tasksTotal) * 100)
+        : 0;
 
     // User averages over last 4 weeks
     const recent = logs.slice(0, 4);
-    const avgTasksCompleted = recent.length > 0
-      ? Math.round(recent.reduce((s, l) => s + l.tasksCompleted, 0) / recent.length)
-      : 0;
-    const avgScore = recent.length > 0
-      ? Math.round(recent.reduce((s, l) => s + l.shippingScore, 0) / recent.length)
-      : 0;
+    const avgTasksCompleted =
+      recent.length > 0
+        ? Math.round(
+            recent.reduce((s, l) => s + l.tasksCompleted, 0) / recent.length,
+          )
+        : 0;
+    const avgScore =
+      recent.length > 0
+        ? Math.round(
+            recent.reduce((s, l) => s + l.shippingScore, 0) / recent.length,
+          )
+        : 0;
 
     // Current streak (from most recent backward)
     const userStreak = computeCurrentStreak(logs);
@@ -90,20 +111,34 @@ export const getShareCard = query({
     if (!authorized) return null;
 
     const project = await ctx.db.get(args.projectId);
+
+    const ninetyDaysAgo = new Date();
+    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+    const cutoffDate = ninetyDaysAgo.toISOString().split("T")[0];
+
     const logs = await ctx.db
       .query("loopLogs")
-      .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
+      .withIndex("by_project_date", (q) =>
+        q.eq("projectId", args.projectId).gte("date", cutoffDate),
+      )
       .order("desc")
       .take(4);
 
     if (logs.length === 0) return null;
 
-    const avgScore = Math.round(logs.reduce((s, l) => s + l.shippingScore, 0) / logs.length);
-    const avgTasks = Math.round(logs.reduce((s, l) => s + l.tasksCompleted, 0) / logs.length);
+    const avgScore = Math.round(
+      logs.reduce((s, l) => s + l.shippingScore, 0) / logs.length,
+    );
+    const avgTasks = Math.round(
+      logs.reduce((s, l) => s + l.tasksCompleted, 0) / logs.length,
+    );
     const streak = computeCurrentStreak(logs);
 
-    // Get aggregated score distribution for percentile
-    const allLogs = await ctx.db.query("loopLogs").take(500);
+    // Get aggregated score distribution for percentile (last 90 days)
+    const allLogs = await ctx.db
+      .query("loopLogs")
+      .withIndex("by_date", (q) => q.gte("date", cutoffDate))
+      .take(500);
     const allScores = allLogs.map((l) => l.shippingScore);
 
     return {
@@ -113,7 +148,12 @@ export const getShareCard = query({
       streak,
       scorePercentile: percentileOf(allScores, avgScore),
       totalWeeks: logs.length,
-      shareText: buildShareText(project?.name || "Project", avgScore, avgTasks, streak),
+      shareText: buildShareText(
+        project?.name || "Project",
+        avgScore,
+        avgTasks,
+        streak,
+      ),
     };
   },
 });
@@ -129,9 +169,7 @@ function percentileOf(values: number[], target: number): number {
 
 // ─── Streak computation (current, from most recent backward) ───────
 
-function computeCurrentStreak(
-  logs: Array<{ weekNumber: number }>
-): number {
+function computeCurrentStreak(logs: Array<{ weekNumber: number }>): number {
   if (logs.length === 0) return 0;
 
   // logs are sorted desc (most recent first)
@@ -149,9 +187,7 @@ function computeCurrentStreak(
 
 // ─── Streaks grouped by project (avoids interleaving users) ───────
 
-function computeStreaksByProject(
-  allLogs: LogEntry[]
-): number[] {
+function computeStreaksByProject(allLogs: LogEntry[]): number[] {
   if (allLogs.length === 0) return [];
 
   const byProject = new Map<Id<"projects">, Array<{ weekNumber: number }>>();
@@ -175,7 +211,9 @@ function computeStreaksByProject(
 
 // ─── Trend computation ────────────────────────────────────────────
 
-function computeTrend(recent: Array<{ shippingScore: number }>): "up" | "down" | "flat" {
+function computeTrend(
+  recent: Array<{ shippingScore: number }>,
+): "up" | "down" | "flat" {
   if (recent.length < 2) return "flat";
   const first = recent[recent.length - 1].shippingScore;
   const last = recent[0].shippingScore;
@@ -187,7 +225,12 @@ function computeTrend(recent: Array<{ shippingScore: number }>): "up" | "down" |
 
 // ─── Share text builder ───────────────────────────────────────────
 
-function buildShareText(projectName: string, score: number, tasks: number, streak: number): string {
+function buildShareText(
+  projectName: string,
+  score: number,
+  tasks: number,
+  streak: number,
+): string {
   return [
     `🚀 ${projectName}`,
     `  Shipping Score: ${score}/100`,
@@ -199,7 +242,12 @@ function buildShareText(projectName: string, score: number, tasks: number, strea
 
 // ─── Founder Archetype Detection ─────────────────────────────────
 
-export type Archetype = "Sprinter" | "Marathoner" | "Perfectionist" | "Reactor" | "All-Star";
+export type Archetype =
+  | "Sprinter"
+  | "Marathoner"
+  | "Perfectionist"
+  | "Reactor"
+  | "All-Star";
 
 export const getArchetype = query({
   args: { projectId: v.id("projects") },
@@ -233,11 +281,13 @@ export const getArchetype = query({
     if (avgScore >= 80 && scoreVariance <= 20 && taskVariance <= 4) {
       archetype = "All-Star";
       emoji = "🌟";
-      description = "Rare profile — you maintain both high output and high consistency. You're in the top tier of solo founders.";
+      description =
+        "Rare profile — you maintain both high output and high consistency. You're in the top tier of solo founders.";
     } else if (avgScore >= 75 && avgTasks <= 3) {
       archetype = "Perfectionist";
       emoji = "🎯";
-      description = "You complete what you start at a high level, but your volume is low. Consider shipping more often and iterating based on feedback.";
+      description =
+        "You complete what you start at a high level, but your volume is low. Consider shipping more often and iterating based on feedback.";
     } else if (sorted.length >= 4) {
       const firstTwo = sorted.slice(0, 2);
       const lastTwo = sorted.slice(-2);
@@ -246,20 +296,24 @@ export const getArchetype = query({
       if (firstAvg > lastAvg * 1.5 && firstAvg >= 5) {
         archetype = "Sprinter";
         emoji = "⚡";
-        description = "High initial energy that fades over time. You start fast but struggle with pacing. Try adding fewer tasks per week.";
+        description =
+          "High initial energy that fades over time. You start fast but struggle with pacing. Try adding fewer tasks per week.";
       } else if (scores.every((s) => s >= 40) && scoreVariance <= 25) {
         archetype = "Marathoner";
         emoji = "🏃";
-        description = "Steady, consistent, and reliable. You ship at a sustainable pace and rarely miss a week. This is the highest-retention founder profile.";
+        description =
+          "Steady, consistent, and reliable. You ship at a sustainable pace and rarely miss a week. This is the highest-retention founder profile.";
       } else {
         archetype = "Reactor";
         emoji = "🌊";
-        description = "Your output varies significantly week to week. Building a regular rhythm will help smooth out the volatility.";
+        description =
+          "Your output varies significantly week to week. Building a regular rhythm will help smooth out the volatility.";
       }
     } else {
       archetype = "Reactor";
       emoji = "🌊";
-      description = "Not enough data to determine your pattern yet. Keep tracking for more accurate insights.";
+      description =
+        "Not enough data to determine your pattern yet. Keep tracking for more accurate insights.";
     }
 
     return {
@@ -323,15 +377,22 @@ interface TrendCount {
 }
 
 function computeTrends(
-  items: Array<{ category: string; weekNumber: number; submittedAt: number }>
+  items: Array<{ category: string; weekNumber: number; submittedAt: number }>,
 ): TrendCount[] {
   const now = Date.now();
   const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
   const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
 
-  const grouped = new Map<string, { total: number; recent7d: number; recent30d: number }>();
+  const grouped = new Map<
+    string,
+    { total: number; recent7d: number; recent30d: number }
+  >();
   for (const item of items) {
-    const existing = grouped.get(item.category) || { total: 0, recent7d: 0, recent30d: 0 };
+    const existing = grouped.get(item.category) || {
+      total: 0,
+      recent7d: 0,
+      recent30d: 0,
+    };
     existing.total++;
     if (now - item.submittedAt < sevenDaysMs) existing.recent7d++;
     if (now - item.submittedAt < thirtyDaysMs) existing.recent30d++;
@@ -388,11 +449,25 @@ export const getTrendingValidations = query({
       };
     }
 
-    const icpItems = all.map((a) => ({ category: a.icpCategory, weekNumber: a.weekNumber, submittedAt: a.submittedAt }));
-    const problemItems = all.map((a) => ({ category: a.problemCategory, weekNumber: a.weekNumber, submittedAt: a.submittedAt }));
-    const mvpItems = all.map((a) => ({ category: a.mvpCategory, weekNumber: a.weekNumber, submittedAt: a.submittedAt }));
+    const icpItems = all.map((a) => ({
+      category: a.icpCategory,
+      weekNumber: a.weekNumber,
+      submittedAt: a.submittedAt,
+    }));
+    const problemItems = all.map((a) => ({
+      category: a.problemCategory,
+      weekNumber: a.weekNumber,
+      submittedAt: a.submittedAt,
+    }));
+    const mvpItems = all.map((a) => ({
+      category: a.mvpCategory,
+      weekNumber: a.weekNumber,
+      submittedAt: a.submittedAt,
+    }));
 
-    const distinctUsers = new Set(all.map((a) => `${a.icpCategory}:${a.problemCategory}`));
+    const distinctUsers = new Set(
+      all.map((a) => `${a.icpCategory}:${a.problemCategory}`),
+    );
 
     const hasMore = all.length >= limit;
     const nextCursor = hasMore ? String(all[all.length - 1].submittedAt) : null;
@@ -427,7 +502,9 @@ export const getTrendingForCategory = query({
 
     for (const a of all) {
       const icpMatch = a.icpCategory.includes(args.category.toLowerCase());
-      const problemMatch = a.problemCategory.includes(args.category.toLowerCase());
+      const problemMatch = a.problemCategory.includes(
+        args.category.toLowerCase(),
+      );
       if (icpMatch || problemMatch) {
         matchCount++;
         if (now - a.submittedAt < thirtyDaysMs) recentMatchCount++;

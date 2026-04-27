@@ -1,9 +1,18 @@
 import * as p from "@clack/prompts";
 import { readConfig, writeConfig } from "../storage/local.js";
 import { getCoachingPlan, recordMomentShown } from "../analytics/coach.js";
-import { colors, header, coachingPlanCard, nextStep, shortcutsHint } from "../ui/theme.js";
+import {
+  colors,
+  header,
+  coachingPlanCard,
+  nextStep,
+  shortcutsHint,
+} from "../ui/theme.js";
 
-export async function coachCommand(options?: { off?: boolean; on?: boolean }): Promise<void> {
+export async function coachCommand(options?: {
+  off?: boolean;
+  on?: boolean;
+}): Promise<void> {
   const config = readConfig();
   const slug = config.activeProject;
 
@@ -11,7 +20,9 @@ export async function coachCommand(options?: { off?: boolean; on?: boolean }): P
   if (options?.off) {
     config.coaching = { ...config.coaching, enabled: false };
     writeConfig(config);
-    console.log(colors.muted("Coaching disabled. Run `loopkit coach --on` to re-enable."));
+    console.log(
+      colors.muted("Coaching disabled. Run `loopkit coach --on` to re-enable."),
+    );
     return;
   }
 
@@ -27,7 +38,9 @@ export async function coachCommand(options?: { off?: boolean; on?: boolean }): P
   }
 
   if (config.coaching?.enabled === false) {
-    console.log(colors.muted("Coaching is disabled. Run `loopkit coach --on` to enable."));
+    console.log(
+      colors.muted("Coaching is disabled. Run `loopkit coach --on` to enable."),
+    );
     return;
   }
 
@@ -43,13 +56,19 @@ export async function coachCommand(options?: { off?: boolean; on?: boolean }): P
   s.stop("Analysis complete.");
 
   if (!plan || plan.moments.length === 0) {
+    console.log(header("Not Enough Data Yet"));
     console.log(
-      header("Not Enough Data Yet")
+      colors.muted("  Coaching needs at least 2 weeks of loop data."),
     );
-    console.log(colors.muted("  Coaching needs at least 2 weeks of loop data."));
-    console.log(colors.muted("  Run `loopkit loop` for a few weeks to unlock personalized coaching."));
+    console.log(
+      colors.muted(
+        "  Run `loopkit loop` for a few weeks to unlock personalized coaching.",
+      ),
+    );
     console.log(nextStep("loop"));
-    p.outro(colors.muted("Keep shipping. Coaching will get smarter every week."));
+    p.outro(
+      colors.muted("Keep shipping. Coaching will get smarter every week."),
+    );
     return;
   }
 
@@ -62,7 +81,12 @@ export async function coachCommand(options?: { off?: boolean; on?: boolean }): P
       message: `Acknowledge: ${moment.title}?`,
     });
 
-    if (!p.isCancel(ack) && ack) {
+    if (p.isCancel(ack)) {
+      p.outro(colors.muted("Coaching cancelled."));
+      return;
+    }
+
+    if (ack) {
       recordMomentShown(moment.id);
       console.log(colors.success(`  ✓ Marked as seen`));
     }

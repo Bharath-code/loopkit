@@ -2,8 +2,12 @@ import * as p from "@clack/prompts";
 import { readConfig, readBriefJson, listProjects } from "../storage/local.js";
 import { colors, header, info, shortcutsHint } from "../ui/theme.js";
 import { analyzeMarket } from "../analytics/marketTiming.js";
+import { detectProjectCategory } from "@loopkit/shared";
 
-export async function timingCommand(options?: { category?: string; project?: string }): Promise<void> {
+export async function timingCommand(options?: {
+  category?: string;
+  project?: string;
+}): Promise<void> {
   p.intro(colors.primary.bold("LoopKit — Market Timing Signal"));
   console.log(shortcutsHint());
 
@@ -13,16 +17,18 @@ export async function timingCommand(options?: { category?: string; project?: str
 
     if (!category && options?.project) {
       const projects = listProjects();
-      const match = projects.find((pr) => pr.slug === options.project);
-      if (match) {
-        category = match.name;
+      if (projects.includes(options.project)) {
+        const brief = readBriefJson(options.project);
+        if (brief) {
+          category = detectProjectCategory(brief.mvpPlainEnglish);
+        }
       }
     }
 
     if (!category && config?.activeProject) {
       const brief = readBriefJson(config.activeProject);
       if (brief) {
-        category = brief.mvpPlainEnglish.split(" ")[0] || "general";
+        category = detectProjectCategory(brief.mvpPlainEnglish);
       }
     }
 
@@ -53,7 +59,12 @@ export async function timingCommand(options?: { category?: string; project?: str
 
     const { signal } = result;
 
-    const signalEmoji = signal.signal === "heating" ? "🔥" : signal.signal === "cooling" ? "❄️" : "⚖️";
+    const signalEmoji =
+      signal.signal === "heating"
+        ? "🔥"
+        : signal.signal === "cooling"
+          ? "❄️"
+          : "⚖️";
     const signalColor =
       signal.signal === "heating"
         ? colors.success
@@ -61,7 +72,9 @@ export async function timingCommand(options?: { category?: string; project?: str
           ? colors.danger
           : colors.warning;
 
-    info(`${signalEmoji} Composite Score: ${signalColor(String(signal.compositeScore))}/100`);
+    info(
+      `${signalEmoji} Composite Score: ${signalColor(String(signal.compositeScore))}/100`,
+    );
     info(`Signal: ${signalColor(signal.signal.toUpperCase())}`);
     console.log("");
 
@@ -78,13 +91,13 @@ export async function timingCommand(options?: { category?: string; project?: str
 
     console.log(colors.dim("  ─────────────────────────────────"));
     console.log(
-      `  ${trendArrow(signal.fundingTrend)} Funding:   ${signal.fundingCount} rounds detected`
+      `  ${trendArrow(signal.fundingTrend)} Funding:   ${signal.fundingCount} rounds detected`,
     );
     console.log(
-      `  ${trendArrow(signal.devTrend)} Dev Activity: ${signal.devGrowth} avg stars/repos`
+      `  ${trendArrow(signal.devTrend)} Dev Activity: ${signal.devGrowth} avg stars/repos`,
     );
     console.log(
-      `  ${trendArrow(signal.hiringTrend)} Hiring:     ${signal.hiringCount} postings found`
+      `  ${trendArrow(signal.hiringTrend)} Hiring:     ${signal.hiringCount} postings found`,
     );
     console.log(colors.dim("  ─────────────────────────────────"));
     console.log("");
@@ -98,7 +111,11 @@ export async function timingCommand(options?: { category?: string; project?: str
 
     info(`Interpretation: ${interpretation}`);
     console.log("");
-    console.log(colors.dim(`  Last updated: ${new Date(signal.lastUpdated).toLocaleDateString()}`));
+    console.log(
+      colors.dim(
+        `  Last updated: ${new Date(signal.lastUpdated).toLocaleDateString()}`,
+      ),
+    );
   } catch (error) {
     console.log("");
     console.log(colors.danger("  Market analysis failed."));

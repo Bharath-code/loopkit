@@ -11,9 +11,19 @@ import {
   LoopSynthesisSchema,
   LoopLogSchema,
   ConfigSchema,
+  ShippingDNASchema,
+  ChurnRiskSchema,
+  SuccessPredictionSchema,
+  CompetitorLaunchSchema,
+  KeywordOpportunitySchema,
+  MarketSignalSchema,
+  PatternInterruptResponseSchema,
+  CoachingPlanSchema,
+  PeerInspirationResponseSchema,
   slugify,
   getWeekNumber,
   formatDate,
+  detectProjectCategory,
 } from "../index";
 
 describe("InitAnswersSchema", () => {
@@ -462,5 +472,450 @@ describe("formatDate", () => {
   it("returns today's date when no argument", () => {
     const result = formatDate();
     expect(result).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+});
+
+describe("ShippingDNASchema", () => {
+  it("parses valid shipping DNA", () => {
+    const valid = {
+      pattern: "Marathoner",
+      patternDescription: "Steady progress over time",
+      velocityTrend: "accelerating",
+      avgTasksCompleted: 4.5,
+      avgScore: 7.2,
+      peakDay: "Tuesday",
+      completionStyle: "finisher",
+      totalWeeks: 8,
+      streak: 3,
+      riskWarnings: ["Scope creep detected"],
+      strengths: ["Consistent shipping"],
+    };
+    const result = ShippingDNASchema.parse(valid);
+    expect(result.pattern).toBe("Marathoner");
+    expect(result.totalWeeks).toBe(8);
+  });
+
+  it("rejects invalid pattern", () => {
+    const invalid = {
+      pattern: "Unknown",
+      patternDescription: "test",
+      velocityTrend: "steady",
+      avgTasksCompleted: 1,
+      avgScore: 1,
+      peakDay: "Mon",
+      completionStyle: "balancer",
+      totalWeeks: 1,
+      streak: 0,
+      riskWarnings: [],
+      strengths: [],
+    };
+    expect(() => ShippingDNASchema.parse(invalid)).toThrow();
+  });
+});
+
+describe("ChurnRiskSchema", () => {
+  it("parses valid churn risk", () => {
+    const valid = {
+      level: "medium",
+      signals: [
+        {
+          type: "declining_score",
+          severity: "warning",
+          message: "Score dropped 2 weeks in a row",
+        },
+      ],
+      suggestions: ["Run loopkit loop to realign"],
+    };
+    const result = ChurnRiskSchema.parse(valid);
+    expect(result.level).toBe("medium");
+    expect(result.signals).toHaveLength(1);
+  });
+
+  it("rejects invalid signal type", () => {
+    const invalid = {
+      level: "high",
+      signals: [
+        {
+          type: "missing_tasks",
+          severity: "warning",
+          message: "test",
+        },
+      ],
+      suggestions: [],
+    };
+    expect(() => ChurnRiskSchema.parse(invalid)).toThrow();
+  });
+});
+
+describe("SuccessPredictionSchema", () => {
+  it("parses valid success prediction", () => {
+    const valid = {
+      probability: 0.65,
+      confidence: "medium",
+      strengths: ["Consistent shipping", "Clear ICP"],
+      risks: ["Low velocity", "No revenue yet"],
+      shiftFactors: [
+        {
+          factor: "Increase ship cadence",
+          impact: 0.15,
+          direction: "positive",
+        },
+      ],
+      weeksAnalyzed: 12,
+    };
+    const result = SuccessPredictionSchema.parse(valid);
+    expect(result.probability).toBe(0.65);
+    expect(result.confidence).toBe("medium");
+  });
+
+  it("rejects probability above 1", () => {
+    const invalid = {
+      probability: 1.5,
+      confidence: "high",
+      strengths: [],
+      risks: [],
+      shiftFactors: [],
+      weeksAnalyzed: 4,
+    };
+    expect(() => SuccessPredictionSchema.parse(invalid)).toThrow();
+  });
+});
+
+describe("CompetitorLaunchSchema", () => {
+  it("parses valid competitor launch", () => {
+    const valid = {
+      name: "CompetitorX",
+      url: "https://competitorx.com",
+      date: "2026-04-20",
+      platform: "producthunt",
+      relevance: 85,
+      description: "A new tool for founders",
+      tagline: "Ship faster",
+    };
+    const result = CompetitorLaunchSchema.parse(valid);
+    expect(result.platform).toBe("producthunt");
+    expect(result.relevance).toBe(85);
+  });
+
+  it("rejects invalid platform", () => {
+    const invalid = {
+      name: "Test",
+      date: "2026-04-20",
+      platform: "linkedin",
+      relevance: 50,
+    };
+    expect(() => CompetitorLaunchSchema.parse(invalid)).toThrow();
+  });
+
+  it("rejects relevance above 100", () => {
+    const invalid = {
+      name: "Test",
+      date: "2026-04-20",
+      platform: "hackernews",
+      relevance: 101,
+    };
+    expect(() => CompetitorLaunchSchema.parse(invalid)).toThrow();
+  });
+});
+
+describe("KeywordOpportunitySchema", () => {
+  it("parses valid keyword opportunity", () => {
+    const valid = {
+      keyword: "saas founder tools",
+      score: 78,
+      volume: "medium",
+      competition: "low",
+      sources: ["google-autocomplete"],
+      suggestions: ["saas founder toolkit", "best saas founder tools"],
+    };
+    const result = KeywordOpportunitySchema.parse(valid);
+    expect(result.keyword).toBe("saas founder tools");
+    expect(result.score).toBe(78);
+  });
+
+  it("rejects invalid volume enum", () => {
+    const invalid = {
+      keyword: "test",
+      score: 50,
+      volume: "huge",
+      competition: "low",
+      sources: [],
+    };
+    expect(() => KeywordOpportunitySchema.parse(invalid)).toThrow();
+  });
+
+  it("rejects negative score", () => {
+    const invalid = {
+      keyword: "test",
+      score: -1,
+      volume: "low",
+      competition: "high",
+      sources: [],
+    };
+    expect(() => KeywordOpportunitySchema.parse(invalid)).toThrow();
+  });
+});
+
+describe("MarketSignalSchema", () => {
+  it("parses valid market signal", () => {
+    const valid = {
+      category: "saas founders",
+      fundingTrend: "up",
+      fundingCount: 12,
+      devTrend: "stable",
+      devGrowth: 45,
+      hiringTrend: "up",
+      hiringCount: 89,
+      compositeScore: 72,
+      signal: "heating",
+      lastUpdated: "2026-04-27",
+    };
+    const result = MarketSignalSchema.parse(valid);
+    expect(result.compositeScore).toBe(72);
+    expect(result.signal).toBe("heating");
+  });
+
+  it("rejects composite score above 100", () => {
+    const invalid = {
+      category: "test",
+      fundingTrend: "up",
+      fundingCount: 0,
+      devTrend: "down",
+      devGrowth: 0,
+      hiringTrend: "stable",
+      hiringCount: 0,
+      compositeScore: 101,
+      signal: "stable",
+      lastUpdated: "2026-04-27",
+    };
+    expect(() => MarketSignalSchema.parse(invalid)).toThrow();
+  });
+
+  it("rejects invalid signal", () => {
+    const invalid = {
+      category: "test",
+      fundingTrend: "up",
+      fundingCount: 0,
+      devTrend: "down",
+      devGrowth: 0,
+      hiringTrend: "stable",
+      hiringCount: 0,
+      compositeScore: 50,
+      signal: "booming",
+      lastUpdated: "2026-04-27",
+    };
+    expect(() => MarketSignalSchema.parse(invalid)).toThrow();
+  });
+});
+
+describe("PatternInterruptResponseSchema", () => {
+  it("parses valid pattern interrupt response", () => {
+    const valid = {
+      patterns: [
+        {
+          type: "overplanner",
+          severity: "warning",
+          message: "You keep adding tasks without shipping",
+          suggestions: ["Limit to 3 tasks per week", "Ship before planning"],
+          weeksObserved: 3,
+        },
+      ],
+      totalWeeks: 6,
+      scannedAt: "2026-04-27",
+    };
+    const result = PatternInterruptResponseSchema.parse(valid);
+    expect(result.patterns).toHaveLength(1);
+    expect(result.totalWeeks).toBe(6);
+  });
+
+  it("rejects invalid pattern type", () => {
+    const invalid = {
+      patterns: [
+        {
+          type: "procrastinator",
+          severity: "critical",
+          message: "test",
+          suggestions: ["fix it"],
+          weeksObserved: 1,
+        },
+      ],
+      totalWeeks: 2,
+      scannedAt: "2026-04-27",
+    };
+    expect(() => PatternInterruptResponseSchema.parse(invalid)).toThrow();
+  });
+
+  it("rejects too many suggestions", () => {
+    const invalid = {
+      patterns: [
+        {
+          type: "snooze_loop",
+          severity: "warning",
+          message: "test",
+          suggestions: ["a", "b", "c"],
+          weeksObserved: 1,
+        },
+      ],
+      totalWeeks: 2,
+      scannedAt: "2026-04-27",
+    };
+    expect(() => PatternInterruptResponseSchema.parse(invalid)).toThrow();
+  });
+});
+
+describe("CoachingPlanSchema", () => {
+  it("parses valid coaching plan", () => {
+    const valid = {
+      moments: [
+        {
+          id: "m1",
+          week: 4,
+          priority: "warning",
+          title: "Shipping cadence dropped",
+          message: "You shipped 1 task this week vs 5 last week",
+          action: "Run loopkit loop to identify blockers",
+          command: "loopkit loop",
+          condition: "tasksCompleted < 2",
+        },
+      ],
+      totalWeeks: 6,
+      generatedAt: "2026-04-27",
+    };
+    const result = CoachingPlanSchema.parse(valid);
+    expect(result.moments).toHaveLength(1);
+    expect(result.totalWeeks).toBe(6);
+  });
+
+  it("rejects invalid priority", () => {
+    const invalid = {
+      moments: [
+        {
+          id: "m1",
+          priority: "urgent",
+          title: "test",
+          message: "test",
+          action: "test",
+          condition: "true",
+        },
+      ],
+      totalWeeks: 2,
+      generatedAt: "2026-04-27",
+    };
+    expect(() => CoachingPlanSchema.parse(invalid)).toThrow();
+  });
+});
+
+describe("PeerInspirationResponseSchema", () => {
+  it("parses valid peer inspiration response", () => {
+    const valid = {
+      category: "saas founders",
+      peers: [
+        {
+          id: "p1",
+          category: "saas founders",
+          whatShipped: "Launched a new onboarding flow",
+          weekNumber: 16,
+          createdAt: "2026-04-20",
+        },
+      ],
+      totalPeers: 1,
+      fetchedAt: "2026-04-27",
+    };
+    const result = PeerInspirationResponseSchema.parse(valid);
+    expect(result.category).toBe("saas founders");
+    expect(result.peers).toHaveLength(1);
+  });
+
+  it("rejects peer with missing required field", () => {
+    const invalid = {
+      category: "test",
+      peers: [
+        {
+          id: "p1",
+          category: "test",
+          weekNumber: 1,
+          createdAt: "2026-04-20",
+        },
+      ],
+      totalPeers: 1,
+      fetchedAt: "2026-04-27",
+    };
+    expect(() => PeerInspirationResponseSchema.parse(invalid)).toThrow();
+  });
+});
+
+describe("detectProjectCategory", () => {
+  it("detects saas from keywords", () => {
+    expect(detectProjectCategory("A SaaS platform for teams")).toBe("saas");
+    expect(detectProjectCategory("B2B subscription dashboard")).toBe("saas");
+    expect(detectProjectCategory("CRM platform")).toBe("saas");
+  });
+
+  it("detects mobile from keywords", () => {
+    expect(detectProjectCategory("iOS app for fitness")).toBe("mobile");
+    expect(detectProjectCategory("React Native social app")).toBe("mobile");
+    expect(detectProjectCategory("Android flutter game")).toBe("mobile");
+  });
+
+  it("detects cli from keywords", () => {
+    expect(detectProjectCategory("A CLI tool for developers")).toBe("cli");
+    expect(detectProjectCategory("npm package script runner")).toBe("cli");
+    expect(detectProjectCategory("terminal command utility")).toBe("cli");
+  });
+
+  it("detects api from keywords", () => {
+    expect(detectProjectCategory("REST API backend")).toBe("api");
+    expect(detectProjectCategory("microservice endpoint")).toBe("api");
+  });
+
+  it("detects newsletter from keywords", () => {
+    expect(detectProjectCategory("Weekly newsletter about tech")).toBe(
+      "newsletter",
+    );
+    expect(detectProjectCategory("Content writing blog")).toBe("newsletter");
+  });
+
+  it("detects marketplace from keywords", () => {
+    expect(detectProjectCategory("Two-sided marketplace for freelancers")).toBe(
+      "marketplace",
+    );
+    expect(detectProjectCategory("Booking service for rentals")).toBe(
+      "marketplace",
+    );
+  });
+
+  it("detects ai from keywords", () => {
+    expect(detectProjectCategory("LLM powered assistant")).toBe("ai");
+    expect(detectProjectCategory("GPT chatbot service")).toBe("ai");
+    expect(detectProjectCategory("model training pipeline")).toBe("ai");
+  });
+
+  it("detects ecommerce from keywords", () => {
+    expect(detectProjectCategory("Shopify store checkout")).toBe("ecommerce");
+    expect(detectProjectCategory("Ecommerce cart solution")).toBe("ecommerce");
+  });
+
+  it("falls back to general when no keywords match", () => {
+    expect(detectProjectCategory("Something completely random")).toBe(
+      "general",
+    );
+    expect(detectProjectCategory("")).toBe("general");
+    expect(detectProjectCategory("Hello world")).toBe("general");
+  });
+
+  it("is case insensitive", () => {
+    expect(detectProjectCategory("SaaS PLATFORM")).toBe("saas");
+    expect(detectProjectCategory("IOS APP")).toBe("mobile");
+    expect(detectProjectCategory("CLI TOOL")).toBe("cli");
+  });
+
+  it("handles multiple keywords by returning first match", () => {
+    // "saas" appears before "mobile" in the keyword map iteration order
+    expect(detectProjectCategory("saas mobile app")).toBe("saas");
+  });
+
+  it("handles mixed case with punctuation", () => {
+    expect(detectProjectCategory("My SaaS! (B2B)")).toBe("saas");
+    expect(detectProjectCategory("iOS & Android — Mobile")).toBe("mobile");
   });
 });

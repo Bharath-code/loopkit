@@ -90,7 +90,7 @@ export const PulseClusterSchema = z.object({
       count: z.number(),
       pattern: z.string(),
       quotes: z.array(z.string()),
-    })
+    }),
   ),
   outliers: z.array(z.string()),
   confidence: z.number(),
@@ -134,7 +134,13 @@ export type LoopLog = z.infer<typeof LoopLogSchema>;
 // ─── Analytics: Shipping DNA ────────────────────────────────────
 
 export const ShippingDNASchema = z.object({
-  pattern: z.enum(["Marathoner", "Sprinter", "Perfectionist", "Reactor", "All-Star"]),
+  pattern: z.enum([
+    "Marathoner",
+    "Sprinter",
+    "Perfectionist",
+    "Reactor",
+    "All-Star",
+  ]),
   patternDescription: z.string(),
   velocityTrend: z.enum(["accelerating", "steady", "declining", "volatile"]),
   avgTasksCompleted: z.number(),
@@ -152,7 +158,12 @@ export type ShippingDNA = z.infer<typeof ShippingDNASchema>;
 // ─── Analytics: Churn Risk ──────────────────────────────────────
 
 export const ChurnSignalSchema = z.object({
-  type: z.enum(["declining_score", "skipped_loops", "rising_overrides", "low_velocity"]),
+  type: z.enum([
+    "declining_score",
+    "skipped_loops",
+    "rising_overrides",
+    "low_velocity",
+  ]),
   severity: z.enum(["warning", "critical"]),
   message: z.string(),
 });
@@ -178,7 +189,7 @@ export const ShiftFactorSchema = z.object({
 export type ShiftFactor = z.infer<typeof ShiftFactorSchema>;
 
 export const SuccessPredictionSchema = z.object({
-  probability: z.number(),
+  probability: z.number().min(0).max(1),
   confidence: z.enum(["low", "medium", "high"]),
   strengths: z.array(z.string()),
   risks: z.array(z.string()),
@@ -301,7 +312,9 @@ export const CompetitorRadarResponseSchema = z.object({
   totalFound: z.number(),
 });
 
-export type CompetitorRadarResponse = z.infer<typeof CompetitorRadarResponseSchema>;
+export type CompetitorRadarResponse = z.infer<
+  typeof CompetitorRadarResponseSchema
+>;
 
 // ─── IE-16: Keyword Opportunity Finder ──────────────────────────
 
@@ -381,7 +394,9 @@ export const PatternInterruptResponseSchema = z.object({
   scannedAt: z.string(),
 });
 
-export type PatternInterruptResponse = z.infer<typeof PatternInterruptResponseSchema>;
+export type PatternInterruptResponse = z.infer<
+  typeof PatternInterruptResponseSchema
+>;
 
 // ─── IE-7: Anonymous Peer Inspiration ───────────────────────────
 
@@ -402,7 +417,9 @@ export const PeerInspirationResponseSchema = z.object({
   fetchedAt: z.string(),
 });
 
-export type PeerInspirationResponse = z.infer<typeof PeerInspirationResponseSchema>;
+export type PeerInspirationResponse = z.infer<
+  typeof PeerInspirationResponseSchema
+>;
 
 // ─── IE-10: AI Coach ────────────────────────────────────────────
 

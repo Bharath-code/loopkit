@@ -1,5 +1,4 @@
 import * as p from "@clack/prompts";
-import chalk from "chalk";
 import { getWeekNumber, formatDate } from "@loopkit/shared";
 import {
   readConfig,
@@ -19,16 +18,18 @@ const CONFETTI_COLORS = [
   colors.secondary,
   colors.success,
   colors.warning,
-  (t: string) => chalk.hex("#EC4899")(t),
-  (t: string) => chalk.hex("#F97316")(t),
+  colors.pink,
+  colors.orange,
 ];
 
 function confettiLine(width: number): string {
   let line = "";
   for (let i = 0; i < width; i++) {
     if (Math.random() > 0.6) {
-      const char = CONFETTI_CHARS[Math.floor(Math.random() * CONFETTI_CHARS.length)];
-      const color = CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)];
+      const char =
+        CONFETTI_CHARS[Math.floor(Math.random() * CONFETTI_CHARS.length)];
+      const color =
+        CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)];
       line += color(char);
     } else {
       line += " ";
@@ -73,7 +74,8 @@ function calculateScore(slug: string): CelebrateScore {
     }
   }
 
-  const completionRate = tasksTotal > 0 ? Math.round((tasksDone / tasksTotal) * 100) : 0;
+  const completionRate =
+    tasksTotal > 0 ? Math.round((tasksDone / tasksTotal) * 100) : 0;
   const shippingScore = completionRate;
 
   const projects = listProjects();
@@ -81,7 +83,9 @@ function calculateScore(slug: string): CelebrateScore {
   for (const project of projects) {
     const pTasks = readTasksFile(project);
     if (pTasks) {
-      const done = pTasks.split("\n").filter((l) => /^\s*-\s*\[x\]/i.test(l)).length;
+      const done = pTasks
+        .split("\n")
+        .filter((l) => /^\s*-\s*\[x\]/i.test(l)).length;
       totalShipped += done;
     }
   }
@@ -90,7 +94,14 @@ function calculateScore(slug: string): CelebrateScore {
   const pastStreak = getConsecutiveWeeksStreak(weekNum);
   const currentStreak = readShipLog() ? pastStreak + 1 : pastStreak;
 
-  return { totalShipped, currentStreak, tasksDone, tasksTotal, completionRate, shippingScore };
+  return {
+    totalShipped,
+    currentStreak,
+    tasksDone,
+    tasksTotal,
+    completionRate,
+    shippingScore,
+  };
 }
 
 // ─── Shareable Text ─────────────────────────────────────────────
@@ -98,7 +109,7 @@ function calculateScore(slug: string): CelebrateScore {
 function buildShareText(
   productName: string,
   score: CelebrateScore,
-  weekNum: number
+  weekNum: number,
 ): string {
   return [
     `🚀 ${productName} — Week ${weekNum} Ship Report`,
@@ -124,7 +135,9 @@ function getRank(score: number): { title: string; emoji: string } {
 
 // ─── Command ────────────────────────────────────────────────────
 
-export async function celebrateCommand(standalone: boolean = true): Promise<void> {
+export async function celebrateCommand(
+  standalone: boolean = true,
+): Promise<void> {
   const config = readConfig();
   const slug = config.activeProject;
 
@@ -172,16 +185,22 @@ export async function celebrateCommand(standalone: boolean = true): Promise<void
     console.log(pass("First week shipped — the hardest one!"));
   }
   if (score.currentStreak === 4) {
-    console.log(colors.primary.bold("  🎯 4-week streak — you're building a habit!"));
+    console.log(
+      colors.primary.bold("  🎯 4-week streak — you're building a habit!"),
+    );
   }
   if (score.currentStreak === 12) {
-    console.log(colors.primary.bold("  🏅 12-week streak — quarterly operator!"));
+    console.log(
+      colors.primary.bold("  🏅 12-week streak — quarterly operator!"),
+    );
   }
   if (score.completionRate === 100 && score.tasksTotal > 0) {
     console.log(colors.success.bold("  💯 Perfect week — every task done!"));
   }
   if (score.totalShipped >= 50) {
-    console.log(colors.secondary.bold("  ⚡ 50+ tasks shipped — veteran founder!"));
+    console.log(
+      colors.secondary.bold("  ⚡ 50+ tasks shipped — veteran founder!"),
+    );
   }
 
   // ─── Shareable text ───────────────────────────────────────────

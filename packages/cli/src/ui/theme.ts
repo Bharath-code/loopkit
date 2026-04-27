@@ -3,12 +3,14 @@ import chalk from "chalk";
 // ─── Brand Colors ───────────────────────────────────────────────
 
 export const colors = {
-  primary: chalk.hex("#7C3AED"),     // violet-600
-  secondary: chalk.hex("#06B6D4"),   // cyan-500
-  success: chalk.hex("#10B981"),     // emerald-500
-  warning: chalk.hex("#F59E0B"),     // amber-500
-  danger: chalk.hex("#EF4444"),      // red-500
-  muted: chalk.hex("#6B7280"),       // gray-500
+  primary: chalk.hex("#7C3AED"), // violet-600
+  secondary: chalk.hex("#06B6D4"), // cyan-500
+  success: chalk.hex("#10B981"), // emerald-500
+  warning: chalk.hex("#F59E0B"), // amber-500
+  danger: chalk.hex("#EF4444"), // red-500
+  muted: chalk.hex("#6B7280"), // gray-500
+  pink: chalk.hex("#EC4899"), // pink-500
+  orange: chalk.hex("#F97316"), // orange-500
   dim: chalk.dim,
   bold: chalk.bold,
   white: chalk.white,
@@ -20,11 +22,7 @@ export function scoreBar(score: number, max: number = 10): string {
   const filled = Math.round((score / max) * 10);
   const empty = 10 - filled;
   const color =
-    score >= 8
-      ? colors.success
-      : score >= 6
-        ? colors.warning
-        : colors.danger;
+    score >= 8 ? colors.success : score >= 6 ? colors.warning : colors.danger;
   return `${color("█".repeat(filled))}${colors.dim("░".repeat(empty))} ${color(`${score}/${max}`)}`;
 }
 
@@ -60,7 +58,10 @@ export function info(text: string): string {
 
 export function box(content: string, title?: string): string {
   const lines = content.split("\n");
-  const maxLen = Math.max(...lines.map((l) => stripAnsi(l).length), title ? stripAnsi(title).length + 4 : 0);
+  const maxLen = Math.max(
+    ...lines.map((l) => stripAnsi(l).length),
+    title ? stripAnsi(title).length + 4 : 0,
+  );
   const width = Math.min(maxLen + 4, 72);
 
   const top = title
@@ -83,7 +84,7 @@ function stripAnsi(str: string): string {
   return str.replace(
     // eslint-disable-next-line no-control-regex
     /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g,
-    ""
+    "",
   );
 }
 
@@ -99,7 +100,11 @@ export function shortcutsHint(): string {
 
 // ─── Empty State ────────────────────────────────────────────────
 
-export function emptyState(message: string, action: string, command: string): string {
+export function emptyState(
+  message: string,
+  action: string,
+  command: string,
+): string {
   return [
     colors.muted(`  ${message}`),
     colors.muted(`  ${action}:`),
@@ -110,16 +115,14 @@ export function emptyState(message: string, action: string, command: string): st
 
 // ─── Coaching Card ──────────────────────────────────────────────
 
-export function coachingCard(
-  moment: {
-    id: string;
-    priority: "critical" | "warning" | "info";
-    title: string;
-    message: string;
-    action: string;
-    command?: string;
-  }
-): string {
+export function coachingCard(moment: {
+  id: string;
+  priority: "critical" | "warning" | "info";
+  title: string;
+  message: string;
+  action: string;
+  command?: string;
+}): string {
   const emojiMap: Record<string, string> = {
     critical: "🚨",
     warning: "⚠️",
@@ -160,17 +163,19 @@ export function coachingPlanCard(plan: {
   if (plan.moments.length === 0) {
     return box(
       `${colors.success("✓")} No urgent coaching moments. You're on track.`,
-      "💡 Coach"
+      "💡 Coach",
     );
   }
 
   const lines: string[] = [];
-  lines.push(colors.secondary.bold(`Coaching Plan — ${plan.totalWeeks} weeks tracked`));
+  lines.push(
+    colors.secondary.bold(`Coaching Plan — ${plan.totalWeeks} weeks tracked`),
+  );
   lines.push("");
 
   const priorityOrder = { critical: 0, warning: 1, info: 2 };
   const sorted = [...plan.moments].sort(
-    (a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]
+    (a, b) => priorityOrder[a.priority] - priorityOrder[b.priority],
   );
 
   for (const m of sorted) {
@@ -191,7 +196,7 @@ export function patternCard(
     suggestions: string[];
     weeksObserved: number;
   }>,
-  totalWeeks: number
+  totalWeeks: number,
 ): string {
   const emojiMap: Record<string, string> = {
     overplanner: "📋",
@@ -202,7 +207,9 @@ export function patternCard(
   };
 
   const lines: string[] = [];
-  lines.push(colors.secondary.bold(`Pattern Interrupt — ${totalWeeks} weeks of data`));
+  lines.push(
+    colors.secondary.bold(`Pattern Interrupt — ${totalWeeks} weeks of data`),
+  );
   lines.push("");
 
   for (const p of patterns) {
