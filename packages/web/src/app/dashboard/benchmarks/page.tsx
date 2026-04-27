@@ -4,6 +4,18 @@ import { useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { Id } from "../../../../convex/_generated/dataModel";
+import { TrendIcon } from "@/components/trend-icon";
+import {
+  Trophy,
+  Rocket,
+  Sprout,
+  Flame,
+  Share2,
+  CheckCircle2,
+  TrendingUp,
+  BarChart3,
+  X,
+} from "lucide-react";
 
 interface BenchmarkMetric {
   label: string;
@@ -12,7 +24,7 @@ interface BenchmarkMetric {
   percentile: number;
   trend: "up" | "down" | "flat";
   description: string;
-  emoji: string;
+  icon: React.ComponentType<{ className?: string }>;
 }
 
 function PercentileBadge({ percentile }: { percentile: number }) {
@@ -45,12 +57,6 @@ function PercentileBadge({ percentile }: { percentile: number }) {
       {label}
     </span>
   );
-}
-
-function TrendIcon({ trend }: { trend: "up" | "down" | "flat" }) {
-  if (trend === "up") return <span className="text-emerald-400">↑</span>;
-  if (trend === "down") return <span className="text-red-400">↓</span>;
-  return <span className="text-zinc-500">→</span>;
 }
 
 export default function BenchmarksPage() {
@@ -107,7 +113,7 @@ export default function BenchmarksPage() {
       percentile: percentiles.tasksCompleted,
       trend: user.trend,
       description: "Average tasks completed per weekly loop",
-      emoji: "✓",
+      icon: CheckCircle2,
     },
     {
       label: "Shipping Score",
@@ -116,7 +122,7 @@ export default function BenchmarksPage() {
       percentile: percentiles.shippingScore,
       trend: user.trend,
       description: "Average completion rate across all weeks",
-      emoji: "▲",
+      icon: TrendingUp,
     },
     {
       label: "Completion Rate",
@@ -125,7 +131,7 @@ export default function BenchmarksPage() {
       percentile: percentiles.completionRate,
       trend: user.trend,
       description: "Latest week completion percentage",
-      emoji: "▣",
+      icon: BarChart3,
     },
     {
       label: "Weekly Streak",
@@ -134,7 +140,7 @@ export default function BenchmarksPage() {
       percentile: percentiles.streak,
       trend: user.streak >= 3 ? "up" : "flat",
       description: "Consecutive weeks with a loop completed",
-      emoji: "🔥",
+      icon: Flame,
     },
   ];
 
@@ -156,7 +162,11 @@ export default function BenchmarksPage() {
             onClick={() => setShowShareCard(!showShareCard)}
             className="px-4 py-2 rounded-lg border border-zinc-700 bg-zinc-800/50 text-sm text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors cursor-pointer"
           >
-            📤 Share Card
+            <Share2
+              className="h-4 w-4 inline-block mr-1.5"
+              aria-hidden="true"
+            />
+            Share Card
           </button>
         )}
       </header>
@@ -182,13 +192,13 @@ export default function BenchmarksPage() {
             </p>
           </div>
           <div className="w-16 h-16 rounded-full border-4 border-violet-500 flex items-center justify-center">
-            <span className="text-2xl">
-              {overallPercentile >= 75
-                ? "🏆"
-                : overallPercentile >= 50
-                  ? "🚀"
-                  : "🌱"}
-            </span>
+            {overallPercentile >= 75 ? (
+              <Trophy className="h-7 w-7 text-amber-400" aria-hidden="true" />
+            ) : overallPercentile >= 50 ? (
+              <Rocket className="h-7 w-7 text-violet-400" aria-hidden="true" />
+            ) : (
+              <Sprout className="h-7 w-7 text-emerald-400" aria-hidden="true" />
+            )}
           </div>
         </div>
         <p className="text-xs text-zinc-500 mt-2">
@@ -205,8 +215,8 @@ export default function BenchmarksPage() {
           >
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <span className="w-8 h-8 rounded-lg bg-violet-500/10 text-violet-400 flex items-center justify-center text-sm">
-                  {metric.emoji}
+                <span className="w-8 h-8 rounded-lg bg-violet-500/10 text-violet-400 flex items-center justify-center">
+                  <metric.icon className="h-4 w-4" aria-hidden="true" />
                 </span>
                 <span className="text-sm text-zinc-400 font-medium">
                   {metric.label}
@@ -241,15 +251,21 @@ export default function BenchmarksPage() {
 
       {/* Shareable Card Modal */}
       {showShareCard && shareCard && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Share your stats"
+        >
           <div className="w-full max-w-sm rounded-2xl border border-zinc-800 bg-sidebar p-6 shadow-2xl">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-bold text-white">Share Your Stats</h3>
               <button
                 onClick={() => setShowShareCard(false)}
                 className="text-zinc-500 hover:text-white transition-colors cursor-pointer"
+                aria-label="Close"
               >
-                ✕
+                <X className="h-5 w-5" />
               </button>
             </div>
 
@@ -269,7 +285,8 @@ export default function BenchmarksPage() {
               <div className="flex items-center justify-between">
                 <span className="text-sm text-zinc-400">Streak</span>
                 <span className="text-lg font-bold text-amber-400">
-                  {shareCard.streak} weeks 🔥
+                  {shareCard.streak} weeks{" "}
+                  <Flame className="h-4 w-4 inline-block" aria-hidden="true" />
                 </span>
               </div>
               <div className="flex items-center justify-between">

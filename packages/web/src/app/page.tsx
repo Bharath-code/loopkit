@@ -1,5 +1,28 @@
 import Link from "next/link";
 import { CopyButton } from "./copy-button";
+import {
+  Hexagon,
+  Circle,
+  Triangle,
+  MessageCircle,
+  RefreshCw,
+  Skull,
+  Meh,
+  VolumeX,
+  Trash2,
+  Check,
+  ChevronDown,
+} from "lucide-react";
+
+const PAIN_ICONS: Record<
+  string,
+  React.ComponentType<{ className?: string }>
+> = {
+  "💀": Skull,
+  "😶": Meh,
+  "🔇": VolumeX,
+  "🗑️": Trash2,
+};
 
 const LOOP_PHASES = [
   {
@@ -8,7 +31,7 @@ const LOOP_PHASES = [
     desc: "Turn a fuzzy idea into a scored, falsifiable brief in 4 minutes.",
     color: "text-violet-400",
     border: "border-violet-500/20",
-    icon: "◆",
+    icon: Hexagon,
   },
   {
     cmd: "track",
@@ -16,7 +39,7 @@ const LOOP_PHASES = [
     desc: "Tasks in markdown. Commits close them. Zero overhead.",
     color: "text-cyan-400",
     border: "border-cyan-500/20",
-    icon: "○",
+    icon: Circle,
   },
   {
     cmd: "ship",
@@ -24,7 +47,7 @@ const LOOP_PHASES = [
     desc: "AI writes your HN post, Twitter thread, and IH update in 60 seconds.",
     color: "text-emerald-400",
     border: "border-emerald-500/20",
-    icon: "▲",
+    icon: Triangle,
   },
   {
     cmd: "pulse",
@@ -32,7 +55,7 @@ const LOOP_PHASES = [
     desc: "Async feedback that comes to you. AI-clustered. No meetings.",
     color: "text-amber-400",
     border: "border-amber-500/20",
-    icon: "●",
+    icon: MessageCircle,
   },
   {
     cmd: "loop",
@@ -40,7 +63,7 @@ const LOOP_PHASES = [
     desc: "Sunday ritual. One decision. One post. Loop closed.",
     color: "text-red-400",
     border: "border-red-500/20",
-    icon: "↻",
+    icon: RefreshCw,
   },
 ];
 
@@ -48,32 +71,74 @@ const TERMINAL_LINES = [
   { text: "$ loopkit init", color: "text-zinc-400" },
   { text: "", color: "" },
   { text: "◆ LoopKit — Define your product", color: "text-violet-400" },
-  { text: '│ This takes 4 minutes. Be honest, not optimistic.', color: "text-zinc-500" },
+  {
+    text: "│ This takes 4 minutes. Be honest, not optimistic.",
+    color: "text-zinc-500",
+  },
   { text: "│", color: "text-zinc-700" },
   { text: "◇ What's the product called?", color: "text-white" },
   { text: "│ ProposalAI", color: "text-cyan-400" },
   { text: "│", color: "text-zinc-700" },
   { text: "◆ Analyzing your brief...", color: "text-violet-400" },
   { text: "", color: "" },
-  { text: "┌─ ProposalAI ────────────────────────────┐", color: "text-zinc-600" },
+  {
+    text: "┌─ ProposalAI ────────────────────────────┐",
+    color: "text-zinc-600",
+  },
   { text: "│ THE BET                                  │", color: "text-white" },
-  { text: '│ "Freelancers at $3K+ lose deals to       │', color: "text-zinc-300" },
-  { text: '│  cheaper competitors who look more        │', color: "text-zinc-300" },
-  { text: '│  professional on paper."                  │', color: "text-zinc-300" },
-  { text: "│                                          │", color: "text-zinc-700" },
-  { text: "│ ICP      ████████░░ 8/10                 │", color: "text-emerald-400" },
-  { text: "│ PROBLEM  █████████░ 9/10                 │", color: "text-emerald-400" },
-  { text: "│ MVP      ███████░░░ 7/10                 │", color: "text-amber-400" },
-  { text: "│                                          │", color: "text-zinc-700" },
-  { text: "│ 🔴 RISKIEST ASSUMPTION                   │", color: "text-red-400" },
-  { text: '│ "Clients prefer AI-generated proposals    │', color: "text-zinc-300" },
-  { text: '│  over handwritten ones — may not be true."│', color: "text-zinc-300" },
-  { text: "└──────────────────────────────────────────┘", color: "text-zinc-600" },
+  {
+    text: '│ "Freelancers at $3K+ lose deals to       │',
+    color: "text-zinc-300",
+  },
+  {
+    text: "│  cheaper competitors who look more        │",
+    color: "text-zinc-300",
+  },
+  {
+    text: '│  professional on paper."                  │',
+    color: "text-zinc-300",
+  },
+  {
+    text: "│                                          │",
+    color: "text-zinc-700",
+  },
+  {
+    text: "│ ICP      ████████░░ 8/10                 │",
+    color: "text-emerald-400",
+  },
+  {
+    text: "│ PROBLEM  █████████░ 9/10                 │",
+    color: "text-emerald-400",
+  },
+  {
+    text: "│ MVP      ███████░░░ 7/10                 │",
+    color: "text-amber-400",
+  },
+  {
+    text: "│                                          │",
+    color: "text-zinc-700",
+  },
+  {
+    text: "│ 🔴 RISKIEST ASSUMPTION                   │",
+    color: "text-red-400",
+  },
+  {
+    text: '│ "Clients prefer AI-generated proposals    │',
+    color: "text-zinc-300",
+  },
+  {
+    text: '│  over handwritten ones — may not be true."│',
+    color: "text-zinc-300",
+  },
+  {
+    text: "└──────────────────────────────────────────┘",
+    color: "text-zinc-600",
+  },
 ];
 
 export default function LandingPage() {
   return (
-    <main className="relative overflow-hidden">
+    <main id="main-content" className="relative overflow-hidden">
       {/* ─── Hero ─────────────────────────────────────────── */}
       <section className="relative min-h-screen flex items-center justify-center grid-bg">
         {/* Radial gradient overlay */}
@@ -96,15 +161,17 @@ export default function LandingPage() {
           {/* Subheadline */}
           <p className="fade-up delay-2 mt-6 text-lg sm:text-xl text-zinc-400 max-w-2xl mx-auto leading-relaxed">
             LoopKit is the CLI that closes the entire shipping loop for solo
-            founders — from raw idea to paid customer, without social energy
-            or tool switching.
+            founders — from raw idea to paid customer, without social energy or
+            tool switching.
           </p>
 
           {/* CTA */}
           <div className="fade-up delay-3 mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
             <div className="flex items-center gap-3 px-6 py-3 rounded-xl bg-zinc-900 border border-zinc-800 font-mono text-sm">
               <span className="text-zinc-500">$</span>
-              <span className="text-white" id="install-cmd">npx loopkit init</span>
+              <span className="text-white" id="install-cmd">
+                npx loopkit init
+              </span>
               <CopyButton text="npx loopkit init" />
             </div>
 
@@ -124,7 +191,7 @@ export default function LandingPage() {
 
         {/* Scroll indicator */}
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-zinc-600 animate-bounce">
-          ↓
+          <ChevronDown className="h-5 w-5" aria-hidden="true" />
         </div>
       </section>
 
@@ -160,9 +227,9 @@ export default function LandingPage() {
             </span>
           </h2>
           <p className="mt-6 text-zinc-400 leading-relaxed max-w-xl mx-auto">
-            Define → Develop → Deliver → Feedback → Iterate. Five phases.
-            Five different energy profiles. Every existing tool handles one.
-            None connects them.
+            Define → Develop → Deliver → Feedback → Iterate. Five phases. Five
+            different energy profiles. Every existing tool handles one. None
+            connects them.
           </p>
         </div>
 
@@ -178,24 +245,32 @@ export default function LandingPage() {
               emoji: "😶",
             },
             {
-              pain: "\"I'll get feedback later\" (later never comes)",
+              pain: '"I\'ll get feedback later" (later never comes)',
               emoji: "🔇",
             },
             {
               pain: "Notion boards you set up and never opened again",
               emoji: "🗑️",
             },
-          ].map((item, i) => (
-            <div
-              key={i}
-              className="flex items-start gap-4 p-5 rounded-xl border border-zinc-800/50 bg-zinc-900/30"
-            >
-              <span className="text-xl mt-0.5">{item.emoji}</span>
-              <p className="text-zinc-300 text-sm leading-relaxed">
-                {item.pain}
-              </p>
-            </div>
-          ))}
+          ].map((item, i) => {
+            const PainIcon = PAIN_ICONS[item.emoji];
+            return (
+              <div
+                key={i}
+                className="flex items-start gap-4 p-5 rounded-xl border border-zinc-800/50 bg-zinc-900/30"
+              >
+                {PainIcon && (
+                  <PainIcon
+                    className="h-5 w-5 mt-0.5 text-zinc-400 shrink-0"
+                    aria-hidden="true"
+                  />
+                )}
+                <p className="text-zinc-300 text-sm leading-relaxed">
+                  {item.pain}
+                </p>
+              </div>
+            );
+          })}
         </div>
       </section>
 
@@ -207,8 +282,7 @@ export default function LandingPage() {
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
-              Five commands.{" "}
-              <span className="gradient-text">One loop.</span>
+              Five commands. <span className="gradient-text">One loop.</span>
             </h2>
             <p className="mt-4 text-zinc-400">
               Every command feeds the next. The loop closes itself.
@@ -223,9 +297,9 @@ export default function LandingPage() {
               >
                 {/* Phase icon */}
                 <div
-                  className={`flex-shrink-0 w-12 h-12 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-lg ${phase.color}`}
+                  className={`flex-shrink-0 w-12 h-12 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center ${phase.color}`}
                 >
-                  {phase.icon}
+                  <phase.icon className="h-5 w-5" aria-hidden="true" />
                 </div>
 
                 <div className="flex-1">
@@ -284,13 +358,25 @@ export default function LandingPage() {
               </div>
               <ul className="mt-6 space-y-3 text-sm text-zinc-400">
                 <li className="flex gap-2">
-                  <span className="text-emerald-500">✓</span> 1 project
+                  <Check
+                    className="h-4 w-4 text-emerald-500 shrink-0"
+                    aria-hidden="true"
+                  />{" "}
+                  1 project
                 </li>
                 <li className="flex gap-2">
-                  <span className="text-emerald-500">✓</span> Full CLI
+                  <Check
+                    className="h-4 w-4 text-emerald-500 shrink-0"
+                    aria-hidden="true"
+                  />{" "}
+                  Full CLI
                 </li>
                 <li className="flex gap-2">
-                  <span className="text-emerald-500">✓</span> Git task sync
+                  <Check
+                    className="h-4 w-4 text-emerald-500 shrink-0"
+                    aria-hidden="true"
+                  />{" "}
+                  Git task sync
                 </li>
                 <li className="flex gap-2">
                   <span className="text-zinc-700">–</span>
@@ -320,21 +406,39 @@ export default function LandingPage() {
               </div>
               <ul className="mt-6 space-y-3 text-sm text-zinc-300">
                 <li className="flex gap-2">
-                  <span className="text-emerald-500">✓</span> 5 projects
+                  <Check
+                    className="h-4 w-4 text-emerald-500 shrink-0"
+                    aria-hidden="true"
+                  />{" "}
+                  5 projects
                 </li>
                 <li className="flex gap-2">
-                  <span className="text-emerald-500">✓</span> Full CLI + AI
+                  <Check
+                    className="h-4 w-4 text-emerald-500 shrink-0"
+                    aria-hidden="true"
+                  />{" "}
+                  Full CLI + AI
                 </li>
                 <li className="flex gap-2">
-                  <span className="text-emerald-500">✓</span> Ship drafts (HN,
-                  Twitter, IH)
+                  <Check
+                    className="h-4 w-4 text-emerald-500 shrink-0"
+                    aria-hidden="true"
+                  />{" "}
+                  Ship drafts (HN, Twitter, IH)
                 </li>
                 <li className="flex gap-2">
-                  <span className="text-emerald-500">✓</span> Pulse clustering
+                  <Check
+                    className="h-4 w-4 text-emerald-500 shrink-0"
+                    aria-hidden="true"
+                  />{" "}
+                  Pulse clustering
                 </li>
                 <li className="flex gap-2">
-                  <span className="text-emerald-500">✓</span> Sunday loop
-                  synthesis
+                  <Check
+                    className="h-4 w-4 text-emerald-500 shrink-0"
+                    aria-hidden="true"
+                  />{" "}
+                  Sunday loop synthesis
                 </li>
               </ul>
               <button className="mt-8 w-full py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium transition-colors">
@@ -353,21 +457,39 @@ export default function LandingPage() {
               </div>
               <ul className="mt-6 space-y-3 text-sm text-zinc-400">
                 <li className="flex gap-2">
-                  <span className="text-emerald-500">✓</span> Unlimited
-                  projects
+                  <Check
+                    className="h-4 w-4 text-emerald-500 shrink-0"
+                    aria-hidden="true"
+                  />{" "}
+                  Unlimited projects
                 </li>
                 <li className="flex gap-2">
-                  <span className="text-emerald-500">✓</span> Everything in
-                  Solo
+                  <Check
+                    className="h-4 w-4 text-emerald-500 shrink-0"
+                    aria-hidden="true"
+                  />{" "}
+                  Everything in Solo
                 </li>
                 <li className="flex gap-2">
-                  <span className="text-emerald-500">✓</span> Web dashboard
+                  <Check
+                    className="h-4 w-4 text-emerald-500 shrink-0"
+                    aria-hidden="true"
+                  />{" "}
+                  Web dashboard
                 </li>
                 <li className="flex gap-2">
-                  <span className="text-emerald-500">✓</span> Client export
+                  <Check
+                    className="h-4 w-4 text-emerald-500 shrink-0"
+                    aria-hidden="true"
+                  />{" "}
+                  Client export
                 </li>
                 <li className="flex gap-2">
-                  <span className="text-emerald-500">✓</span> Bring your own API key
+                  <Check
+                    className="h-4 w-4 text-emerald-500 shrink-0"
+                    aria-hidden="true"
+                  />{" "}
+                  Bring your own API key
                 </li>
               </ul>
               <button className="mt-8 w-full py-2.5 rounded-xl border border-zinc-700 text-zinc-300 text-sm hover:bg-zinc-800 transition-colors">
@@ -407,10 +529,16 @@ export default function LandingPage() {
             <span>· Built by a solo founder, for solo founders.</span>
           </div>
           <div className="flex gap-6">
-            <a href="https://github.com/loopkit" className="hover:text-zinc-300 transition-colors">
+            <a
+              href="https://github.com/loopkit"
+              className="hover:text-zinc-300 transition-colors"
+            >
               GitHub
             </a>
-            <a href="https://twitter.com/loopkit" className="hover:text-zinc-300 transition-colors">
+            <a
+              href="https://twitter.com/loopkit"
+              className="hover:text-zinc-300 transition-colors"
+            >
               Twitter
             </a>
           </div>

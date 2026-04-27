@@ -476,7 +476,7 @@ WEEK 13+ (P3 — IE Phase 4-5 ML + Platform)
 
 ---
 
-### Phase 3 — Icons + Accessibility (🟡 P1)
+### Phase 3 — Icons + Accessibility ✅ (7/7 tasks complete)
 
 > Replace all emoji/unicode symbols with lucide-react. Add ARIA support. Fix keyboard navigation.
 
@@ -640,7 +640,7 @@ SPRINT 6 (Phase 6 — Polish) ~2-3 days
 | Issue                                                              | Severity   | Status                                                 | Fix Task       |
 | ------------------------------------------------------------------ | ---------- | ------------------------------------------------------ | -------------- |
 | No reusable component library (everything inline)                  | **High**   | ✅ Phase 2 components created                          | DS-2.1–2.12    |
-| Emoji icons (inconsistent cross-platform)                          | **High**   | 🟡 Open                                                | DS-3.1–3.5     |
+| Emoji icons (inconsistent cross-platform)                          | **High**   | ✅ All replaced with lucide-react                      | DS-3.1–3.5     |
 | No toast/notification system                                       | **High**   | ✅ sonner installed + Toaster in layout                | DS-2.5         |
 | Modal has no focus trap/escape/scroll-lock                         | **High**   | ✅ shadcn Dialog installed (ready for migration)       | DS-2.4         |
 | No `prefers-reduced-motion` (WCAG violation)                       | **Medium** | ✅ Fixed                                               | DS-1.5         |
@@ -650,7 +650,7 @@ SPRINT 6 (Phase 6 — Polish) ~2-3 days
 | Pulse "New" badge shows "New" for both states                      | **Low**    | ✅ Fixed — now shows "Read" for non-new items          | DS-1.6         |
 | No data visualization (no charts)                                  | **Medium** | 🟡 Open                                                | DS-4.1–4.7     |
 | No form validation library                                         | **Low**    | 🟡 Open                                                | DS-5.1–5.5     |
-| No skip-nav link                                                   | **Low**    | 🟡 Open                                                | DS-3.7         |
+| No skip-nav link                                                   | **Low**    | ✅ Added skip-to-content link                          | DS-3.7         |
 
 ---
 

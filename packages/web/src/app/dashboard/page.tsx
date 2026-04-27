@@ -4,6 +4,7 @@ import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { TrendIcon } from "@/components/trend-icon";
 import {
   SkeletonMetric,
   SkeletonCard,
@@ -12,6 +13,24 @@ import {
   SkeletonArchetype,
   SkeletonMarketTiming,
 } from "@/components/skeletons";
+import {
+  CheckCircle2,
+  MessageCircle,
+  History,
+  Flame,
+  TrendingUp,
+  Zap,
+  AlertTriangle,
+  AlertCircle,
+  Lightbulb,
+  Rocket,
+  Snowflake,
+  Scale,
+  ClipboardList,
+  Pause,
+  Ship,
+  Target,
+} from "lucide-react";
 
 export default function DashboardOverviewPage() {
   const user = useQuery(api.users.me);
@@ -88,8 +107,8 @@ export default function DashboardOverviewPage() {
         {tasksCompleted !== undefined ? (
           <div className="p-5 rounded-2xl border border-zinc-800 bg-zinc-900/30">
             <div className="flex items-center gap-2 mb-3">
-              <span className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-sm">
-                ✓
+              <span className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
+                <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
               </span>
               <span className="text-sm text-zinc-400 font-medium">
                 Tasks Completed
@@ -112,8 +131,8 @@ export default function DashboardOverviewPage() {
         {shippingScore !== undefined ? (
           <div className="p-5 rounded-2xl border border-zinc-800 bg-zinc-900/30">
             <div className="flex items-center gap-2 mb-3">
-              <span className="w-8 h-8 rounded-lg bg-violet-500/10 text-violet-400 flex items-center justify-center text-sm">
-                ▲
+              <span className="w-8 h-8 rounded-lg bg-violet-500/10 text-violet-400 flex items-center justify-center">
+                <TrendingUp className="h-4 w-4" aria-hidden="true" />
               </span>
               <span className="text-sm text-zinc-400 font-medium">
                 Shipping Score
@@ -135,8 +154,8 @@ export default function DashboardOverviewPage() {
         {pulseCount !== undefined ? (
           <div className="p-5 rounded-2xl border border-zinc-800 bg-zinc-900/30">
             <div className="flex items-center gap-2 mb-3">
-              <span className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center text-sm">
-                ●
+              <span className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center">
+                <MessageCircle className="h-4 w-4" aria-hidden="true" />
               </span>
               <span className="text-sm text-zinc-400 font-medium">
                 Pulse Responses
@@ -168,8 +187,11 @@ export default function DashboardOverviewPage() {
             <div className="space-y-6">
               {latestLoop ? (
                 <div className="flex gap-4">
-                  <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-xs text-zinc-400 shrink-0">
-                    ↻
+                  <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center shrink-0">
+                    <History
+                      className="h-4 w-4 text-zinc-400"
+                      aria-hidden="true"
+                    />
                   </div>
                   <div>
                     <p className="text-sm text-zinc-300">
@@ -189,8 +211,11 @@ export default function DashboardOverviewPage() {
               )}
               {streak !== undefined && streak > 0 && (
                 <div className="flex gap-4">
-                  <div className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center text-xs text-amber-400 shrink-0">
-                    🔥
+                  <div className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center shrink-0">
+                    <Flame
+                      className="h-4 w-4 text-amber-400"
+                      aria-hidden="true"
+                    />
                   </div>
                   <div>
                     <p className="text-sm text-zinc-300">
@@ -326,7 +351,7 @@ export default function DashboardOverviewPage() {
                       {item.count} founders
                     </span>
                     {item.count7d >= 2 && (
-                      <span className="text-xs text-emerald-400">↑</span>
+                      <TrendIcon trend="up" className="text-xs" />
                     )}
                   </div>
                 ))}
@@ -393,19 +418,23 @@ function PatternInterruptWidget({
 
   if (patterns.length === 0) return null;
 
-  const emojiMap: Record<string, string> = {
-    overplanner: "📋",
-    snooze_loop: "⏸",
-    ship_avoider: "🚢",
-    icp_drift: "🎯",
-    scope_creep: "📈",
+  const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+    overplanner: ClipboardList,
+    snooze_loop: Pause,
+    ship_avoider: Ship,
+    icp_drift: Target,
+    scope_creep: TrendingUp,
   };
 
   return (
     <div className="p-6 rounded-2xl border border-amber-500/20 bg-zinc-900/20">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-base font-semibold text-white">
-          ⚡ Pattern Interrupt
+          <Zap
+            className="h-4 w-4 inline-block mr-1.5 text-amber-400"
+            aria-hidden="true"
+          />
+          Pattern Interrupt
         </h2>
         <span className="text-xs text-amber-400 font-medium">
           {patterns.length} detected
@@ -414,7 +443,15 @@ function PatternInterruptWidget({
       <div className="space-y-4">
         {patterns.slice(0, 3).map((p) => (
           <div key={p._id} className="flex gap-3">
-            <span className="text-lg shrink-0">{emojiMap[p.type] || "⚡"}</span>
+            {(() => {
+              const Icon = iconMap[p.type] || Zap;
+              return (
+                <Icon
+                  className="h-5 w-5 shrink-0 text-zinc-400"
+                  aria-hidden="true"
+                />
+              );
+            })()}
             <div>
               <p
                 className={`text-sm font-medium ${p.severity === "critical" ? "text-red-400" : "text-amber-400"}`}
@@ -452,7 +489,11 @@ function PeerInspirationWidget({
     return (
       <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/20">
         <h2 className="text-base font-semibold text-white mb-2">
-          🚀 Peer Inspiration
+          <Rocket
+            className="h-4 w-4 inline-block mr-1.5 text-zinc-400"
+            aria-hidden="true"
+          />
+          Peer Inspiration
         </h2>
         <p className="text-xs text-zinc-500">
           Be the first in <span className="text-violet-400">{category}</span> to
@@ -468,15 +509,19 @@ function PeerInspirationWidget({
     <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/20">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-base font-semibold text-white">
-          🚀 Peer Inspiration
+          <Rocket
+            className="h-4 w-4 inline-block mr-1.5 text-zinc-400"
+            aria-hidden="true"
+          />
+          Peer Inspiration
         </h2>
         <span className="text-xs text-zinc-500">This week in {category}</span>
       </div>
       <div className="space-y-3">
         {peers.map((p) => (
           <div key={p._id} className="flex gap-3 items-start">
-            <span className="w-6 h-6 rounded-full bg-violet-500/10 flex items-center justify-center text-xs text-violet-400 shrink-0">
-              🚀
+            <span className="w-6 h-6 rounded-full bg-violet-500/10 flex items-center justify-center shrink-0">
+              <Rocket className="h-3 w-3 text-violet-400" aria-hidden="true" />
             </span>
             <div>
               <p className="text-sm text-zinc-300">{p.whatShipped}</p>
@@ -618,11 +663,22 @@ function CoachingWidget({
     <div className={`p-6 rounded-2xl border ${priorityColor[top.priority]}`}>
       <div className="flex items-center justify-between mb-4">
         <h2 className={`text-base font-semibold ${titleColor[top.priority]}`}>
-          {top.priority === "critical"
-            ? "🚨"
-            : top.priority === "warning"
-              ? "⚠️"
-              : "💡"}{" "}
+          {top.priority === "critical" ? (
+            <AlertTriangle
+              className="h-4 w-4 inline-block mr-1.5"
+              aria-hidden="true"
+            />
+          ) : top.priority === "warning" ? (
+            <AlertCircle
+              className="h-4 w-4 inline-block mr-1.5"
+              aria-hidden="true"
+            />
+          ) : (
+            <Lightbulb
+              className="h-4 w-4 inline-block mr-1.5"
+              aria-hidden="true"
+            />
+          )}{" "}
           Coach
         </h2>
         <span className="text-xs text-zinc-500">
@@ -659,11 +715,11 @@ function MarketTimingWidget({
   const trendArrow = (trend: string) => {
     switch (trend) {
       case "up":
-        return <span className="text-emerald-400">↑</span>;
+        return <TrendIcon trend="up" />;
       case "down":
-        return <span className="text-red-400">↓</span>;
+        return <TrendIcon trend="down" />;
       default:
-        return <span className="text-zinc-500">→</span>;
+        return <TrendIcon trend="flat" />;
     }
   };
 
@@ -708,9 +764,18 @@ function MarketTimingWidget({
           <span className="text-sm text-zinc-500 font-normal">/100</span>
         </div>
         <div className={`text-sm font-medium ${signalColor(signal.signal)}`}>
-          {signal.signal === "heating" && "🔥"}
-          {signal.signal === "cooling" && "❄️"}
-          {signal.signal === "stable" && "⚖️"}{" "}
+          {signal.signal === "heating" && (
+            <Flame className="h-4 w-4 inline-block mr-1" aria-hidden="true" />
+          )}
+          {signal.signal === "cooling" && (
+            <Snowflake
+              className="h-4 w-4 inline-block mr-1"
+              aria-hidden="true"
+            />
+          )}
+          {signal.signal === "stable" && (
+            <Scale className="h-4 w-4 inline-block mr-1" aria-hidden="true" />
+          )}
           {signal.signal.charAt(0).toUpperCase() + signal.signal.slice(1)}
         </div>
       </div>

@@ -6,14 +6,26 @@ import { usePathname } from "next/navigation";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
+import {
+  LayoutDashboard,
+  MessageCircle,
+  History,
+  BarChart3,
+  TrendingUp,
+  Search,
+  X,
+  Menu,
+  LogOut,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
-const navLinks = [
-  { name: "Overview", href: "/dashboard", icon: "⟳" },
-  { name: "Pulse Inbox", href: "/dashboard/pulse", icon: "●" },
-  { name: "Loop History", href: "/dashboard/loop", icon: "↻" },
-  { name: "Benchmarks", href: "/dashboard/benchmarks", icon: "◈" },
-  { name: "Trends", href: "/dashboard/trends", icon: "▲" },
-  { name: "Keywords", href: "/dashboard/keywords", icon: "◆" },
+const navLinks: { name: string; href: string; icon: LucideIcon }[] = [
+  { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
+  { name: "Pulse Inbox", href: "/dashboard/pulse", icon: MessageCircle },
+  { name: "Loop History", href: "/dashboard/loop", icon: History },
+  { name: "Benchmarks", href: "/dashboard/benchmarks", icon: BarChart3 },
+  { name: "Trends", href: "/dashboard/trends", icon: TrendingUp },
+  { name: "Keywords", href: "/dashboard/keywords", icon: Search },
 ];
 
 export default function DashboardLayout({
@@ -54,7 +66,7 @@ export default function DashboardLayout({
               className="sm:hidden p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer"
               aria-label="Close menu"
             >
-              ✕
+              <X className="h-5 w-5" />
             </button>
           )}
         </div>
@@ -71,11 +83,10 @@ export default function DashboardLayout({
                     : "text-zinc-400 hover:bg-zinc-900 hover:text-white"
                 }`}
               >
-                <span
-                  className={isActive ? "text-violet-400" : "text-zinc-500"}
-                >
-                  {link.icon}
-                </span>
+                <link.icon
+                  className={`h-4 w-4 ${isActive ? "text-violet-400" : "text-zinc-500"}`}
+                  aria-hidden="true"
+                />
                 {link.name}
               </Link>
             );
@@ -92,7 +103,10 @@ export default function DashboardLayout({
             <p className="text-xs text-zinc-400 mb-3">
               Unlock AI synthesis and team pulse features.
             </p>
-            <button className="w-full py-2.5 px-3 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-xs font-medium transition-colors cursor-pointer min-h-[44px]">
+            <button
+              className="w-full py-2.5 px-3 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-xs font-medium transition-colors cursor-pointer min-h-[44px]"
+              aria-label="Upgrade to Pro"
+            >
               View Plans
             </button>
           </div>
@@ -101,7 +115,7 @@ export default function DashboardLayout({
           onClick={() => void signOut()}
           className="flex items-center gap-3 px-3 py-2.5 w-full rounded-lg text-sm text-zinc-400 hover:bg-zinc-900 hover:text-white transition-colors cursor-pointer min-h-[44px]"
         >
-          <span className="text-zinc-500">➜</span>
+          <LogOut className="h-4 w-4 text-zinc-500" aria-hidden="true" />
           Sign Out
         </button>
       </div>
@@ -110,6 +124,12 @@ export default function DashboardLayout({
 
   return (
     <div className="flex flex-1 overflow-hidden h-[calc(100vh-56px)]">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:px-4 focus:py-2 focus:bg-violet-600 focus:text-white focus:rounded-lg focus:text-sm"
+      >
+        Skip to content
+      </a>
       {/* Desktop sidebar */}
       <aside className="w-64 border-r border-zinc-900 bg-sidebar flex-col hidden sm:flex">
         {sidebarContent}
@@ -129,7 +149,7 @@ export default function DashboardLayout({
       )}
 
       {/* Main Content Area */}
-      <main className="flex-1 overflow-y-auto bg-background">
+      <main id="main-content" className="flex-1 overflow-y-auto bg-background">
         {/* Mobile top bar */}
         <div className="sm:hidden border-b border-zinc-900 p-3 flex items-center gap-3">
           <button
@@ -137,7 +157,11 @@ export default function DashboardLayout({
             className="p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center"
             aria-label="Toggle menu"
           >
-            {sidebarOpen ? "✕" : "☰"}
+            {sidebarOpen ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Menu className="h-5 w-5" />
+            )}
           </button>
 
           <nav className="flex gap-1.5 overflow-x-auto flex-1 scrollbar-none">
@@ -153,7 +177,10 @@ export default function DashboardLayout({
                       : "text-zinc-400 border border-zinc-800 hover:border-zinc-700"
                   }`}
                 >
-                  <span className="mr-1.5">{link.icon}</span>
+                  <link.icon
+                    className="h-3.5 w-3.5 mr-1.5"
+                    aria-hidden="true"
+                  />
                   {link.name}
                 </Link>
               );
