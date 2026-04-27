@@ -135,8 +135,17 @@ loopkit loop                           # Weekly synthesis
 
 # Auth
 loopkit auth                           # Log in
+
+# Intelligence Engine
+loopkit radar                          # Scan PH & HN for competitor launches
+loopkit radar --category "saas"        # Scan a specific category
+loopkit keywords                       # Find low-competition keywords in your niche
+loopkit keywords --category "saas"     # Find keywords for a specific category
+loopkit telemetry on                   # Opt-in to anonymous usage data
+loopkit telemetry off                  # Opt-out
+loopkit telemetry status               # Check current status
 ```
 
 ---
 
-*Last updated: April 2026*
+*Last updated: April 2026 · v0.1.0 (IE-8 + IE-15 shipped · Audit fixes + nice-to-haves complete)*

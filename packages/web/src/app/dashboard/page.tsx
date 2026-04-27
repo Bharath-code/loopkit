@@ -32,6 +32,8 @@ export default function DashboardOverviewPage() {
     projectId ? { projectId: projectId as Id<"projects"> } : "skip"
   );
 
+  const trending = useQuery(api.analytics.getTrendingValidations, {});
+
   const tasksCompleted = latestLoop?.tasksCompleted ?? 0;
   const tasksTotal = latestLoop?.tasksTotal ?? 0;
   const shippingScore = latestLoop?.shippingScore ?? 0;
@@ -75,10 +77,19 @@ export default function DashboardOverviewPage() {
             <span className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-sm">✓</span>
             <span className="text-sm text-zinc-400 font-medium">Tasks Completed</span>
           </div>
-          <div className="text-3xl font-bold text-white">{tasksCompleted}</div>
-          <div className="mt-2 text-xs text-zinc-500">
-            {tasksTotal > 0 ? `${Math.round((tasksCompleted / tasksTotal) * 100)}% of weekly plan` : "No tasks tracked yet"}
-          </div>
+          {tasksCompleted !== undefined ? (
+            <>
+              <div className="text-3xl font-bold text-white">{tasksCompleted}</div>
+              <div className="mt-2 text-xs text-zinc-500">
+                {tasksTotal > 0 ? `${Math.round((tasksCompleted / tasksTotal) * 100)}% of weekly plan` : "No tasks tracked yet"}
+              </div>
+            </>
+          ) : (
+            <div className="animate-pulse">
+              <div className="h-8 bg-zinc-800 rounded w-16 mb-2"></div>
+              <div className="h-3 bg-zinc-800 rounded w-32"></div>
+            </div>
+          )}
         </div>
 
         {/* Metric 2 */}
@@ -87,10 +98,19 @@ export default function DashboardOverviewPage() {
             <span className="w-8 h-8 rounded-lg bg-violet-500/10 text-violet-400 flex items-center justify-center text-sm">▲</span>
             <span className="text-sm text-zinc-400 font-medium">Shipping Score</span>
           </div>
-          <div className="text-3xl font-bold text-white">{shippingScore}<span className="text-sm text-zinc-500">/100</span></div>
-          <div className="mt-2 text-xs text-zinc-500">
-            Based on completed vs planned tasks
-          </div>
+          {shippingScore !== undefined ? (
+            <>
+              <div className="text-3xl font-bold text-white">{shippingScore}<span className="text-sm text-zinc-500">/100</span></div>
+              <div className="mt-2 text-xs text-zinc-500">
+                Based on completed vs planned tasks
+              </div>
+            </>
+          ) : (
+            <div className="animate-pulse">
+              <div className="h-8 bg-zinc-800 rounded w-24 mb-2"></div>
+              <div className="h-3 bg-zinc-800 rounded w-28"></div>
+            </div>
+          )}
         </div>
 
         {/* Metric 3 */}
@@ -99,32 +119,53 @@ export default function DashboardOverviewPage() {
             <span className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center text-sm">●</span>
             <span className="text-sm text-zinc-400 font-medium">Pulse Responses</span>
           </div>
-          <div className="text-3xl font-bold text-white">{pulseCount ?? 0}</div>
-          <div className="mt-2 text-xs text-amber-400 flex items-center gap-1">
-            <span>{pulseCount && pulseCount > 0 ? "Collecting feedback" : "No responses yet"}</span>
-          </div>
+          {pulseCount !== undefined ? (
+            <>
+              <div className="text-3xl font-bold text-white">{pulseCount ?? 0}</div>
+              <div className="mt-2 text-xs text-amber-400 flex items-center gap-1">
+                <span>{pulseCount && pulseCount > 0 ? "Collecting feedback" : "No responses yet"}</span>
+              </div>
+            </>
+          ) : (
+            <div className="animate-pulse">
+              <div className="h-8 bg-zinc-800 rounded w-12 mb-2"></div>
+              <div className="h-3 bg-zinc-800 rounded w-24"></div>
+            </div>
+          )}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Recent Activity */}
         <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/20">
           <h2 className="text-base font-semibold text-white mb-6">Recent Activity</h2>
           <div className="space-y-6">
-            {latestLoop ? (
-              <div className="flex gap-4">
-                <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-xs text-zinc-400 shrink-0">
-                  ↻
+            {latestLoop !== undefined ? (
+              latestLoop ? (
+                <div className="flex gap-4">
+                  <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-xs text-zinc-400 shrink-0">
+                    ↻
+                  </div>
+                  <div>
+                    <p className="text-sm text-zinc-300">
+                      Completed loop for Week {latestLoop.weekNumber}
+                    </p>
+                    <p className="text-xs text-zinc-500 mt-1">{latestLoop.date}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm text-zinc-300">
-                    Completed loop for Week {latestLoop.weekNumber}
-                  </p>
-                  <p className="text-xs text-zinc-500 mt-1">{latestLoop.date}</p>
+              ) : (
+                <p className="text-sm text-zinc-500">No recent activity. Run <code className="text-violet-400">loopkit loop</code> to start tracking.</p>
+              )
+            ) : (
+              <div className="animate-pulse space-y-4">
+                <div className="flex gap-4">
+                  <div className="w-8 h-8 rounded-full bg-zinc-800 shrink-0"></div>
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-zinc-800 rounded w-3/4"></div>
+                    <div className="h-3 bg-zinc-800 rounded w-1/4"></div>
+                  </div>
                 </div>
               </div>
-            ) : (
-              <p className="text-sm text-zinc-500">No recent activity. Run <code className="text-violet-400">loopkit loop</code> to start tracking.</p>
             )}
             {streak !== undefined && streak > 0 && (
               <div className="flex gap-4">
@@ -172,35 +213,89 @@ export default function DashboardOverviewPage() {
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-violet-600 to-cyan-500"></div>
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-base font-semibold text-white">Last Sunday&apos;s Loop</h2>
-            <span className="px-2 py-1 rounded text-xs bg-violet-500/10 text-violet-400 font-medium border border-violet-500/20">
-              {latestLoop ? `Week ${latestLoop.weekNumber}` : "No loops yet"}
-            </span>
+            {latestLoop !== undefined ? (
+              <span className="px-2 py-1 rounded text-xs bg-violet-500/10 text-violet-400 font-medium border border-violet-500/20">
+                {latestLoop ? `Week ${latestLoop.weekNumber}` : "No loops yet"}
+              </span>
+            ) : (
+              <div className="animate-pulse w-16 h-5 bg-zinc-800 rounded"></div>
+            )}
           </div>
 
-          {latestLoop?.synthesis ? (
-            <div className="space-y-4">
-              <div>
-                <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-2">The One Thing</p>
-                <p className="text-sm text-white font-medium bg-zinc-800/50 p-3 rounded-lg border border-zinc-800">
-                  {latestLoop.synthesis.oneThing}
-                </p>
-              </div>
+          {latestLoop !== undefined ? (
+            latestLoop?.synthesis ? (
+              <div className="space-y-4">
+                <div>
+                  <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-2">The One Thing</p>
+                  <p className="text-sm text-white font-medium bg-zinc-800/50 p-3 rounded-lg border border-zinc-800">
+                    {latestLoop.synthesis.oneThing}
+                  </p>
+                </div>
 
-              <div>
-                <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-2">Build in Public Draft</p>
-                <p className="text-sm text-zinc-400 italic border-l-2 border-zinc-700 pl-3">
-                  &quot;{latestLoop.synthesis.bipPost || latestLoop.bipPost || "No BIP post generated."}&quot;
-                </p>
+                <div>
+                  <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-2">Build in Public Draft</p>
+                  <p className="text-sm text-zinc-400 italic border-l-2 border-zinc-700 pl-3">
+                    &quot;{latestLoop.synthesis.bipPost || latestLoop.bipPost || "No BIP post generated."}&quot;
+                  </p>
+                </div>
               </div>
-            </div>
+            ) : (
+              <p className="text-sm text-zinc-500">
+                {latestLoop
+                  ? "Loop completed but no synthesis available."
+                  : "No loops yet. Run loopkit loop on Sunday to generate your first synthesis."}
+              </p>
+            )
           ) : (
-            <p className="text-sm text-zinc-500">
-              {latestLoop
-                ? "Loop completed but no synthesis available."
-                : "No loops yet. Run loopkit loop on Sunday to generate your first synthesis."}
-            </p>
+            <div className="animate-pulse space-y-4">
+              <div className="h-3 bg-zinc-800 rounded w-24"></div>
+              <div className="h-12 bg-zinc-800 rounded"></div>
+              <div className="h-3 bg-zinc-800 rounded w-32"></div>
+              <div className="h-10 bg-zinc-800 rounded"></div>
+            </div>
           )}
         </div>
+
+        {/* Trending Validations (IE-8) */}
+        {trending ? (
+          trending.totalFounders > 0 ? (
+            <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/20">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-base font-semibold text-white">Trending Validations</h2>
+                <a href="/dashboard/trends" className="text-xs text-violet-400 hover:text-violet-300 transition-colors">
+                  View all →
+                </a>
+              </div>
+              <div className="space-y-3">
+                {trending.icp.slice(0, 3).map((item, i) => (
+                  <div key={item.category} className="flex items-center gap-3">
+                    <span className="w-5 text-center text-xs text-zinc-500 font-mono">{i + 1}</span>
+                    <span className="flex-1 text-sm text-zinc-300 capitalize">{item.category}</span>
+                    <span className="text-xs text-zinc-500">{item.count} founders</span>
+                    {item.count7d >= 2 && (
+                      <span className="text-xs text-emerald-400">↑</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-zinc-600 mt-4">{trending.totalFounders} founders opted into telemetry</p>
+            </div>
+          ) : (
+            <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/20">
+              <h2 className="text-base font-semibold text-white mb-2">Trending Validations</h2>
+              <p className="text-xs text-zinc-500">Not enough data yet. Run <code className="text-violet-400">loopkit init</code> and opt into telemetry to contribute.</p>
+            </div>
+          )
+        ) : (
+          <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/20 animate-pulse">
+            <div className="h-5 w-40 bg-zinc-800 rounded mb-4"></div>
+            <div className="space-y-3">
+              <div className="h-4 bg-zinc-800 rounded w-full"></div>
+              <div className="h-4 bg-zinc-800 rounded w-3/4"></div>
+              <div className="h-4 bg-zinc-800 rounded w-1/2"></div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

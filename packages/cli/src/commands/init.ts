@@ -12,6 +12,8 @@ import {
   readConfig,
 } from "../storage/local.js";
 import { colors, scoreBar, box, header, nextStep, info, shortcutsHint } from "../ui/theme.js";
+import { recordBriefCategories, getLocalTrendingData, isTelemetryEnabled } from "../analytics/telemetry.js";
+import { categorizeICP, categorizeProblem, categorizeMVP } from "../analytics/competitorRadar.js";
 
 export async function initCommand(
   resumeName?: string,
@@ -188,6 +190,15 @@ export async function initCommand(
     saveBrief(slug, finalAnswers, brief);
     deleteDraft(slug);
 
+    // Record brief categories for trending (IE-8)
+    if (isTelemetryEnabled()) {
+      recordBriefCategories({
+        icpCategory: categorizeICP(finalAnswers.icp),
+        problemCategory: categorizeProblem(finalAnswers.problem),
+        mvpCategory: categorizeMVP(finalAnswers.mvp),
+      });
+    }
+
     // Update active project
     const config = readConfig();
     config.activeProject = slug;
@@ -196,6 +207,9 @@ export async function initCommand(
 
     // Render
     renderBrief(finalAnswers, brief, slug);
+
+    // Show trend hint (IE-8.4)
+    renderTrendHint(finalAnswers);
   } catch (error) {
     s.stop("AI analysis unavailable.");
 
@@ -306,5 +320,22 @@ async function analyzeExisting(name: string): Promise<void> {
   } catch (error) {
     s.stop("Analysis failed.");
     console.log(colors.danger("Could not reach AI. Try again later."));
+  }
+}
+
+// ─── IE-8.4: Trend Hint Renderer ────────────────────────────────
+
+function renderTrendHint(answers: InitAnswers): void {
+  const trending = getLocalTrendingData();
+  if (trending.totalFounders < 2) return;
+
+  const icpCat = categorizeICP(answers.icp);
+  const similarCount = (trending.icp[icpCat] || 0) - 1;
+
+  if (similarCount >= 1) {
+    console.log("");
+    console.log(colors.primary.bold("  Trending Validation"));
+    console.log(colors.dim(`  ${similarCount} other founder${similarCount > 1 ? "s" : ""} ${similarCount > 1 ? "are" : "is"} exploring similar ICP spaces this month.`));
+    console.log(colors.dim("  Run `loopkit radar` to see recent launches in your category."));
   }
 }

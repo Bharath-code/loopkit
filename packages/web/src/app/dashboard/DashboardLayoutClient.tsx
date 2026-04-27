@@ -12,6 +12,7 @@ const navLinks = [
   { name: "Pulse Inbox", href: "/dashboard/pulse", icon: "●" },
   { name: "Loop History", href: "/dashboard/loop", icon: "↻" },
   { name: "Benchmarks", href: "/dashboard/benchmarks", icon: "◈" },
+  { name: "Trends", href: "/dashboard/trends", icon: "▲" },
 ];
 
 export default function DashboardLayout({

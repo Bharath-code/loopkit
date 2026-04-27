@@ -1,8 +1,8 @@
 # LoopKit — Build Status
 
-**Last updated:** April 26, 2026 (Week 6 P2 sprint COMPLETE)  
+**Last updated:** April 27, 2026 (Week 6 P2 sprint COMPLETE · IE Phase 3: IE-8 + IE-15 IMPLEMENTED + AUDIT FIXES · IE-16 CLI DONE)  
 **Version:** 0.1.0  
-**Overall:** MVP complete · Weeks 1-2 shipped · Week 3 P0 done · Week 4 P1 done · Week 5 P1 done · Week 6 P2 done · Strategic + IE Phase 2 shipped
+**Overall:** MVP complete · Weeks 1-2 shipped · Week 3 P0 done · Week 4 P1 done · Week 5 P1 done · Week 6 P2 done · Strategic + IE Phase 2 shipped · IE Phase 3: IE-8 (Trending Validations) + IE-15 (Competitor Ship Radar) implemented · Audit fixes applied (17 issues resolved, 5 nice-to-haves shipped)
 
 ---
 
@@ -150,6 +150,50 @@
 
 ### P3 — Future Roadmap (Week 7+)
 
+#### IE-8: Trending Validations (S) ✅ COMPLETE
+*Aggregate what ICPs/problems LoopKit users are pursuing. Proprietary data no one else has.*
+
+| Sub-Task | Effort | Files | Acceptance Criteria |
+|---|---|---|---|
+| IE-8.1 | **Telemetry ICP extraction** | S | `cli/src/analytics/telemetry.ts`, `convex/analytics.ts` | ✅ Opt-in telemetry captures anonymized ICP, problem, MVP category from brief. Stored as aggregate counts, not raw data. |
+| IE-8.2 | **Convex trending query** | S | `convex/analytics.ts` | ✅ Query returns top 10 ICPs/problems by count, with 7d/30d trend deltas. Rate-limited, cached. |
+| IE-8.3 | **Dashboard trends page** | S | `web/src/app/dashboard/trends/page.tsx` | ✅ Shows trending ICPs/problems as ranked list with sparkline trend indicators. "12 founders validating X this week." |
+| IE-8.4 | **CLI trend hint** | S | `commands/init.ts` | ✅ After brief scoring, show: "X other founders are exploring similar spaces this month." |
+
+#### IE-15: Competitor Ship Radar (M) ✅ COMPLETE
+*Scan Product Hunt/HN/Twitter for launches in user's space. Alert: "3 competitors shipped this week."*
+
+| Sub-Task | Effort | Files | Acceptance Criteria |
+|---|---|---|---|
+| IE-15.1 | **External API adapters** | M | `cli/src/analytics/competitorRadar.ts` (new) | ✅ Free APIs only: Product Hunt RSS, HN Algolia search API. No scraping, no API keys required. |
+| IE-15.2 | **Category keyword mapping** | S | `cli/src/analytics/competitorRadar.ts`, `shared/src/index.ts` | ✅ Map brief category → search keywords. Zod schema for `CompetitorLaunchSchema`. |
+| IE-15.3 | **Cached scan results** | S | `cli/src/analytics/competitorRadar.ts`, `storage/cache.ts` | ✅ Results cached 24h. Returns `{ launches: [{ name, url, date, platform, relevance }] }`. Handles API failures gracefully. |
+| IE-15.4 | **CLI radar command** | S | `commands/radar.ts` (new) | ✅ `loopkit radar` → shows recent launches in user's category. Opt-in, respects telemetry consent. |
+| IE-15.5 | **Dashboard radar widget** | M | `web/src/app/dashboard/page.tsx` | ✅ Widget on overview page. Shows trending validations with link to full trends page. |
+
+#### IE-16: Keyword Opportunity Finder (M) 🔄 CLI DONE
+
+| Sub-Task | Effort | Files | Acceptance Criteria |
+|---|---|---|---|
+| IE-16.1 | **SEO data source adapters** | M | `cli/src/analytics/keywordFinder.ts` (new) | Free sources: Google Autocomplete, Reddit search API, GitHub repo count. No paid APIs. ✅ DONE |
+| IE-16.2 | **Keyword scoring algorithm** | S | `cli/src/analytics/keywordFinder.ts` | Score = (search volume proxy) / (competition proxy). Competition = GitHub repos + suggestion count. Returns top 15 opportunities. ✅ DONE |
+| IE-16.3 | **Zod schema + caching** | S | `shared/src/index.ts`, `storage/cache.ts` | `KeywordOpportunitySchema`: `{ keyword, score, volume, competition, sources[], suggestions[] }`. Cached 7d. ✅ DONE |
+| IE-16.4 | **CLI keywords command** | S | `commands/keywords.ts` (new) | `loopkit keywords` → shows ranked list with score, volume, competition. "Low-hanging fruit" highlighted. ✅ DONE |
+| IE-16.5 | **Dashboard keywords page** | M | `web/src/app/dashboard/keywords/page.tsx` | Table view with sort/filter. Export as CSV. "Content ideas for your niche." |
+
+#### IE-17: Market Timing Signal (M)
+*Track funding rounds, job postings, GitHub stars in user's category. "Space is heating up" vs "cooling down."*
+
+| Sub-Task | Effort | Files | Acceptance Criteria |
+|---|---|---|---|
+| IE-17.1 | **Market data adapters** | M | `cli/src/analytics/marketTiming.ts` (new) | Free sources: Crunchbase RSS (funding), GitHub API (repo growth), LinkedIn/Indeed RSS (job postings). No scraping. All requests cached 7d. |
+| IE-17.2 | **Signal computation** | S | `cli/src/analytics/marketTiming.ts` | 3 signals: funding velocity (rounds/30d), dev activity (GitHub stars/30d), hiring demand (postings/30d). Each: ↑ ↓ → trend. Composite score 0-100. |
+| IE-17.3 | **Zod schema + Convex storage** | S | `shared/src/index.ts`, `convex/analytics.ts` | `MarketSignalSchema`: `{ category, fundingTrend, devTrend, hiringTrend, compositeScore, lastUpdated }`. Stored per-category, updated weekly via cron. |
+| IE-17.4 | **CLI timing hint** | S | `commands/init.ts`, `commands/loop.ts` | During init scoring: "Market signal: ↑ Space is heating up (3 funding rounds this month)." During loop: "Your category saw 12 new GitHub repos this week." |
+| IE-17.5 | **Dashboard signal widget** | M | `web/src/app/dashboard/overview/page.tsx` | Gauge or card showing composite score + 3 trend arrows. Historical sparkline (30d). |
+
+#### Remaining P3 (Other)
+
 | # | Task | Effort | Files | Acceptance Criteria |
 |---|---|---|---|---|
 | D3 | **Dashboard task CRUD** | L | New files in `dashboard/` | Create/edit tasks from web. Sync with local `tasks.md`. Drag-to-reorder. |
@@ -158,15 +202,14 @@
 | W4 | **Public ship log** | L | `commands/ship.ts`, new web route | `loopkit ship --public` → shareable URL (`loopkit.dev/@username/ships`). |
 | W5 | **GitHub Issues sync** | L | `commands/track.ts`, `sync/` module | `loopkit track --sync` two-way sync. ID mapping table. |
 | STRAT-5 | **Annual report framework** | L | `web/src/app/state-of-solo-founders/` | Landing page + data pipeline for "State of Solo Founders 2027". Launch Month 9. |
-| IE-7 | **Anonymous Peer Inspiration** | M | `cli/src/analytics/peers.ts` (new), `commands/loop.ts` | Show what anonymized founders with similar projects shipped this week. "SaaS founders at Week 12 shipped: Stripe billing, webhook retry..." Opt-in. |
-| IE-8 | **Trending Validations** | S | `convex/analytics.ts`, `web/src/app/dashboard/trends/` (new) | Surface trending ICPs, problems, MVP categories from aggregate data. Feed into Monthly Insights (STRAT-3). |
-| IE-9 | **Pattern Interrupt** | M | `commands/init.ts`, `cli/src/analytics/patterns.ts` (new) | Detect repeated failure patterns (e.g., 4th project in 6 months). Interrupt with data: "Founders with this pattern have 15% success rate." Suggest `--narrow` ICP refinement. |
-| IE-10 | **AI Coach v1** | L | `cli/src/analytics/coach.ts` (new), all command files | Rule-based coaching layer. Week 3: "Add validation tasks to track." Week 8: "Ship something public." Week 16: "Tension detected: pulse wants API, tasks focus on UI." |
-| IE-11 | **Churn Guardian v2 (ML)** | L | `convex/analytics.ts` + model training pipeline | Replace rule-based Churn Guardian with ML model trained on proprietary behavioral data. |
-| IE-12 | **Success Predictor v2 (ML)** | L | `convex/analytics.ts` + model training pipeline | Replace heuristics with ML model correlating 8+ weeks of behavior with actual revenue/outcome reports. |
-| IE-13 | **AI Coach v2 (ML-powered)** | L | `cli/src/analytics/coach.ts`, `convex/analytics.ts` | ML-powered coaching interventions calibrated to individual user patterns + aggregate success data. |
+| IE-7 | **Anonymous Peer Inspiration** | M | `cli/src/analytics/peers.ts` (new), `commands/loop.ts` | Show what anonymized founders with similar projects shipped this week. Opt-in. |
+| IE-9 | **Pattern Interrupt** | M | `commands/init.ts`, `cli/src/analytics/patterns.ts` (new) | Detect repeated failure patterns. Interrupt with data. Suggest `--narrow` ICP refinement. |
+| IE-10 | **AI Coach v1** | L | `cli/src/analytics/coach.ts` (new), all command files | Rule-based coaching layer. Week 3/8/16 contextual suggestions. |
+| IE-11 | **Churn Guardian v2 (ML)** | L | `convex/analytics.ts` + model training pipeline | Replace rule-based with ML model trained on proprietary behavioral data. |
+| IE-12 | **Success Predictor v2 (ML)** | L | `convex/analytics.ts` + model training pipeline | Replace heuristics with ML model correlating behavior with revenue/outcome reports. |
+| IE-13 | **AI Coach v2 (ML-powered)** | L | `cli/src/analytics/coach.ts`, `convex/analytics.ts` | ML-powered coaching interventions calibrated to individual patterns + aggregate data. |
 
-**Why P3:** CLI-first means dashboard task CRUD is secondary. Intelligence Engine Phase 3+ needs critical mass (500+ users, 12+ weeks data). These are the ultimate moat features — they compound over time and cannot be replicated by competitors without catching up on data depth.
+**Why P3:** CLI-first means dashboard task CRUD is secondary. IE-8 and IE-15 implemented — proprietary data moat compounding with each user. IE-16/17 (Keywords + Timing) use free external APIs next. Intelligence Engine needs critical mass (500+ users, 12+ weeks data) for ML features.
 
 ---
 
@@ -205,12 +248,36 @@ WEEK 6 (P2 — Performance + Security + IE Phase 2)  ✅ COMPLETE
 ├── IE-5: Auto-Loop                          ✅ Monday detection, auto-draft
 └── IE-6: Success Predictor v1               ✅ 8-week heuristic model
 
-WEEK 7-8 (P3 — IE Phase 3 Early)
-├── IE-7: Anonymous Peer Inspiration
-├── IE-8: Trending Validations
+WEEK 7-8 (P3 — IE Phase 3: Trending + Radar)  ✅ COMPLETE
+├── IE-8: Trending Validations (4 sub-tasks)     ✅ ALL DONE
+│   ├── IE-8.1: Telemetry ICP extraction         ✅ recordBriefCategories() + local aggregates
+│   ├── IE-8.2: Convex trending query            ✅ getTrendingValidations + getTrendingForCategory
+│   ├── IE-8.3: Dashboard trends page            ✅ /dashboard/trends with 3-column layout
+│   └── IE-8.4: CLI trend hint                   ✅ Shows after init when similar founders exist
+├── IE-15: Competitor Ship Radar (5 sub-tasks)   ✅ ALL DONE
+│   ├── IE-15.1: External API adapters (PH RSS, HN Algolia) ✅ Free APIs, no keys
+│   ├── IE-15.2: Category keyword mapping        ✅ 10 ICP + 10 problem keyword maps
+│   ├── IE-15.3: Cached scan results             ✅ 24h TTL via existing cache.ts
+│   ├── IE-15.4: CLI radar command               ✅ loopkit radar with auto-detect from brief
+│   └── IE-15.5: Dashboard radar widget          ✅ Trending widget on overview page
+└── IE-7: Anonymous Peer Inspiration             (next)
+
+WEEK 9-10 (P3 — IE Phase 3: Keywords + Timing)
+├── IE-16: Keyword Opportunity Finder (5 sub-tasks)
+│   ├── IE-16.1: SEO data source adapters            ✅ DONE
+│   ├── IE-16.2: Keyword scoring algorithm            ✅ DONE
+│   ├── IE-16.3: Zod schema + caching                 ✅ DONE
+│   ├── IE-16.4: CLI keywords command                 ✅ DONE
+│   └── IE-16.5: Dashboard keywords page              (next)
+├── IE-17: Market Timing Signal (5 sub-tasks)
+│   ├── IE-17.1: Market data adapters
+│   ├── IE-17.2: Signal computation
+│   ├── IE-17.3: Zod schema + Convex storage
+│   ├── IE-17.4: CLI timing hint
+│   └── IE-17.5: Dashboard signal widget
 └── IE-9: Pattern Interrupt
 
-WEEK 9-12 (P3 — Platform Expansion)
+WEEK 11-12 (P3 — Platform Expansion)
 ├── D3: Dashboard task CRUD
 ├── F5/W6: Project templates
 ├── W3: Weekly email digest
@@ -299,6 +366,14 @@ node packages/cli/dist/index.js init
 
 # Quick pulse test (no AI needed)
 node packages/cli/dist/index.js pulse --add "The onboarding is confusing"
+
+# Competitor radar (free APIs, no key needed)
+node packages/cli/dist/index.js radar
+node packages/cli/dist/index.js radar --category "saas founders"
+
+# Keyword opportunity finder (free SEO data, no key needed)
+node packages/cli/dist/index.js keywords
+node packages/cli/dist/index.js keywords --category "saas founders"
 
 # Run landing page
 cd packages/web && npx next dev -p 3099

@@ -161,6 +161,7 @@ export const ConfigSchema = z.object({
   version: z.number().default(1),
   activeProject: z.string().optional(),
   distinctId: z.string().optional(),
+  encryptionSalt: z.string().optional(),
   auth: z
     .object({
       apiKey: z.string().optional(),
@@ -182,6 +183,83 @@ export const ConfigSchema = z.object({
 });
 
 export type Config = z.infer<typeof ConfigSchema>;
+
+// ─── IE-8: Trending Validations ─────────────────────────────────
+
+export const TelemetryBriefSchema = z.object({
+  icpCategory: z.string(),
+  problemCategory: z.string(),
+  mvpCategory: z.string(),
+  weekNumber: z.number(),
+  timestamp: z.string(),
+});
+
+export type TelemetryBrief = z.infer<typeof TelemetryBriefSchema>;
+
+export const TrendingItemSchema = z.object({
+  category: z.string(),
+  count: z.number(),
+  trend7d: z.number(),
+  trend30d: z.number(),
+  label: z.enum(["icp", "problem", "mvp"]),
+});
+
+export type TrendingItem = z.infer<typeof TrendingItemSchema>;
+
+export const TrendingResponseSchema = z.object({
+  icp: z.array(TrendingItemSchema),
+  problem: z.array(TrendingItemSchema),
+  mvp: z.array(TrendingItemSchema),
+  totalFounders: z.number(),
+  lastUpdated: z.string(),
+});
+
+export type TrendingResponse = z.infer<typeof TrendingResponseSchema>;
+
+// ─── IE-15: Competitor Ship Radar ───────────────────────────────
+
+export const CompetitorLaunchSchema = z.object({
+  name: z.string(),
+  url: z.string().url().optional(),
+  date: z.string(),
+  platform: z.enum(["producthunt", "hackernews", "twitter"]),
+  relevance: z.number().min(0).max(100),
+  description: z.string().optional(),
+  tagline: z.string().optional(),
+});
+
+export type CompetitorLaunch = z.infer<typeof CompetitorLaunchSchema>;
+
+export const CompetitorRadarResponseSchema = z.object({
+  launches: z.array(CompetitorLaunchSchema),
+  category: z.string(),
+  scannedAt: z.string(),
+  totalFound: z.number(),
+});
+
+export type CompetitorRadarResponse = z.infer<typeof CompetitorRadarResponseSchema>;
+
+// ─── IE-16: Keyword Opportunity Finder ──────────────────────────
+
+export const KeywordOpportunitySchema = z.object({
+  keyword: z.string(),
+  score: z.number().min(0),
+  volume: z.enum(["high", "medium", "low"]),
+  competition: z.enum(["low", "medium", "high"]),
+  sources: z.array(z.string()),
+  suggestions: z.array(z.string()).optional(),
+});
+
+export type KeywordOpportunity = z.infer<typeof KeywordOpportunitySchema>;
+
+export const KeywordFinderResponseSchema = z.object({
+  opportunities: z.array(KeywordOpportunitySchema),
+  category: z.string(),
+  scannedAt: z.string(),
+  totalFound: z.number(),
+});
+
+export type KeywordFinderResponse = z.infer<typeof KeywordFinderResponseSchema>;
 
 // ─── Helpers ────────────────────────────────────────────────────
 

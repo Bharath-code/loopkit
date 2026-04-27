@@ -8,6 +8,8 @@ import { pulseCommand } from "./commands/pulse.js";
 import { loopCommand } from "./commands/loop.js";
 import { authCommand } from "./commands/auth.js";
 import { celebrateCommand } from "./commands/celebrate.js";
+import { radarCommand } from "./commands/radar.js";
+import { keywordsCommand } from "./commands/keywords.js";
 import { recordEvent, telemetryCommand } from "./analytics/telemetry.js";
 
 const program = new Command();
@@ -83,6 +85,26 @@ program
   .description("Manage anonymous usage telemetry")
   .action((action) => {
     telemetryCommand(action);
+  });
+
+program
+  .command("radar")
+  .description("Scan Product Hunt & Hacker News for launches in your category")
+  .option("-c, --category <name>", "Category to scan")
+  .option("-p, --project <slug>", "Project to scan for")
+  .action((options) => {
+    recordEvent({ command: "radar" });
+    radarCommand(options);
+  });
+
+program
+  .command("keywords")
+  .description("Find low-competition keywords in your niche using free SEO data")
+  .option("-c, --category <name>", "Category to find keywords for")
+  .option("-p, --project <slug>", "Project to find keywords for")
+  .action((options) => {
+    recordEvent({ command: "keywords" });
+    keywordsCommand(options);
   });
 
 program.parse(process.argv);

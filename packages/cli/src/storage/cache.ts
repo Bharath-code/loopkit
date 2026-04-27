@@ -102,3 +102,72 @@ export function getCacheStats(): { count: number; sizeBytes: number } {
   }
   return { count: files.length, sizeBytes: totalSize };
 }
+
+// ─── Radar-specific cache (key-based, not hash-based) ────────────
+
+function getRadarCachePath(key: string): string {
+  return path.join(getCacheDir(), `radar-${key}.json`);
+}
+
+interface RadarCacheEntry<T> {
+  result: T;
+  scannedAt: string;
+  expiresAt: string;
+}
+
+export function getCachedRadar<T>(key: string, ttlMs: number): T | null {
+  const cachePath = getRadarCachePath(key);
+  if (!fs.existsSync(cachePath)) return null;
+
+  try {
+    const entry: RadarCacheEntry<T> = JSON.parse(fs.readFileSync(cachePath, "utf-8"));
+    if (Date.now() > new Date(entry.expiresAt).getTime()) {
+      fs.unlinkSync(cachePath);
+      return null;
+    }
+    return entry.result;
+  } catch {
+    return null;
+  }
+}
+
+export function setCachedRadar<T>(key: string, ttlMs: number, result: T): void {
+  ensureCacheDir();
+  const cachePath = getRadarCachePath(key);
+  const now = new Date();
+  const expiresAt = new Date(now.getTime() + ttlMs);
+
+  const entry: RadarCacheEntry<T> = {
+    result,
+    scannedAt: now.toISOString(),
+    expiresAt: expiresAt.toISOString(),
+  };
+
+  fs.writeFileSync(cachePath, JSON.stringify(entry, null, 2));
+}
+
+export function clearExpiredCache(): number {
+  const dir = getCacheDir();
+  if (!fs.existsSync(dir)) return 0;
+
+  const files = fs.readdirSync(dir).filter((f) => f.endsWith(".json"));
+  let cleared = 0;
+  for (const file of files) {
+    const cachePath = path.join(dir, file);
+    try {
+      const entry = JSON.parse(fs.readFileSync(cachePath, "utf-8"));
+      if (entry.meta?.expiresAt && Date.now() > new Date(entry.meta.expiresAt).getTime()) {
+        fs.unlinkSync(cachePath);
+        cleared++;
+      } else if (entry.expiresAt && Date.now() > new Date(entry.expiresAt).getTime()) {
+        fs.unlinkSync(cachePath);
+        cleared++;
+      }
+    } catch {
+      // corrupt file, remove it
+      fs.unlinkSync(cachePath);
+      cleared++;
+    }
+  }
+  return cleared;
+}

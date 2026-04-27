@@ -27,6 +27,19 @@ Welcome to the LoopKit documentation. This directory contains everything you nee
 | **[CONTENT_STRATEGY.md](CONTENT_STRATEGY.md)** | State of Solo Founders content engine and 12-month calendar | You're planning content, PR, or brand building |
 | **[INTELLIGENCE_ENGINE.md](INTELLIGENCE_ENGINE.md)** | How behavioral data becomes product intelligence | You're building features that wow users and deepen retention |
 
+## Feature Status
+
+| Feature | Status | Commands | Dashboard |
+|---------|--------|----------|-----------|
+| Core Loop (init/track/ship/pulse/loop) | ✅ Shipped | CLI | Full |
+| Auth + Payments | ✅ Shipped | `loopkit auth` | Login/Signup |
+| Telemetry + Benchmarks | ✅ Shipped | `loopkit telemetry` | `/benchmarks` |
+| Intelligence Engine Phase 1-2 | ✅ Shipped | DNA, benchmarks, oracle, churn, auto-loop, predictor | Overview, Benchmarks |
+| **IE-8: Trending Validations** | ✅ **Shipped** | Hint in `init` | `/trends` |
+| **IE-15: Competitor Ship Radar** | ✅ **Shipped** | `loopkit radar` | Overview widget |
+| IE-16: Keyword Opportunity Finder | Planned | `loopkit keywords` | `/keywords` |
+| IE-17: Market Timing Signal | Planned | Hint in `init`/`loop` | Overview widget |
+
 ## Document Relationships
 
 ```

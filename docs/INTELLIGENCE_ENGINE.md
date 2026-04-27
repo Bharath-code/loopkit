@@ -404,33 +404,38 @@ Week 12 Synthesis
 
 ---
 
-### Feature 3.2: Trending Validations
+### Feature 3.2: Trending Validations ✅ IMPLEMENTED
 
 **What it does:** Shows what ICPs, problems, and MVPs are trending among LoopKit founders.
 
-**Example (Monthly Insights content + dashboard widget):**
+**How it works (implemented):**
+- When a founder runs `loopkit init` with telemetry opted in, their ICP, problem, and MVP are categorized into one of 10 ICP types, 10 problem types, and 8 MVP types.
+- Categories are stored as anonymized aggregates in Convex (`briefAggregates` table).
+- The dashboard `/dashboard/trends` page shows top 10 in each category with 7-day and 30-day trend deltas.
+- After `init`, if similar founders exist, a CLI hint appears: "X other founders are exploring similar spaces this month."
+
+**Example (CLI):**
 ```
-🔥 Trending in April 2027
+  Trending Validation
+  5 other founders are exploring similar ICP spaces this month.
+  Run `loopkit radar` to see recent launches in your category.
+```
 
-Most validated ICP this month:
-   "Technical writers at API companies" (+340% from March)
-   Most common problem: "API docs get out of sync with code"
+**Example (Dashboard):**
+```
+Trending Validations
+5 founders opted in
 
-Most shipped MVP category:
-   "Chrome extensions for productivity" (+120%)
-
-Emerging pattern:
-   23 founders are building AI-powered email assistants.
-   Average ICP score: 6.2 (lower than usual — market may be crowded)
-
-💡 Idea: If you're considering this space, narrow your ICP.
-   "AI email assistant for sales teams" scores 8.4 on average.
+Top ICPs          Top Problems        Top MVP Types
+1. saas founders  1. content creation  1. web app
+2. creators       2. email outreach    2. cli tool
+3. developers     3. workflow auto     3. api/plugin
 ```
 
 **Data used:**
-- Brief scores and ICP descriptions
-- Project categorization (AI, SaaS, mobile, etc.)
-- Validation outcomes
+- Anonymized ICP, problem, and MVP categories from briefs
+- Aggregate counts with 7d/30d trend windows
+- No raw brief content, no user identifiers
 
 **Why it wows:**
 - Market intelligence for free. Founders pay for this kind of data.
@@ -444,6 +449,131 @@ Emerging pattern:
 **How it builds moat:**
 - Proprietary market data no one else has.
 - Becomes a research destination, not just a tool.
+- Compounds with every new user who opts in.
+
+**Implementation status:**
+- ✅ `recordBriefCategories()` in `telemetry.ts` — captures categorized brief data
+- ✅ `getTrendingValidations` in `convex/analytics.ts` — returns top 10 per category with trend deltas
+- ✅ `/dashboard/trends` — 3-column layout (ICPs, Problems, MVP types)
+- ✅ CLI trend hint in `init.ts` — shows after brief scoring when similar founders exist
+- ✅ `briefAggregates` table in Convex schema
+
+---
+
+### Feature 3.3: Competitor Ship Radar ✅ IMPLEMENTED
+
+**What it does:** Scans Product Hunt and Hacker News for recent launches in the user's category.
+
+**How it works (implemented):**
+- Maps the user's ICP category (from their brief) to search keywords.
+- Fetches Product Hunt RSS feed and HN Algolia Search API (free, no API keys).
+- Scores each launch for relevance (0-100%) based on keyword matches.
+- Results cached for 24 hours. API failures return empty arrays, not crashes.
+
+**Example (CLI):**
+```bash
+$ loopkit radar
+
+  Scanning for: saas founders
+  Found 7 relevant launches.
+
+  3 launches this week
+
+  [PH] Acme CRM
+    The CRM for solo founders
+    2 days ago · relevance: 85%
+    https://producthunt.com/posts/acme-crm
+
+  [HN] ShipFast
+    Launch your SaaS in a weekend
+    1 day ago · relevance: 72%
+    https://news.ycombinator.com/item?id=12345
+```
+
+**Data sources:**
+- Product Hunt RSS (`https://www.producthunt.com/rss`) — free, official
+- HN Algolia Search API (`https://hn.algolia.com/api/v1/search`) — free, official
+- No scraping, no unofficial endpoints, no API keys required
+
+**Why it wows:**
+- "I didn't know 3 competitors shipped this week." Market awareness without manual research.
+- Relevance scoring surfaces what matters, not everything.
+- Works out of the box — no configuration needed.
+
+**How it retains:**
+- Founders check radar weekly to stay aware of their space.
+- Drives back to dashboard for deeper trends analysis.
+
+**How it builds moat:**
+- Keyword mapping + relevance scoring tuned to LoopKit's ICP taxonomy.
+- Combined with trending data, creates a unique market intelligence layer.
+
+**Implementation status:**
+- ✅ `competitorRadar.ts` — PH RSS parser + HN Algolia adapter, keyword mapping, relevance scoring
+- ✅ `loopkit radar` command — auto-detects category from brief, supports `--category` flag
+- ✅ 24-hour cache via existing `cache.ts` pattern
+- ✅ Trending widget on dashboard overview page
+- ✅ 10 ICP categories + 10 problem categories mapped to search keywords
+
+**Implementation status:**
+- ✅ `competitorRadar.ts` — PH RSS parser + HN Algolia adapter, keyword mapping, relevance scoring
+- ✅ `loopkit radar` command — auto-detects category from brief, supports `--category` flag
+- ✅ 24-hour cache via existing `cache.ts` pattern
+- ✅ Trending widget on dashboard overview page
+- ✅ 10 ICP categories + 10 problem categories mapped to search keywords
+- ✅ State-machine XML parser — handles nested tags, CDATA, namespace prefixes without external deps
+- ✅ JSON-configurable keywords (`keywords.json`) — adding new ICP/problem categories requires only JSON edits
+- ✅ Structured JSON logging — all errors emit JSON with level, module, correlationId, timestamp, data
+- ✅ Parallel HN API calls — 3 queries fetched concurrently via Promise.all
+- ✅ Per-install encryption salt — cryptographically random salt generated on first run, stored in config.json
+
+---
+
+### Feature 3.4: Keyword Opportunity Finder 🔄 IN PROGRESS
+
+**What it does:** Finds low-competition keywords in the user's niche using free SEO APIs.
+
+**How it works (planned):**
+- Free SEO data adapters: Google Autocomplete (RSS), AnswerThePublic free tier, Reddit search API.
+- Keyword scoring: score = (search volume proxy) / (competition proxy).
+- Competition = number of PH launches + GitHub repos + HN mentions.
+- Returns top 10 opportunities with actionable content suggestions.
+
+**Example (CLI):**
+```bash
+$ loopkit keywords
+
+  Low-hanging fruit for: saas founders
+
+  1. "saas metrics dashboard"     score: 8.2  volume: high  competition: low
+  2. "solo founder tools"          score: 7.5  volume: med   competition: low
+  3. "indie hacker analytics"      score: 6.8  volume: med   competition: med
+```
+
+**Data sources:**
+- Google Autocomplete (via RSS, free)
+- AnswerThePublic free tier
+- Reddit search API (free)
+- No paid APIs, no scraping
+
+---
+
+### Feature 3.5: Market Timing Signal 🔄 IN PROGRESS
+
+**What it does:** Tracks funding rounds, job postings, and GitHub activity in the user's category.
+
+**How it works (planned):**
+- Free market data: Crunchbase RSS (funding), GitHub API (repo growth), job posting RSS.
+- 3 signals: funding velocity, dev activity, hiring demand — each with ↑ ↓ → trend.
+- Composite score 0-100. "Space is heating up" vs "cooling down."
+
+**Example (CLI):**
+```bash
+$ loopkit init
+
+  Market Signal: ↑ Space is heating up
+  3 funding rounds this month · 12 new GitHub repos · 8 job postings
+```
 
 ---
 
@@ -564,7 +694,8 @@ Still want to proceed? [Yes, I'm committed] [Refine ICP first]
 | 2 | Auto-Loop | "I drafted your loop. Confirm?" | Friction removal | Individual pattern data |
 | 2 | Success Predictor | "68% probability of revenue" | Stakes + hope | Outcome correlations |
 | 3 | Peer Inspiration | "Founders like you shipped..." | Community feeling | Critical mass network |
-| 3 | Trending Validations | "Market may be crowded" | Market intelligence | Proprietary trend data |
+| 3 | Trending Validations ✅ | "5 founders exploring similar ICPs" | Market intelligence | Proprietary aggregate data |
+| 3 | Competitor Ship Radar ✅ | "3 competitors shipped this week" | Market awareness | Keyword mapping + relevance scoring |
 | 4 | Pattern Interrupt | "This is your 4th project in 6 months" | Preventing failure | Longitudinal user data |
 | 4 | AI Coach | "Tension detected: feedback ≠ tasks" | Personal relationship | Deep behavioral understanding |
 
@@ -647,4 +778,4 @@ Moat Strength = (Data Depth) × (Insight Quality) × (User Trust) × (Time)
 
 ---
 
-*Last updated: April 2026*
+*Last updated: April 2026 · IE-8 + IE-15 implemented · Audit fixes + nice-to-haves complete · IE-16/17 in progress*

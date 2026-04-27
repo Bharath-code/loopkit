@@ -62,4 +62,17 @@ export default defineSchema({
   })
     .index("by_user_date", ["userId", "date"])
     .index("by_user", ["userId"]),
+
+  briefAggregates: defineTable({
+    icpCategory: v.string(),
+    problemCategory: v.string(),
+    mvpCategory: v.string(),
+    weekNumber: v.number(),
+    submittedAt: v.number(),
+  })
+    .index("by_week", ["weekNumber"])
+    .index("by_icp", ["icpCategory"])
+    .index("by_problem", ["problemCategory"])
+    .index("by_mvp", ["mvpCategory"])
+    .index("by_submittedAt", ["submittedAt"]),
 });

@@ -160,8 +160,10 @@ However, we can **plant seeds** for future moats without premature optimization.
 
 **What resources could LoopKit corner?**
 
-#### A: Founder Shipping Data (Unique)
+#### A: Founder Shipping Data (Unique) ✅ ENHANCED
 - LoopKit collects structured data about: idea scores, shipping velocity, task completion, feedback patterns, iteration cycles
+- **Now also collects:** Anonymized ICP categories, problem categories, MVP categories from briefs (IE-8)
+- **Now also tracks:** External competitor launches via PH RSS + HN Algolia (IE-15)
 - No other tool collects this specific data in this structured way
 - Could become the largest dataset on "how solo founders actually build"
 
@@ -169,8 +171,10 @@ However, we can **plant seeds** for future moats without premature optimization.
 - Research: "What ICP scores correlate with eventual success?"
 - AI training: Better synthesis, better scoring, better recommendations
 - Content: "We analyzed 10,000 founder weeks. Here's what we learned."
+- Market intelligence: "5 founders are validating this ICP this month"
+- Competitive awareness: "3 competitors shipped in your space this week"
 
-**Moat strength:** Medium. Data is valuable but not impossible to replicate.
+**Moat strength:** Medium-High. Data is valuable and now includes proprietary aggregate trends + external market scanning.
 
 #### B: Founder Community (Harder to Replicate)
 - If LoopKit becomes the hub for serious solo founders, the community itself is the resource
@@ -224,15 +228,17 @@ However, we can **plant seeds** for future moats without premature optimization.
 | Double down on CLI-native features | Counter-positioning | M |
 | Dogfood publicly (build in public) | Brand | S |
 
-### Phase 2: Early PMF (3-6 months) — Deepen
+### Phase 2: Early PMF (3-6 months) — Deepen ✅ IN PROGRESS
 **Goal:** Users are sticky. Moat starts to matter.
 
-| Action | Moat | Effort |
-|--------|------|--------|
-| Launch public ship log network | Network effects | M |
-| Personalized AI based on user history | Switching costs | M |
-| Publish "State of Solo Founders" report | Brand + Cornered resource | M |
-| Methodology certification/content | Process power | M |
+| Action | Moat | Effort | Status |
+|--------|------|--------|--------|
+| Launch public ship log network | Network effects | M | Pending |
+| Personalized AI based on user history | Switching costs | M | Pending |
+| Publish "State of Solo Founders" report | Brand + Cornered resource | M | Pending |
+| Methodology certification/content | Process power | M | Pending |
+| Trending Validations (IE-8) | Cornered resource | S | ✅ Done |
+| Competitor Ship Radar (IE-15) | Cornered resource | M | ✅ Done |
 
 ### Phase 3: Scale (6-18 months) — Stack
 **Goal:** Multiple moats. Compounding advantages.
@@ -335,4 +341,4 @@ LoopKit's moat strategy:
 
 ---
 
-*Last updated: April 2026*
+*Last updated: April 2026 · IE-8 + IE-15 implemented*

@@ -20,14 +20,23 @@ const LOOPKIT_DIR = ".loopkit";
 
 const ENCRYPTION_PREFIX = "enc:";
 
-function deriveKey(): Buffer {
-  const salt = "loopkit";
-  const material = `${os.hostname()}:${os.userInfo().username}:loopkit-salt-v1`;
-  return crypto.scryptSync(material, salt, 32);
+function getOrCreateSalt(config: Config): string {
+  if (config.encryptionSalt) return config.encryptionSalt;
+
+  const salt = crypto.randomBytes(16).toString("hex");
+  config.encryptionSalt = salt;
+  writeConfig(config);
+  return salt;
 }
 
-function encryptToken(plain: string): string {
-  const key = deriveKey();
+function deriveKey(config: Config): Buffer {
+  const salt = getOrCreateSalt(config);
+  const material = `${os.hostname()}:${os.userInfo().username}:${salt}`;
+  return crypto.scryptSync(material, "loopkit-key-v1", 32);
+}
+
+function encryptToken(plain: string, config: Config): string {
+  const key = deriveKey(config);
   const iv = crypto.randomBytes(16);
   const cipher = crypto.createCipheriv("aes-256-gcm", key, iv);
   const encrypted = Buffer.concat([cipher.update(plain, "utf-8"), cipher.final()]);
@@ -36,10 +45,10 @@ function encryptToken(plain: string): string {
   return ENCRYPTION_PREFIX + combined.toString("base64");
 }
 
-function decryptToken(value: string): string | null {
+function decryptToken(value: string, config: Config): string | null {
   if (!value.startsWith(ENCRYPTION_PREFIX)) return value; // plaintext fallback
   try {
-    const key = deriveKey();
+    const key = deriveKey(config);
     const combined = Buffer.from(value.slice(ENCRYPTION_PREFIX.length), "base64");
     const iv = combined.subarray(0, 16);
     const authTag = combined.subarray(16, 32);
@@ -174,9 +183,8 @@ export function readConfig(): Config {
   try {
     const raw = JSON.parse(fs.readFileSync(configPath, "utf-8"));
     const config = ConfigSchema.parse(raw);
-    // Decrypt auth token if encrypted
     if (config.auth?.apiKey) {
-      const decrypted = decryptToken(config.auth.apiKey);
+      const decrypted = decryptToken(config.auth.apiKey, config);
       if (decrypted) {
         config.auth.apiKey = decrypted;
       } else {
@@ -195,9 +203,8 @@ export function readConfig(): Config {
 export function writeConfig(config: Config): void {
   ensureLoopkitDir();
   const toWrite = { ...config };
-  // Encrypt auth token before writing
   if (toWrite.auth?.apiKey && !toWrite.auth.apiKey.startsWith(ENCRYPTION_PREFIX)) {
-    toWrite.auth.apiKey = encryptToken(toWrite.auth.apiKey);
+    toWrite.auth.apiKey = encryptToken(toWrite.auth.apiKey, toWrite);
   }
   fs.writeFileSync(getConfigPath(), JSON.stringify(toWrite, null, 2));
 }

@@ -267,6 +267,107 @@ But if you're overriding > 50% of the time for a month, ask yourself: *Is the sy
 
 ---
 
+## Intelligence Engine
+
+Once you opt into telemetry (`loopkit telemetry on`), LoopKit unlocks market intelligence features no other tool can offer.
+
+### Trending Validations
+
+After you run `loopkit init`, LoopKit analyzes your ICP, problem, and MVP category. If other founders are exploring similar spaces, you'll see a hint:
+
+```
+  Trending Validation
+  5 other founders are exploring similar ICP spaces this month.
+  Run `loopkit radar` to see recent launches in your category.
+```
+
+View full trends on your dashboard at `/dashboard/trends` — ranked lists of top ICPs, problems, and MVP types across all opted-in founders.
+
+### Competitor Ship Radar
+
+Scan Product Hunt and Hacker News for recent launches in your category:
+
+```bash
+loopkit radar
+```
+
+LoopKit auto-detects your project's category from your brief and searches for relevant launches. Results show:
+- Launch name, tagline, and URL
+- Platform (Product Hunt or Hacker News)
+- Relevance score (0-100%)
+- How recent the launch is
+
+You can also scan any category:
+```bash
+loopkit radar --category "ecommerce"
+```
+
+Results are cached for 24 hours. No API keys required.
+
+### Keyword Opportunity Finder
+
+Find low-competition keywords in your niche for content strategy:
+
+```bash
+loopkit keywords
+```
+
+LoopKit scans free SEO data sources (Google Autocomplete, Reddit, GitHub) and returns:
+- Keyword score (0-100) — higher = better opportunity
+- Search volume estimate (high/medium/low)
+- Competition level (low/medium/high)
+- Related search suggestions
+
+Results are sorted by score. "Low-hanging fruit" keywords (low competition, decent volume) are highlighted at the top.
+
+```bash
+$ loopkit keywords
+
+  Found 12 keyword opportunities.
+
+  3 low-hanging fruit
+
+  Keyword                          Score  Volume      Competition
+  ──────────────────────────────────────────────────────────────────────
+  saas metrics dashboard            82  ███ high    low
+    → saas metrics dashboard template, saas metrics dashboard examples
+  solo founder tools                75  ██░ medium  low
+  indie hacker analytics            68  ██░ medium  medium
+```
+
+You can also scan any category:
+```bash
+loopkit keywords --category "ecommerce"
+```
+
+Results are cached for 7 days. No API keys required.
+
+### Telemetry & Privacy
+
+LoopKit's intelligence features require opt-in telemetry:
+
+```bash
+loopkit telemetry on     # Enable anonymous data sharing
+loopkit telemetry off    # Disable
+loopkit telemetry status # Check current status
+loopkit telemetry export # Download all your data
+loopkit telemetry delete # Delete all server-side data
+```
+
+**What's collected (when opted in):**
+- Anonymized ICP, problem, and MVP categories from your brief
+- Aggregate usage patterns (which commands you run, not what you type)
+- Shipping scores and streak lengths
+
+**What's NEVER collected:**
+- Project names, task content, or brief text
+- API keys or personal identifiers
+- Raw feedback responses
+
+All raw data stays in `.loopkit/` on your machine. Server-side data is aggregated and anonymized.
+
+---
+
 ## Pricing
 
 | Plan | Cost | AI | Best For |
@@ -328,4 +429,4 @@ LoopKit keeps you honest about that.
 
 ---
 
-*Last updated: April 2026*
+*Last updated: April 2026 · v0.1.0 (IE-8 + IE-15 shipped · Audit fixes complete)*

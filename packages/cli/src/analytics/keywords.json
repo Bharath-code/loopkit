@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "categoryKeywords": {
+    "freelancers": ["freelance", "contractor", "gig economy", "upwork", "fiverr"],
+    "saas founders": ["saas", "startup", "founder", "no-code", "indie hacker"],
+    "creators": ["creator", "influencer", "content creator", "youtube", "podcast"],
+    "ecommerce": ["ecommerce", "shopify", "d2c", "online store", "retail"],
+    "developers": ["developer tools", "devtools", "api", "sdk", "cli"],
+    "students": ["education", "learning", "student", "course", "e-learning"],
+    "health & wellness": ["health", "fitness", "wellness", "meditation", "mental health"],
+    "finance": ["fintech", "finance", "crypto", "investing", "trading"],
+    "marketers": ["marketing", "seo", "growth", "email marketing", "social media"],
+    "general": ["tool", "productivity", "automation", "workflow"]
+  },
+  "problemKeywords": {
+    "proposal creation": ["proposal", "pitch deck", "presentation", "bid"],
+    "email outreach": ["cold email", "outreach", "follow-up", "email sequence"],
+    "content creation": ["content", "writing", "blog", "social media", "copywriting"],
+    "scheduling": ["scheduling", "calendar", "booking", "meeting"],
+    "billing & payments": ["invoicing", "billing", "payment", "subscription"],
+    "analytics": ["analytics", "tracking", "metrics", "dashboard", "reporting"],
+    "customer management": ["crm", "customer", "lead", "pipeline", "sales"],
+    "workflow automation": ["automation", "workflow", "zapier", "integration"],
+    "hiring & recruiting": ["hiring", "recruiting", "talent", "job posting"],
+    "other": ["tool", "app", "platform", "software"]
+  }
+}

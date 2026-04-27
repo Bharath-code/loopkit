@@ -2,11 +2,14 @@ import * as p from "@clack/prompts";
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
-import { getWeekNumber, formatDate, type TelemetryEvent, type TelemetryExport } from "@loopkit/shared";
+import { getWeekNumber, formatDate, type TelemetryEvent, type TelemetryExport, type TelemetryBrief, TelemetryBriefSchema } from "@loopkit/shared";
 import { getRoot, readConfig, writeConfig } from "../storage/local.js";
 import { colors, info, pass, fail } from "../ui/theme.js";
 
 const TELEMETRY_DIR = "telemetry";
+const BRIEF_AGGREGATES_FILE = "brief-aggregates.json";
+const MAX_AGGREGATE_AGE_MS = 90 * 24 * 60 * 60 * 1000; // 90 days
+const MAX_AGGREGATES_BEFORE_COMPACTION = 1000;
 
 function getTelemetryDir(): string {
   return path.join(getRoot(), TELEMETRY_DIR);
@@ -138,6 +141,86 @@ export async function startTelemetryPrompt(): Promise<void> {
 export function isTelemetryEnabled(): boolean {
   const config = readConfig();
   return config.telemetry?.optedIn === true;
+}
+
+function getBriefAggregatesPath(): string {
+  return path.join(getRoot(), BRIEF_AGGREGATES_FILE);
+}
+
+function readBriefAggregates(): TelemetryBrief[] {
+  const filePath = getBriefAggregatesPath();
+  if (!fs.existsSync(filePath)) return [];
+  try {
+    const raw = JSON.parse(fs.readFileSync(filePath, "utf-8"));
+    const parsed = TelemetryBriefSchema.array().parse(raw);
+    return compactAggregates(parsed);
+  } catch {
+    return [];
+  }
+}
+
+function compactAggregates(aggregates: TelemetryBrief[]): TelemetryBrief[] {
+  const now = Date.now();
+  const cutoff = now - MAX_AGGREGATE_AGE_MS;
+  let filtered = aggregates.filter((a) => {
+    const ts = new Date(a.timestamp).getTime();
+    return ts >= cutoff;
+  });
+
+  if (filtered.length > MAX_AGGREGATES_BEFORE_COMPACTION) {
+    filtered = filtered.slice(-MAX_AGGREGATES_BEFORE_COMPACTION);
+  }
+
+  if (filtered.length !== aggregates.length) {
+    fs.writeFileSync(getBriefAggregatesPath(), JSON.stringify(filtered, null, 2));
+  }
+
+  return filtered;
+}
+
+function appendBriefAggregate(brief: TelemetryBrief): void {
+  ensureTelemetryDir();
+  const aggregates = readBriefAggregates();
+  aggregates.push(brief);
+  fs.writeFileSync(getBriefAggregatesPath(), JSON.stringify(aggregates, null, 2));
+}
+
+export function recordBriefCategories(data: {
+  icpCategory: string;
+  problemCategory: string;
+  mvpCategory: string;
+}): void {
+  if (!isTelemetryEnabled()) return;
+
+  const brief: TelemetryBrief = {
+    icpCategory: data.icpCategory.toLowerCase().trim(),
+    problemCategory: data.problemCategory.toLowerCase().trim(),
+    mvpCategory: data.mvpCategory.toLowerCase().trim(),
+    weekNumber: getWeekNumber(),
+    timestamp: new Date().toISOString(),
+  };
+
+  appendBriefAggregate(brief);
+}
+
+export function getLocalTrendingData(): {
+  icp: Record<string, number>;
+  problem: Record<string, number>;
+  mvp: Record<string, number>;
+  totalFounders: number;
+} {
+  const aggregates = readBriefAggregates();
+  const icp: Record<string, number> = {};
+  const problem: Record<string, number> = {};
+  const mvp: Record<string, number> = {};
+
+  for (const a of aggregates) {
+    icp[a.icpCategory] = (icp[a.icpCategory] || 0) + 1;
+    problem[a.problemCategory] = (problem[a.problemCategory] || 0) + 1;
+    mvp[a.mvpCategory] = (mvp[a.mvpCategory] || 0) + 1;
+  }
+
+  return { icp, problem, mvp, totalFounders: aggregates.length };
 }
 
 export function recordEvent(event: {

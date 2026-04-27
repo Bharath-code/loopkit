@@ -1,4 +1,4 @@
-import { query } from "./_generated/server";
+import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { Id } from "./_generated/dataModel";
 
@@ -259,6 +259,173 @@ export const getArchetype = query({
       scoreVariance: Math.round(scoreVariance),
       taskVariance: Math.round(taskVariance),
       weeksAnalyzed: logs.length,
+    };
+  },
+});
+
+// ─── IE-8: Trending Validations ─────────────────────────────────
+
+export const submitBriefAggregate = mutation({
+  args: {
+    icpCategory: v.string(),
+    problemCategory: v.string(),
+    mvpCategory: v.string(),
+    weekNumber: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+    const oneHourMs = 60 * 60 * 1000;
+    const oneHourAgo = now - oneHourMs;
+
+    const recent = await ctx.db
+      .query("briefAggregates")
+      .withIndex("by_submittedAt", (q) => q.gte("submittedAt", oneHourAgo))
+      .order("desc")
+      .take(1);
+
+    if (recent.length > 0) {
+      const last = recent[0];
+      const isDuplicate =
+        last.icpCategory === args.icpCategory.toLowerCase().trim() &&
+        last.problemCategory === args.problemCategory.toLowerCase().trim() &&
+        last.mvpCategory === args.mvpCategory.toLowerCase().trim();
+
+      if (isDuplicate) return;
+    }
+
+    await ctx.db.insert("briefAggregates", {
+      icpCategory: args.icpCategory.toLowerCase().trim(),
+      problemCategory: args.problemCategory.toLowerCase().trim(),
+      mvpCategory: args.mvpCategory.toLowerCase().trim(),
+      weekNumber: args.weekNumber,
+      submittedAt: Date.now(),
+    });
+  },
+});
+
+interface TrendCount {
+  category: string;
+  count: number;
+  count7d: number;
+  count30d: number;
+}
+
+function computeTrends(
+  items: Array<{ category: string; weekNumber: number; submittedAt: number }>
+): TrendCount[] {
+  const now = Date.now();
+  const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+  const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
+
+  const grouped = new Map<string, { total: number; recent7d: number; recent30d: number }>();
+  for (const item of items) {
+    const existing = grouped.get(item.category) || { total: 0, recent7d: 0, recent30d: 0 };
+    existing.total++;
+    if (now - item.submittedAt < sevenDaysMs) existing.recent7d++;
+    if (now - item.submittedAt < thirtyDaysMs) existing.recent30d++;
+    grouped.set(item.category, existing);
+  }
+
+  return Array.from(grouped.entries())
+    .map(([category, counts]) => ({
+      category,
+      count: counts.total,
+      count7d: counts.recent7d,
+      count30d: counts.recent30d,
+    }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 10);
+}
+
+export const getTrendingValidations = query({
+  args: {
+    cursor: v.optional(v.string()),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+    const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
+    const cutoff = now - thirtyDaysMs;
+    const limit = args.limit || 500;
+
+    let all;
+    if (args.cursor) {
+      const cursorTs = parseInt(args.cursor, 10);
+      all = await ctx.db
+        .query("briefAggregates")
+        .withIndex("by_submittedAt", (q) => q.gt("submittedAt", cursorTs))
+        .order("desc")
+        .take(limit);
+    } else {
+      all = await ctx.db
+        .query("briefAggregates")
+        .withIndex("by_submittedAt", (q) => q.gte("submittedAt", cutoff))
+        .order("desc")
+        .take(limit);
+    }
+
+    if (all.length === 0) {
+      return {
+        icp: [],
+        problem: [],
+        mvp: [],
+        totalFounders: 0,
+        lastUpdated: new Date().toISOString(),
+        hasMore: false,
+        nextCursor: null,
+      };
+    }
+
+    const icpItems = all.map((a) => ({ category: a.icpCategory, weekNumber: a.weekNumber, submittedAt: a.submittedAt }));
+    const problemItems = all.map((a) => ({ category: a.problemCategory, weekNumber: a.weekNumber, submittedAt: a.submittedAt }));
+    const mvpItems = all.map((a) => ({ category: a.mvpCategory, weekNumber: a.weekNumber, submittedAt: a.submittedAt }));
+
+    const distinctUsers = new Set(all.map((a) => `${a.icpCategory}:${a.problemCategory}`));
+
+    const hasMore = all.length >= limit;
+    const nextCursor = hasMore ? String(all[all.length - 1].submittedAt) : null;
+
+    return {
+      icp: computeTrends(icpItems),
+      problem: computeTrends(problemItems),
+      mvp: computeTrends(mvpItems),
+      totalFounders: distinctUsers.size,
+      lastUpdated: new Date().toISOString(),
+      hasMore,
+      nextCursor,
+    };
+  },
+});
+
+export const getTrendingForCategory = query({
+  args: { category: v.string() },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+    const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
+    const cutoff = now - thirtyDaysMs;
+
+    const all = await ctx.db
+      .query("briefAggregates")
+      .withIndex("by_submittedAt", (q) => q.gte("submittedAt", cutoff))
+      .order("desc")
+      .take(500);
+
+    let matchCount = 0;
+    let recentMatchCount = 0;
+
+    for (const a of all) {
+      const icpMatch = a.icpCategory.includes(args.category.toLowerCase());
+      const problemMatch = a.problemCategory.includes(args.category.toLowerCase());
+      if (icpMatch || problemMatch) {
+        matchCount++;
+        if (now - a.submittedAt < thirtyDaysMs) recentMatchCount++;
+      }
+    }
+
+    return {
+      similarFounders: matchCount,
+      recentFounders: recentMatchCount,
+      hasData: all.length > 0,
     };
   },
 });

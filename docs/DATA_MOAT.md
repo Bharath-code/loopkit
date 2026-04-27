@@ -237,7 +237,7 @@ Aggregated, anonymized benchmarks:
 
 ### Implementation Plan
 
-#### Phase 1: Minimal Collection (Now)
+#### Phase 1: Minimal Collection (Now) ✅ COMPLETE
 **Goal:** Start collecting without user friction
 
 ```typescript
@@ -260,10 +260,14 @@ interface WeeklyTelemetry {
   loopOverridden?: boolean;
 }
 
-export async function sendWeeklyTelemetry(data: WeeklyTelemetry) {
-  // Only sends if user opted in
-  // Sent once per week at loop time
-  // No PII, no project names, no task content
+// packages/cli/src/analytics/telemetry.ts (IE-8)
+
+interface TelemetryBrief {
+  icpCategory: string;       // e.g. "saas founders", "creators"
+  problemCategory: string;   // e.g. "content creation", "email outreach"
+  mvpCategory: string;       // e.g. "web app", "cli tool"
+  weekNumber: number;
+  timestamp: string;
 }
 ```
 
@@ -279,6 +283,9 @@ This helps us answer questions like:
 • How can we improve AI recommendations?
 • What's the average time from idea to launch?
 ```
+
+**Brief category collection (IE-8 — implemented):**
+When telemetry is opted in, `loopkit init` categorizes the founder's ICP, problem, and MVP into standardized categories. These are stored locally as aggregates and synced to Convex for cross-user trending. No raw brief text leaves the machine — only category labels and counts.
 
 #### Phase 2: Enriched Collection (Month 3)
 **Goal:** Deeper behavioral signals
@@ -378,13 +385,18 @@ More users → More data → Better AI → Better outcomes → More users
 
 ## Next Steps
 
-1. **This week:** Add telemetry module to CLI with opt-in prompt
-2. **Next week:** Define data schema and aggregation pipeline
-3. **Month 2:** Launch first benchmark feature ("Your shipping score vs. average")
-4. **Month 3:** Enrich collection with decision patterns
-5. **Month 6:** Launch personalized AI recommendations based on data
-6. **Month 9:** Publish first "State of Solo Founders" report
+1. ~~**This week:** Add telemetry module to CLI with opt-in prompt~~ ✅ Done
+2. ~~**Next week:** Define data schema and aggregation pipeline~~ ✅ Done
+3. ~~**Month 2:** Launch first benchmark feature ("Your shipping score vs. average")~~ ✅ Done
+4. ~~**Month 3:** Enrich collection with decision patterns~~ ✅ Done (brief categories)
+5. ✅ **Month 3:** Trending Validations (IE-8) — ICP/problem/MVP aggregate tracking ✅ Done
+6. ✅ **Month 3:** Competitor Ship Radar (IE-15) — PH/HN launch scanning ✅ Done
+7. ✅ **Month 3:** Audit fixes — structured logging, cursor pagination, per-install encryption salt, telemetry compaction, state-machine XML parser, JSON keyword config ✅ Done
+8. **Month 6:** Keyword Opportunity Finder (IE-16) — free SEO data
+9. **Month 6:** Market Timing Signal (IE-17) — funding/dev/hiring trends
+10. **Month 6:** Launch personalized AI recommendations based on data
+11. **Month 9:** Publish first "State of Solo Founders" report
 
 ---
 
-*Last updated: April 2026*
+*Last updated: April 2026 · IE-8 + IE-15 implemented · Audit fixes complete*
