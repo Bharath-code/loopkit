@@ -13,6 +13,7 @@ const navLinks = [
   { name: "Loop History", href: "/dashboard/loop", icon: "↻" },
   { name: "Benchmarks", href: "/dashboard/benchmarks", icon: "◈" },
   { name: "Trends", href: "/dashboard/trends", icon: "▲" },
+  { name: "Keywords", href: "/dashboard/keywords", icon: "◆" },
 ];
 
 export default function DashboardLayout({

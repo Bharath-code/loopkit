@@ -296,7 +296,109 @@ export default function DashboardOverviewPage() {
             </div>
           </div>
         )}
+
+        {/* Market Timing Signal (IE-17) */}
+        <MarketTimingWidget />
       </div>
+    </div>
+  );
+}
+
+function MarketTimingWidget() {
+  const projects = useQuery(api.projects.list);
+  const activeProject = projects?.[0];
+  const category = activeProject?.name.toLowerCase() || "general";
+  const signal = useQuery(api.marketTiming.getMarketSignal, { category });
+
+  const trendArrow = (trend: string) => {
+    switch (trend) {
+      case "up":
+        return <span className="text-emerald-400">↑</span>;
+      case "down":
+        return <span className="text-red-400">↓</span>;
+      default:
+        return <span className="text-zinc-500">→</span>;
+    }
+  };
+
+  const signalColor = (signal: string) => {
+    switch (signal) {
+      case "heating":
+        return "text-amber-400";
+      case "cooling":
+        return "text-cyan-400";
+      default:
+        return "text-zinc-400";
+    }
+  };
+
+  const scoreColor = (score: number) => {
+    if (score >= 65) return "text-amber-400";
+    if (score <= 35) return "text-cyan-400";
+    return "text-zinc-400";
+  };
+
+  if (!signal) {
+    return (
+      <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/20 animate-pulse">
+        <div className="h-5 w-40 bg-zinc-800 rounded mb-4"></div>
+        <div className="h-8 bg-zinc-800 rounded w-24 mb-3"></div>
+        <div className="space-y-2">
+          <div className="h-4 bg-zinc-800 rounded w-full"></div>
+          <div className="h-4 bg-zinc-800 rounded w-3/4"></div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/20">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-base font-semibold text-white">Market Timing</h2>
+        <a href="#" className="text-xs text-violet-400 hover:text-violet-300 transition-colors">
+          Run loopkit timing →
+        </a>
+      </div>
+
+      <div className="flex items-center gap-4 mb-4">
+        <div className={`text-3xl font-bold ${scoreColor(signal.compositeScore)}`}>
+          {signal.compositeScore}
+          <span className="text-sm text-zinc-500 font-normal">/100</span>
+        </div>
+        <div className={`text-sm font-medium ${signalColor(signal.signal)}`}>
+          {signal.signal === "heating" && "🔥"}
+          {signal.signal === "cooling" && "❄️"}
+          {signal.signal === "stable" && "⚖️"}{" "}
+          {signal.signal.charAt(0).toUpperCase() + signal.signal.slice(1)}
+        </div>
+      </div>
+
+      <div className="space-y-2 text-sm">
+        <div className="flex items-center justify-between">
+          <span className="text-zinc-400">Funding</span>
+          <span className="flex items-center gap-2 text-zinc-300">
+            {trendArrow(signal.fundingTrend)} {signal.fundingCount} rounds
+          </span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-zinc-400">Dev Activity</span>
+          <span className="flex items-center gap-2 text-zinc-300">
+            {trendArrow(signal.devTrend)} {signal.devGrowth} avg stars
+          </span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-zinc-400">Hiring</span>
+          <span className="flex items-center gap-2 text-zinc-300">
+            {trendArrow(signal.hiringTrend)} {signal.hiringCount} postings
+          </span>
+        </div>
+      </div>
+
+      {signal.lastUpdated && (
+        <p className="text-xs text-zinc-600 mt-4">
+          Updated {new Date(signal.lastUpdated).toLocaleDateString()}
+        </p>
+      )}
     </div>
   );
 }

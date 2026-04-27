@@ -75,4 +75,34 @@ export default defineSchema({
     .index("by_problem", ["problemCategory"])
     .index("by_mvp", ["mvpCategory"])
     .index("by_submittedAt", ["submittedAt"]),
+
+  keywordOpportunities: defineTable({
+    category: v.string(),
+    keyword: v.string(),
+    score: v.number(),
+    volume: v.string(),
+    competition: v.string(),
+    sources: v.array(v.string()),
+    suggestions: v.optional(v.array(v.string())),
+    volumeProxy: v.optional(v.number()),
+    competitionProxy: v.optional(v.number()),
+    lastScanned: v.number(),
+  })
+    .index("by_category", ["category"])
+    .index("by_category_score", ["category", "score"]),
+
+  marketSignals: defineTable({
+    category: v.string(),
+    fundingTrend: v.string(),
+    fundingCount: v.number(),
+    devTrend: v.string(),
+    devGrowth: v.number(),
+    hiringTrend: v.string(),
+    hiringCount: v.number(),
+    compositeScore: v.number(),
+    signal: v.string(),
+    lastUpdated: v.number(),
+  })
+    .index("by_category", ["category"])
+    .index("by_lastUpdated", ["lastUpdated"]),
 });

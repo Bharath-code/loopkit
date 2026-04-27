@@ -261,6 +261,34 @@ export const KeywordFinderResponseSchema = z.object({
 
 export type KeywordFinderResponse = z.infer<typeof KeywordFinderResponseSchema>;
 
+// ─── IE-17: Market Timing Signal ────────────────────────────────
+
+export const MarketTrendDirectionSchema = z.enum(["up", "down", "stable"]);
+export type MarketTrendDirection = z.infer<typeof MarketTrendDirectionSchema>;
+
+export const MarketSignalSchema = z.object({
+  category: z.string(),
+  fundingTrend: MarketTrendDirectionSchema,
+  fundingCount: z.number().default(0),
+  devTrend: MarketTrendDirectionSchema,
+  devGrowth: z.number().default(0),
+  hiringTrend: MarketTrendDirectionSchema,
+  hiringCount: z.number().default(0),
+  compositeScore: z.number().min(0).max(100),
+  signal: z.enum(["heating", "cooling", "stable"]),
+  lastUpdated: z.string(),
+});
+
+export type MarketSignal = z.infer<typeof MarketSignalSchema>;
+
+export const MarketTimingResponseSchema = z.object({
+  category: z.string(),
+  signal: MarketSignalSchema,
+  scannedAt: z.string(),
+});
+
+export type MarketTimingResponse = z.infer<typeof MarketTimingResponseSchema>;
+
 // ─── Helpers ────────────────────────────────────────────────────
 
 export function slugify(name: string): string {

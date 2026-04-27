@@ -10,6 +10,7 @@ import { authCommand } from "./commands/auth.js";
 import { celebrateCommand } from "./commands/celebrate.js";
 import { radarCommand } from "./commands/radar.js";
 import { keywordsCommand } from "./commands/keywords.js";
+import { timingCommand } from "./commands/timing.js";
 import { recordEvent, telemetryCommand } from "./analytics/telemetry.js";
 
 const program = new Command();
@@ -105,6 +106,16 @@ program
   .action((options) => {
     recordEvent({ command: "keywords" });
     keywordsCommand(options);
+  });
+
+program
+  .command("timing")
+  .description("Analyze market timing signals: funding, dev activity, and hiring trends")
+  .option("-c, --category <name>", "Category to analyze")
+  .option("-p, --project <slug>", "Project to analyze for")
+  .action((options) => {
+    recordEvent({ command: "timing" });
+    timingCommand(options);
   });
 
 program.parse(process.argv);

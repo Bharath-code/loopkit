@@ -11,7 +11,9 @@
 import type * as analytics from "../analytics.js";
 import type * as auth from "../auth.js";
 import type * as http from "../http.js";
+import type * as keywords from "../keywords.js";
 import type * as loopLogs from "../loopLogs.js";
+import type * as marketTiming from "../marketTiming.js";
 import type * as projects from "../projects.js";
 import type * as pulse from "../pulse.js";
 import type * as rateLimits from "../rateLimits.js";
@@ -28,7 +30,9 @@ declare const fullApi: ApiFromModules<{
   analytics: typeof analytics;
   auth: typeof auth;
   http: typeof http;
+  keywords: typeof keywords;
   loopLogs: typeof loopLogs;
+  marketTiming: typeof marketTiming;
   projects: typeof projects;
   pulse: typeof pulse;
   rateLimits: typeof rateLimits;

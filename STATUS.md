@@ -1,8 +1,8 @@
 # LoopKit — Build Status
 
-**Last updated:** April 27, 2026 (Week 6 P2 sprint COMPLETE · IE Phase 3: IE-8 + IE-15 IMPLEMENTED + AUDIT FIXES · IE-16 CLI DONE)  
+**Last updated:** April 27, 2026 (Week 6 P2 sprint COMPLETE · IE Phase 3: IE-8 + IE-15 IMPLEMENTED + AUDIT FIXES · IE-16 COMPLETE · IE-17 COMPLETE)  
 **Version:** 0.1.0  
-**Overall:** MVP complete · Weeks 1-2 shipped · Week 3 P0 done · Week 4 P1 done · Week 5 P1 done · Week 6 P2 done · Strategic + IE Phase 2 shipped · IE Phase 3: IE-8 (Trending Validations) + IE-15 (Competitor Ship Radar) implemented · Audit fixes applied (17 issues resolved, 5 nice-to-haves shipped)
+**Overall:** MVP complete · Weeks 1-2 shipped · Week 3 P0 done · Week 4 P1 done · Week 5 P1 done · Week 6 P2 done · Strategic + IE Phase 2 shipped · IE Phase 3: IE-8 (Trending Validations) + IE-15 (Competitor Ship Radar) implemented · Audit fixes applied (17 issues resolved, 5 nice-to-haves shipped) · IE-16 (Keyword Opportunity Finder) COMPLETE · IE-17 (Market Timing Signal) COMPLETE
 
 ---
 
@@ -171,7 +171,7 @@
 | IE-15.4 | **CLI radar command** | S | `commands/radar.ts` (new) | ✅ `loopkit radar` → shows recent launches in user's category. Opt-in, respects telemetry consent. |
 | IE-15.5 | **Dashboard radar widget** | M | `web/src/app/dashboard/page.tsx` | ✅ Widget on overview page. Shows trending validations with link to full trends page. |
 
-#### IE-16: Keyword Opportunity Finder (M) 🔄 CLI DONE
+#### IE-16: Keyword Opportunity Finder (M) ✅ COMPLETE
 
 | Sub-Task | Effort | Files | Acceptance Criteria |
 |---|---|---|---|
@@ -179,18 +179,18 @@
 | IE-16.2 | **Keyword scoring algorithm** | S | `cli/src/analytics/keywordFinder.ts` | Score = (search volume proxy) / (competition proxy). Competition = GitHub repos + suggestion count. Returns top 15 opportunities. ✅ DONE |
 | IE-16.3 | **Zod schema + caching** | S | `shared/src/index.ts`, `storage/cache.ts` | `KeywordOpportunitySchema`: `{ keyword, score, volume, competition, sources[], suggestions[] }`. Cached 7d. ✅ DONE |
 | IE-16.4 | **CLI keywords command** | S | `commands/keywords.ts` (new) | `loopkit keywords` → shows ranked list with score, volume, competition. "Low-hanging fruit" highlighted. ✅ DONE |
-| IE-16.5 | **Dashboard keywords page** | M | `web/src/app/dashboard/keywords/page.tsx` | Table view with sort/filter. Export as CSV. "Content ideas for your niche." |
+| IE-16.5 | **Dashboard keywords page** | M | `web/src/app/dashboard/keywords/page.tsx` | Table view with sort/filter. Export as CSV. "Content ideas for your niche." ✅ DONE |
 
-#### IE-17: Market Timing Signal (M)
+#### IE-17: Market Timing Signal (M) ✅ COMPLETE
 *Track funding rounds, job postings, GitHub stars in user's category. "Space is heating up" vs "cooling down."*
 
 | Sub-Task | Effort | Files | Acceptance Criteria |
 |---|---|---|---|
-| IE-17.1 | **Market data adapters** | M | `cli/src/analytics/marketTiming.ts` (new) | Free sources: Crunchbase RSS (funding), GitHub API (repo growth), LinkedIn/Indeed RSS (job postings). No scraping. All requests cached 7d. |
-| IE-17.2 | **Signal computation** | S | `cli/src/analytics/marketTiming.ts` | 3 signals: funding velocity (rounds/30d), dev activity (GitHub stars/30d), hiring demand (postings/30d). Each: ↑ ↓ → trend. Composite score 0-100. |
-| IE-17.3 | **Zod schema + Convex storage** | S | `shared/src/index.ts`, `convex/analytics.ts` | `MarketSignalSchema`: `{ category, fundingTrend, devTrend, hiringTrend, compositeScore, lastUpdated }`. Stored per-category, updated weekly via cron. |
-| IE-17.4 | **CLI timing hint** | S | `commands/init.ts`, `commands/loop.ts` | During init scoring: "Market signal: ↑ Space is heating up (3 funding rounds this month)." During loop: "Your category saw 12 new GitHub repos this week." |
-| IE-17.5 | **Dashboard signal widget** | M | `web/src/app/dashboard/overview/page.tsx` | Gauge or card showing composite score + 3 trend arrows. Historical sparkline (30d). |
+| IE-17.1 | **Market data adapters** | M | `cli/src/analytics/marketTiming.ts` (new) | Free sources: Crunchbase RSS (funding), GitHub API (repo growth), Indeed RSS (job postings). No scraping. All requests cached 7d. ✅ DONE |
+| IE-17.2 | **Signal computation** | S | `cli/src/analytics/marketTiming.ts` | 3 signals: funding velocity (rounds/30d), dev activity (GitHub stars/30d), hiring demand (postings/30d). Each: ↑ ↓ → trend. Composite score 0-100. ✅ DONE |
+| IE-17.3 | **Zod schema + Convex storage** | S | `shared/src/index.ts`, `convex/marketTiming.ts`, `convex/schema.ts` | `MarketSignalSchema`: `{ category, fundingTrend, devTrend, hiringTrend, compositeScore, lastUpdated }`. Stored per-category, updated weekly via cron. ✅ DONE |
+| IE-17.4 | **CLI timing command** | S | `commands/timing.ts` (new) | `loopkit timing` → shows composite score, 3 trend arrows, and interpretation. Opt-in, respects telemetry consent. ✅ DONE |
+| IE-17.5 | **Dashboard signal widget** | M | `web/src/app/dashboard/page.tsx` | Gauge card showing composite score + 3 trend arrows on overview page. ✅ DONE |
 
 #### Remaining P3 (Other)
 
@@ -262,20 +262,20 @@ WEEK 7-8 (P3 — IE Phase 3: Trending + Radar)  ✅ COMPLETE
 │   └── IE-15.5: Dashboard radar widget          ✅ Trending widget on overview page
 └── IE-7: Anonymous Peer Inspiration             (next)
 
-WEEK 9-10 (P3 — IE Phase 3: Keywords + Timing)
+WEEK 9-10 (P3 — IE Phase 3: Keywords + Timing)  ✅ COMPLETE
 ├── IE-16: Keyword Opportunity Finder (5 sub-tasks)
 │   ├── IE-16.1: SEO data source adapters            ✅ DONE
 │   ├── IE-16.2: Keyword scoring algorithm            ✅ DONE
 │   ├── IE-16.3: Zod schema + caching                 ✅ DONE
 │   ├── IE-16.4: CLI keywords command                 ✅ DONE
-│   └── IE-16.5: Dashboard keywords page              (next)
+│   └── IE-16.5: Dashboard keywords page              ✅ DONE (sort/filter/CSV export)
 ├── IE-17: Market Timing Signal (5 sub-tasks)
-│   ├── IE-17.1: Market data adapters
-│   ├── IE-17.2: Signal computation
-│   ├── IE-17.3: Zod schema + Convex storage
-│   ├── IE-17.4: CLI timing hint
-│   └── IE-17.5: Dashboard signal widget
-└── IE-9: Pattern Interrupt
+│   ├── IE-17.1: Market data adapters                 ✅ DONE (Crunchbase RSS, GitHub API, Indeed RSS)
+│   ├── IE-17.2: Signal computation                   ✅ DONE (composite 0-100 score)
+│   ├── IE-17.3: Zod schema + Convex storage          ✅ DONE (marketSignals table)
+│   ├── IE-17.4: CLI timing command                   ✅ DONE (loopkit timing)
+│   └── IE-17.5: Dashboard signal widget              ✅ DONE (overview page card)
+└── IE-9: Pattern Interrupt                           (next)
 
 WEEK 11-12 (P3 — Platform Expansion)
 ├── D3: Dashboard task CRUD
@@ -344,7 +344,7 @@ WEEK 13+ (P3 — IE Phase 4-5 ML)
 - [ ] Web changed? → `cd packages/web && npx next build` → clean
 - [ ] New AI paths: `generateStructured()` works for both auth paths
 - [ ] Ctrl+C exits gracefully at every prompt
-- [ ] Tests pass: `pnpm --filter @loopkit/cli test` (135 tests total)
+- [ ] Tests pass: `pnpm --filter @loopkit/cli test` (127 tests total)
 - [ ] `STATUS.md` updated with task completion checkmark
 
 ---
@@ -374,6 +374,10 @@ node packages/cli/dist/index.js radar --category "saas founders"
 # Keyword opportunity finder (free SEO data, no key needed)
 node packages/cli/dist/index.js keywords
 node packages/cli/dist/index.js keywords --category "saas founders"
+
+# Market timing signal (free data, no key needed)
+node packages/cli/dist/index.js timing
+node packages/cli/dist/index.js timing --category "saas founders"
 
 # Run landing page
 cd packages/web && npx next dev -p 3099
