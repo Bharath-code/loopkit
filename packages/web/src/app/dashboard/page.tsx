@@ -31,6 +31,7 @@ import {
   Ship,
   Target,
 } from "lucide-react";
+import { SparkLine } from "@/components/charts";
 
 export default function DashboardOverviewPage() {
   const user = useQuery(api.users.me);
@@ -43,6 +44,11 @@ export default function DashboardOverviewPage() {
   const latestLoop = useQuery(
     api.loopLogs.latestByProject,
     projectId ? { projectId: projectId as Id<"projects"> } : "skip",
+  );
+
+  const loopLogs = useQuery(
+    api.loopLogs.listByProject,
+    projectId ? { projectId: projectId as Id<"projects">, limit: 8 } : "skip",
   );
 
   const pulseCount = useQuery(
@@ -106,13 +112,22 @@ export default function DashboardOverviewPage() {
         {/* Metric 1 */}
         {tasksCompleted !== undefined ? (
           <div className="p-5 rounded-2xl border border-zinc-800 bg-zinc-900/30">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
-                <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
-              </span>
-              <span className="text-sm text-zinc-400 font-medium">
-                Tasks Completed
-              </span>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <span className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
+                  <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+                </span>
+                <span className="text-sm text-zinc-400 font-medium">
+                  Tasks Completed
+                </span>
+              </div>
+              {loopLogs && loopLogs.length >= 2 && (
+                <SparkLine
+                  data={loopLogs.slice(-8).map((l) => l.tasksCompleted)}
+                  color="#10b981"
+                  height={24}
+                />
+              )}
             </div>
             <div className="text-3xl font-bold text-white">
               {tasksCompleted}
@@ -130,13 +145,22 @@ export default function DashboardOverviewPage() {
         {/* Metric 2 */}
         {shippingScore !== undefined ? (
           <div className="p-5 rounded-2xl border border-zinc-800 bg-zinc-900/30">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="w-8 h-8 rounded-lg bg-violet-500/10 text-violet-400 flex items-center justify-center">
-                <TrendingUp className="h-4 w-4" aria-hidden="true" />
-              </span>
-              <span className="text-sm text-zinc-400 font-medium">
-                Shipping Score
-              </span>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <span className="w-8 h-8 rounded-lg bg-violet-500/10 text-violet-400 flex items-center justify-center">
+                  <TrendingUp className="h-4 w-4" aria-hidden="true" />
+                </span>
+                <span className="text-sm text-zinc-400 font-medium">
+                  Shipping Score
+                </span>
+              </div>
+              {loopLogs && loopLogs.length >= 2 && (
+                <SparkLine
+                  data={loopLogs.slice(-8).map((l) => l.shippingScore)}
+                  color="#8b5cf6"
+                  height={24}
+                />
+              )}
             </div>
             <div className="text-3xl font-bold text-white">
               {shippingScore}
@@ -153,13 +177,15 @@ export default function DashboardOverviewPage() {
         {/* Metric 3 */}
         {pulseCount !== undefined ? (
           <div className="p-5 rounded-2xl border border-zinc-800 bg-zinc-900/30">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center">
-                <MessageCircle className="h-4 w-4" aria-hidden="true" />
-              </span>
-              <span className="text-sm text-zinc-400 font-medium">
-                Pulse Responses
-              </span>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <span className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center">
+                  <MessageCircle className="h-4 w-4" aria-hidden="true" />
+                </span>
+                <span className="text-sm text-zinc-400 font-medium">
+                  Pulse Responses
+                </span>
+              </div>
             </div>
             <div className="text-3xl font-bold text-white">
               {pulseCount ?? 0}
@@ -744,6 +770,12 @@ function MarketTimingWidget({
     return <SkeletonMarketTiming />;
   }
 
+  function trendSparkline(trend: string): number[] {
+    if (trend === "up") return [20, 25, 22, 30, 28, 35, 42];
+    if (trend === "down") return [42, 38, 35, 30, 28, 22, 18];
+    return [28, 26, 30, 28, 27, 29, 28];
+  }
+
   return (
     <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/20">
       <div className="flex items-center justify-between mb-4">
@@ -780,24 +812,45 @@ function MarketTimingWidget({
         </div>
       </div>
 
-      <div className="space-y-2 text-sm">
+      <div className="space-y-3 text-sm">
         <div className="flex items-center justify-between">
           <span className="text-zinc-400">Funding</span>
-          <span className="flex items-center gap-2 text-zinc-300">
-            {trendArrow(signal.fundingTrend)} {signal.fundingCount} rounds
-          </span>
+          <div className="flex items-center gap-2">
+            <SparkLine
+              data={trendSparkline(signal.fundingTrend)}
+              color="#8b5cf6"
+              height={20}
+            />
+            <span className="flex items-center gap-1 text-zinc-300">
+              {trendArrow(signal.fundingTrend)} {signal.fundingCount} rounds
+            </span>
+          </div>
         </div>
         <div className="flex items-center justify-between">
           <span className="text-zinc-400">Dev Activity</span>
-          <span className="flex items-center gap-2 text-zinc-300">
-            {trendArrow(signal.devTrend)} {signal.devGrowth} avg stars
-          </span>
+          <div className="flex items-center gap-2">
+            <SparkLine
+              data={trendSparkline(signal.devTrend)}
+              color="#06b6d4"
+              height={20}
+            />
+            <span className="flex items-center gap-1 text-zinc-300">
+              {trendArrow(signal.devTrend)} {signal.devGrowth} avg stars
+            </span>
+          </div>
         </div>
         <div className="flex items-center justify-between">
           <span className="text-zinc-400">Hiring</span>
-          <span className="flex items-center gap-2 text-zinc-300">
-            {trendArrow(signal.hiringTrend)} {signal.hiringCount} postings
-          </span>
+          <div className="flex items-center gap-2">
+            <SparkLine
+              data={trendSparkline(signal.hiringTrend)}
+              color="#10b981"
+              height={20}
+            />
+            <span className="flex items-center gap-1 text-zinc-300">
+              {trendArrow(signal.hiringTrend)} {signal.hiringCount} postings
+            </span>
+          </div>
         </div>
       </div>
 
