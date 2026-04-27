@@ -66,7 +66,7 @@ export function SkeletonActivity() {
 
 export function SkeletonLoopSynthesis() {
   return (
-    <div className="p-6 rounded-2xl border border-violet-500/20 bg-[#0c0c0f] relative overflow-hidden glow-violet">
+    <div className="p-6 rounded-2xl border border-violet-500/20 bg-sidebar relative overflow-hidden glow-violet">
       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-violet-600 to-cyan-500" />
       <div className="flex items-center justify-between mb-6">
         <Skeleton className="h-5 w-36" />

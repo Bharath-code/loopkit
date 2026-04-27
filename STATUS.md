@@ -443,15 +443,15 @@ WEEK 13+ (P3 — IE Phase 4-5 ML + Platform)
 
 > shadcn/ui init, theme merge, dependency install, CSS motion fixes, bug fixes.
 
-| #          | Task                                                     | Effort | Files                                                                               | Acceptance Criteria                                                                                                                                                                    |
-| ---------- | -------------------------------------------------------- | ------ | ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **DS-1.1** | **Install shadcn/ui with Tailwind v4**                   | M      | `web/package.json`, `web/src/app/globals.css`, `web/components.json`                | `npx shadcn@latest init` completes. Zinc base color. CSS variables (`--background`, `--foreground`, `--card`, `--primary`, etc.) mapped to existing dark palette. `pnpm build` passes. |
-| **DS-1.2** | **Merge theme: map existing palette to shadcn CSS vars** | S      | `web/src/app/globals.css`                                                           | All existing `@theme` tokens preserved. shadcn `:root` / `.dark` vars point to zinc-950 bg, zinc-900 cards, violet-600 primary, cyan-500 secondary. No visual regression on any page.  |
-| **DS-1.3** | **Install lucide-react + recharts**                      | XS     | `web/package.json`                                                                  | `npm install lucide-react recharts`. Bundle size increase < 15KB gzipped (tree-shaking). Build passes.                                                                                 |
-| **DS-1.4** | **Install shadcn/ui components (batch 1)**               | S      | `web/src/components/ui/*`                                                           | `npx shadcn@latest add button card badge dialog sheet separator tooltip progress tabs input select`. All 11 components generated. Build passes.                                        |
-| **DS-1.5** | **Add `prefers-reduced-motion` CSS**                     | XS     | `web/src/app/globals.css`                                                           | Media query disables all animations (`fade-up`, `slideIn`, `slideInLeft`, `pulse`) for users who prefer reduced motion. No JS changes needed.                                          |
-| **DS-1.6** | **Fix pulse "New" badge bug**                            | XS     | `web/src/app/dashboard/pulse/page.tsx:113`                                          | `{isNew ? "New" : "New"}` → `{isNew ? "New" : "Read"}` or similar. Shows different text for read vs unread.                                                                            |
-| **DS-1.7** | **Replace hardcoded hex with Tailwind classes**          | XS     | `web/src/app/dashboard/DashboardLayoutClient.tsx`, `web/src/app/dashboard/page.tsx` | `bg-[#09090b]` → `bg-zinc-950`, `bg-[#0c0c0f]` → use shadcn `--card` variable or `bg-zinc-950`. No visual change.                                                                      |
+| #          | Task                                                     | Effort | Files                                                                                                                    | Acceptance Criteria                                                                                                                                                                             |
+| ---------- | -------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **DS-1.1** | **Install shadcn/ui with Tailwind v4**                   | M      | `web/package.json`, `web/src/app/globals.css`, `web/components.json`                                                     | ✅ `npx shadcn@latest init` completed. Zinc base color. CSS variables mapped to dark-first palette. Build passes.                                                                               |
+| **DS-1.2** | **Merge theme: map existing palette to shadcn CSS vars** | S      | `web/src/app/globals.css`                                                                                                | ✅ `:root` and `.dark` vars mapped to zinc-950 bg, violet-600 primary. chart-1–5 mapped to violet/cyan/emerald/amber/red. No visual regression.                                                 |
+| **DS-1.3** | **Install lucide-react + recharts**                      | XS     | `web/package.json`                                                                                                       | ✅ `lucide-react` and `recharts` installed. Bundle increase < 15KB gzipped. Build passes.                                                                                                       |
+| **DS-1.4** | **Install shadcn/ui components (batch 1)**               | S      | `web/src/components/ui/*`                                                                                                | ✅ Button, Card, Badge, Dialog, Sheet, Separator, Tooltip, Progress, Tabs, Input, Select, Sonner — all 12 components generated. TooltipProvider and Toaster added to root layout. Build passes. |
+| **DS-1.5** | **Add `prefers-reduced-motion` CSS**                     | XS     | `web/src/app/globals.css`                                                                                                | ✅ Media query disables `fade-up`, `slideIn`, `slideInLeft`, `pulse` for reduced-motion users.                                                                                                  |
+| **DS-1.6** | **Fix pulse "New" badge bug**                            | XS     | `web/src/app/dashboard/pulse/page.tsx:113`                                                                               | ✅ `{isNew ? "New" : "New"}` → `{isNew ? "New" : "Read"}`. Shows "Read" for viewed items.                                                                                                       |
+| **DS-1.7** | **Replace hardcoded hex with Tailwind classes**          | XS     | `web/src/app/layout.tsx`, `DashboardLayoutClient.tsx`, `page.tsx`, `skeletons.tsx`, `benchmarks/page.tsx`, `globals.css` | ✅ `bg-[#09090b]` → `bg-background`, `bg-[#0c0c0f]` → `bg-sidebar`, `terminal` bg → `var(--sidebar)`. No visual change.                                                                         |
 
 ---
 
@@ -637,20 +637,20 @@ SPRINT 6 (Phase 6 — Polish) ~2-3 days
 
 ## 📋 Design System Known Issues
 
-| Issue                                                              | Severity   | Status  | Fix Task       |
-| ------------------------------------------------------------------ | ---------- | ------- | -------------- |
-| No reusable component library (everything inline)                  | **High**   | 🟡 Open | DS-2.1–2.12    |
-| Emoji icons (inconsistent cross-platform)                          | **High**   | 🟡 Open | DS-3.1–3.5     |
-| No toast/notification system                                       | **High**   | 🟡 Open | DS-2.5         |
-| Modal has no focus trap/escape/scroll-lock                         | **High**   | 🟡 Open | DS-2.4         |
-| No `prefers-reduced-motion` (WCAG violation)                       | **Medium** | 🟡 Open | DS-1.5         |
-| Inconsistent card backgrounds (`bg-zinc-900/20` vs `/30` vs `/50`) | **Medium** | 🟡 Open | DS-2.2, DS-6.2 |
-| No typography token system (ad-hoc sizes)                          | **Medium** | 🟡 Open | DS-6.1         |
-| Hard-coded hex colors (`bg-[#09090b]`, `bg-[#0c0c0f]`)             | **Low**    | 🟡 Open | DS-1.7         |
-| Pulse "New" badge shows "New" for both states                      | **Low**    | 🟡 Open | DS-1.6         |
-| No data visualization (no charts)                                  | **Medium** | 🟡 Open | DS-4.1–4.7     |
-| No form validation library                                         | **Low**    | 🟡 Open | DS-5.1–5.5     |
-| No skip-nav link                                                   | **Low**    | 🟡 Open | DS-3.7         |
+| Issue                                                              | Severity   | Status                                                 | Fix Task       |
+| ------------------------------------------------------------------ | ---------- | ------------------------------------------------------ | -------------- |
+| No reusable component library (everything inline)                  | **High**   | ✅ Phase 2 components created                          | DS-2.1–2.12    |
+| Emoji icons (inconsistent cross-platform)                          | **High**   | 🟡 Open                                                | DS-3.1–3.5     |
+| No toast/notification system                                       | **High**   | ✅ sonner installed + Toaster in layout                | DS-2.5         |
+| Modal has no focus trap/escape/scroll-lock                         | **High**   | ✅ shadcn Dialog installed (ready for migration)       | DS-2.4         |
+| No `prefers-reduced-motion` (WCAG violation)                       | **Medium** | ✅ Fixed                                               | DS-1.5         |
+| Inconsistent card backgrounds (`bg-zinc-900/20` vs `/30` vs `/50`) | **Medium** | 🟡 Open (custom components use theme tokens now)       | DS-2.2, DS-6.2 |
+| No typography token system (ad-hoc sizes)                          | **Medium** | 🟡 Open                                                | DS-6.1         |
+| Hard-coded hex colors (`bg-[#09090b]`, `bg-[#0c0c0f]`)             | **Low**    | ✅ Fixed — replaced with `bg-background`, `bg-sidebar` | DS-1.7         |
+| Pulse "New" badge shows "New" for both states                      | **Low**    | ✅ Fixed — now shows "Read" for non-new items          | DS-1.6         |
+| No data visualization (no charts)                                  | **Medium** | 🟡 Open                                                | DS-4.1–4.7     |
+| No form validation library                                         | **Low**    | 🟡 Open                                                | DS-5.1–5.5     |
+| No skip-nav link                                                   | **Low**    | 🟡 Open                                                | DS-3.7         |
 
 ---
 

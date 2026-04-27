@@ -1,10 +1,15 @@
 export const dynamic = "force-dynamic";
 
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { Inter, JetBrains_Mono, Geist } from "next/font/google";
 import Link from "next/link";
 import "./globals.css";
 import { ConvexClientProvider } from "@/components/ConvexClientProvider";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "@/components/ui/sonner";
+import { cn } from "@/lib/utils";
+
+const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 
 const inter = Inter({
   variable: "--font-inter",
@@ -43,11 +48,18 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${jetbrains.variable} h-full antialiased`}
+      className={cn(
+        "h-full",
+        "antialiased",
+        inter.variable,
+        jetbrains.variable,
+        "font-sans",
+        geist.variable,
+      )}
     >
-      <body className="min-h-full flex flex-col bg-[#09090b] text-white">
+      <body className="min-h-full flex flex-col bg-background text-foreground">
         {/* ─── Nav ────────────────────────────────────────────── */}
-        <header className="sticky top-0 z-50 border-b border-zinc-900/80 bg-[#09090b]/80 backdrop-blur-md">
+        <header className="sticky top-0 z-50 border-b border-zinc-900/80 bg-background/80 backdrop-blur-md">
           <nav
             className="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between"
             aria-label="Main navigation"
@@ -106,9 +118,11 @@ export default function RootLayout({
           </nav>
         </header>
 
-        <ConvexClientProvider>{children}</ConvexClientProvider>
+        <ConvexClientProvider>
+          <TooltipProvider>{children}</TooltipProvider>
+          <Toaster />
+        </ConvexClientProvider>
       </body>
     </html>
   );
 }
-

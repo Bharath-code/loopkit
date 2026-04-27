@@ -39,7 +39,9 @@ function PercentileBadge({ percentile }: { percentile: number }) {
             : "border-zinc-700 bg-zinc-800 text-zinc-500";
 
   return (
-    <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${color}`}>
+    <span
+      className={`px-2 py-0.5 rounded-full text-xs font-medium border ${color}`}
+    >
       {label}
     </span>
   );
@@ -60,20 +62,26 @@ export default function BenchmarksPage() {
 
   const benchmarks = useQuery(
     api.analytics.getBenchmarks,
-    projectId ? { projectId: projectId as Id<"projects"> } : "skip"
+    projectId ? { projectId: projectId as Id<"projects"> } : "skip",
   );
 
   const shareCard = useQuery(
     api.analytics.getShareCard,
-    projectId && showShareCard ? { projectId: projectId as Id<"projects"> } : "skip"
+    projectId && showShareCard
+      ? { projectId: projectId as Id<"projects"> }
+      : "skip",
   );
 
   if (!benchmarks || !benchmarks.user) {
     return (
       <div className="space-y-8 fade-up">
         <header>
-          <h1 className="text-2xl font-bold tracking-tight text-white mb-2">Benchmarks</h1>
-          <p className="text-zinc-400 text-sm">See how your shipping habits compare.</p>
+          <h1 className="text-2xl font-bold tracking-tight text-white mb-2">
+            Benchmarks
+          </h1>
+          <p className="text-zinc-400 text-sm">
+            See how your shipping habits compare.
+          </p>
         </header>
         <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/20 text-center">
           <p className="text-zinc-500 text-sm">
@@ -87,7 +95,8 @@ export default function BenchmarksPage() {
   const { user, percentiles, cohortSize } = benchmarks;
 
   const overallPercentile = Math.round(
-    Object.values(percentiles).reduce((a, b) => a + b, 0) / Object.values(percentiles).length
+    Object.values(percentiles).reduce((a, b) => a + b, 0) /
+      Object.values(percentiles).length,
   );
 
   const metrics: BenchmarkMetric[] = [
@@ -133,7 +142,9 @@ export default function BenchmarksPage() {
     <div className="space-y-8 fade-up">
       <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white mb-2">Benchmarks</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-white mb-2">
+            Benchmarks
+          </h1>
           <p className="text-zinc-400 text-sm">
             {cohortSize >= 20
               ? `Compared against ${cohortSize} anonymized founder-weeks.`
@@ -152,7 +163,11 @@ export default function BenchmarksPage() {
 
       {!activeProject && (
         <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/20 text-center">
-          <p className="text-zinc-400 text-sm">No project connected. Run <code className="text-violet-400">loopkit init</code> to get started.</p>
+          <p className="text-zinc-400 text-sm">
+            No project connected. Run{" "}
+            <code className="text-violet-400">loopkit init</code> to get
+            started.
+          </p>
         </div>
       )}
 
@@ -193,7 +208,9 @@ export default function BenchmarksPage() {
                 <span className="w-8 h-8 rounded-lg bg-violet-500/10 text-violet-400 flex items-center justify-center text-sm">
                   {metric.emoji}
                 </span>
-                <span className="text-sm text-zinc-400 font-medium">{metric.label}</span>
+                <span className="text-sm text-zinc-400 font-medium">
+                  {metric.label}
+                </span>
               </div>
               <PercentileBadge percentile={metric.percentile} />
             </div>
@@ -225,7 +242,7 @@ export default function BenchmarksPage() {
       {/* Shareable Card Modal */}
       {showShareCard && shareCard && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
-          <div className="w-full max-w-sm rounded-2xl border border-zinc-800 bg-[#0c0c0f] p-6 shadow-2xl">
+          <div className="w-full max-w-sm rounded-2xl border border-zinc-800 bg-sidebar p-6 shadow-2xl">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-bold text-white">Share Your Stats</h3>
               <button
@@ -239,11 +256,15 @@ export default function BenchmarksPage() {
             <div className="p-4 rounded-xl border border-zinc-800 bg-zinc-900/50 space-y-3 mb-4">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-zinc-400">Score</span>
-                <span className="text-lg font-bold text-white">{shareCard.avgScore}/100</span>
+                <span className="text-lg font-bold text-white">
+                  {shareCard.avgScore}/100
+                </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-zinc-400">Tasks / Week</span>
-                <span className="text-lg font-bold text-white">{shareCard.avgTasks}</span>
+                <span className="text-lg font-bold text-white">
+                  {shareCard.avgTasks}
+                </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-zinc-400">Streak</span>
@@ -257,7 +278,9 @@ export default function BenchmarksPage() {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-zinc-400">Weeks Tracked</span>
-                <span className="text-sm text-zinc-400">{shareCard.totalWeeks}</span>
+                <span className="text-sm text-zinc-400">
+                  {shareCard.totalWeeks}
+                </span>
               </div>
             </div>
 
@@ -281,20 +304,20 @@ export default function BenchmarksPage() {
 
       {/* How it works */}
       <div className="p-5 rounded-2xl border border-zinc-800 bg-zinc-900/20">
-        <h3 className="text-sm font-semibold text-white mb-3">How This Works</h3>
+        <h3 className="text-sm font-semibold text-white mb-3">
+          How This Works
+        </h3>
         <div className="space-y-2 text-xs text-zinc-500">
           <p>
-            • Benchmarks are computed from anonymized data across all LoopKit founders.
+            • Benchmarks are computed from anonymized data across all LoopKit
+            founders.
           </p>
+          <p>• Percentiles show where you rank relative to other founders.</p>
           <p>
-            • Percentiles show where you rank relative to other founders.
+            • Data is aggregated and anonymized — nobody sees your individual
+            numbers.
           </p>
-          <p>
-            • Data is aggregated and anonymized — nobody sees your individual numbers.
-          </p>
-          <p>
-            • More weeks tracked = more accurate benchmarks.
-          </p>
+          <p>• More weeks tracked = more accurate benchmarks.</p>
         </div>
       </div>
     </div>

@@ -251,7 +251,7 @@ export default function DashboardOverviewPage() {
 
         {/* Weekly Loop Synthesis Highlight */}
         {latestLoop !== undefined ? (
-          <div className="p-6 rounded-2xl border border-violet-500/20 bg-[#0c0c0f] relative overflow-hidden glow-violet">
+          <div className="p-6 rounded-2xl border border-violet-500/20 bg-sidebar relative overflow-hidden glow-violet">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-violet-600 to-cyan-500"></div>
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-base font-semibold text-white">

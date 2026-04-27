@@ -62,7 +62,7 @@ export default function DashboardLayout({
           {navLinks.map((link) => {
             const isActive = pathname === link.href;
             return (
-                <Link
+              <Link
                 key={link.href}
                 href={link.href}
                 className={`flex items-center gap-3 px-3 py-2.5 sm:py-2 rounded-lg text-sm transition-colors cursor-pointer min-h-[44px] ${
@@ -71,7 +71,9 @@ export default function DashboardLayout({
                     : "text-zinc-400 hover:bg-zinc-900 hover:text-white"
                 }`}
               >
-                <span className={isActive ? "text-violet-400" : "text-zinc-500"}>
+                <span
+                  className={isActive ? "text-violet-400" : "text-zinc-500"}
+                >
                   {link.icon}
                 </span>
                 {link.name}
@@ -84,8 +86,12 @@ export default function DashboardLayout({
       <div className="mt-auto p-4 sm:p-6 border-t border-zinc-900 space-y-4">
         {user?.tier === "free" && (
           <div className="p-4 rounded-xl border border-violet-500/20 bg-violet-500/10">
-            <h3 className="text-sm font-semibold text-white mb-1">Upgrade to Pro</h3>
-            <p className="text-xs text-zinc-400 mb-3">Unlock AI synthesis and team pulse features.</p>
+            <h3 className="text-sm font-semibold text-white mb-1">
+              Upgrade to Pro
+            </h3>
+            <p className="text-xs text-zinc-400 mb-3">
+              Unlock AI synthesis and team pulse features.
+            </p>
             <button className="w-full py-2.5 px-3 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-xs font-medium transition-colors cursor-pointer min-h-[44px]">
               View Plans
             </button>
@@ -105,7 +111,7 @@ export default function DashboardLayout({
   return (
     <div className="flex flex-1 overflow-hidden h-[calc(100vh-56px)]">
       {/* Desktop sidebar */}
-      <aside className="w-64 border-r border-zinc-900 bg-[#0c0c0f] flex-col hidden sm:flex">
+      <aside className="w-64 border-r border-zinc-900 bg-sidebar flex-col hidden sm:flex">
         {sidebarContent}
       </aside>
 
@@ -116,14 +122,14 @@ export default function DashboardLayout({
             className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             onClick={() => setSidebarOpen(false)}
           />
-          <aside className="relative w-72 max-w-[85vw] h-full border-r border-zinc-900 bg-[#0c0c0f] flex flex-col z-50 animate-slide-in-left">
+          <aside className="relative w-72 max-w-[85vw] h-full border-r border-zinc-900 bg-sidebar flex flex-col z-50 animate-slide-in-left">
             {sidebarContent}
           </aside>
         </div>
       )}
 
       {/* Main Content Area */}
-      <main className="flex-1 overflow-y-auto bg-[#09090b]">
+      <main className="flex-1 overflow-y-auto bg-background">
         {/* Mobile top bar */}
         <div className="sm:hidden border-b border-zinc-900 p-3 flex items-center gap-3">
           <button
@@ -155,9 +161,7 @@ export default function DashboardLayout({
           </nav>
         </div>
 
-        <div className="p-4 sm:p-10 max-w-5xl mx-auto w-full">
-          {children}
-        </div>
+        <div className="p-4 sm:p-10 max-w-5xl mx-auto w-full">{children}</div>
       </main>
     </div>
   );
