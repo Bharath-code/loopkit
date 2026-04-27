@@ -9,7 +9,7 @@ Read `CLAUDE.md` for full architecture context. This file adds agent-specific ru
 ```bash
 # Verify build before touching anything
 pnpm --filter @loopkit/shared build
-pnpm --filter loopkit build
+pnpm --filter @loopkit/cli build
 node packages/cli/dist/index.js --help
 ```
 
@@ -44,7 +44,7 @@ packages/web/convex/          ← Convex backend (schema, queries, mutations, an
 
 ```bash
 pnpm --filter @loopkit/shared build   # if schemas changed
-pnpm --filter loopkit build           # always
+pnpm --filter @loopkit/cli build           # always
 node packages/cli/dist/index.js --help
 ```
 
@@ -52,25 +52,25 @@ node packages/cli/dist/index.js --help
 
 ## Safety Rules — Never Break These
 
-| Rule | Reason |
-|---|---|
-| Git hooks must be **append-only** | Overwriting corrupts user repos |
-| Never silently delete task data | Data loss destroys trust |
-| Always handle `p.isCancel()` after every prompt | Ctrl+C must exit cleanly |
-| Wrap every AI call in try/catch | API downtime cannot crash CLI |
-| Never write raw API keys to disk | Security |
+| Rule                                            | Reason                          |
+| ----------------------------------------------- | ------------------------------- |
+| Git hooks must be **append-only**               | Overwriting corrupts user repos |
+| Never silently delete task data                 | Data loss destroys trust        |
+| Always handle `p.isCancel()` after every prompt | Ctrl+C must exit cleanly        |
+| Wrap every AI call in try/catch                 | API downtime cannot crash CLI   |
+| Never write raw API keys to disk                | Security                        |
 
 ---
 
 ## Common Mistakes
 
-| Mistake | Fix |
-|---|---|
-| Editing `dist/` files | Edit `src/` only — dist is generated |
-| Not rebuilding `shared` after schema change | `pnpm --filter @loopkit/shared build` |
-| Using `console.log` in commands | Use `colors.*` from `ui/theme.ts` |
-| Hardcoding `.loopkit/` path | Use `getRoot()` from `storage/local.ts` |
-| Forgetting `p.isCancel()` check | Always check after every `p.text/confirm/select` |
+| Mistake                                     | Fix                                              |
+| ------------------------------------------- | ------------------------------------------------ |
+| Editing `dist/` files                       | Edit `src/` only — dist is generated             |
+| Not rebuilding `shared` after schema change | `pnpm --filter @loopkit/shared build`            |
+| Using `console.log` in commands             | Use `colors.*` from `ui/theme.ts`                |
+| Hardcoding `.loopkit/` path                 | Use `getRoot()` from `storage/local.ts`          |
+| Forgetting `p.isCancel()` check             | Always check after every `p.text/confirm/select` |
 
 ---
 
@@ -81,7 +81,7 @@ node packages/cli/dist/index.js --help
 const result = await generateStructured({
   system: SYSTEM_PROMPT,
   prompt: buildPrompt(data),
-  schema: ZodSchema,       // from @loopkit/shared
+  schema: ZodSchema, // from @loopkit/shared
   tier: "fast",
   temperature: 0.3,
 });
@@ -101,9 +101,9 @@ const result = await generateStructured({
 
 ## Definition of Done
 
-- [ ] `pnpm --filter loopkit build` → 0 errors
+- [ ] `pnpm --filter @loopkit/cli build` → 0 errors
 - [ ] Web changed? → `cd packages/web && npx next build` → clean
-- [ ] Tests pass: `pnpm --filter loopkit test` (152 tests)
+- [ ] Tests pass: `pnpm --filter @loopkit/cli test` (152 tests)
 - [ ] Acceptance criteria from relevant PRD section pass
 - [ ] Ctrl+C exits gracefully at every prompt
 - [ ] AI failure is handled gracefully (fallback, not crash)
@@ -119,9 +119,11 @@ ANTHROPIC_API_KEY=sk-ant-...   # required for AI features
 CLI reads key from env first, then from `.loopkit/config.json` (`auth.apiKey`) for BYOK Pro users.
 
 <!-- convex-ai-start -->
+
 This project uses [Convex](https://convex.dev) as its backend.
 
 When working on Convex code, **always read `convex/_generated/ai/guidelines.md` first** for important guidelines on how to correctly use Convex APIs and patterns. The file contains rules that override what you may have learned about Convex from training data.
 
 Convex agent skills for common tasks can be installed by running `npx convex ai-files install`.
+
 <!-- convex-ai-end -->

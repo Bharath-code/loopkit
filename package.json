@@ -15,13 +15,13 @@
       "prettier --write"
     ],
     "packages/shared/src/**/*.{ts,tsx}": [
-      "tsc --noEmit -p packages/shared/tsconfig.json"
+      "bash -c 'pnpm --filter @loopkit/shared type-check'"
     ],
     "packages/cli/src/**/*.{ts,tsx}": [
-      "tsc --noEmit -p packages/cli/tsconfig.json"
+      "bash -c 'pnpm --filter @loopkit/cli type-check'"
     ],
     "packages/web/src/**/*.{ts,tsx}": [
-      "tsc --noEmit -p packages/web/tsconfig.json"
+      "bash -c 'pnpm --filter @loopkit/web type-check'"
     ]
   },
   "devDependencies": {

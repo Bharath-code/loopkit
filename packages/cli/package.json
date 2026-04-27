@@ -1,5 +1,5 @@
 {
-  "name": "loopkit",
+  "name": "@loopkit/cli",
   "version": "0.1.0",
   "description": "The Solo Founder's Shipping OS — Define · Develop · Deliver · Learn · Repeat",
   "type": "module",
@@ -27,6 +27,7 @@
     "build": "tsup src/index.ts --format esm --dts --clean",
     "dev": "tsup src/index.ts --format esm --watch --onSuccess 'echo Build ready'",
     "lint": "tsc --noEmit",
+    "type-check": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "prepublishOnly": "pnpm build"
