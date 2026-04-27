@@ -1,9 +1,13 @@
 import { v } from "convex/values";
 import { query, mutation } from "./_generated/server";
+import { userOwnsProject, assertProjectOwner } from "./authHelpers";
 
 export const getPatterns = query({
   args: { projectId: v.id("projects") },
   handler: async (ctx, args) => {
+    const authorized = await userOwnsProject(ctx, args.projectId);
+    if (!authorized) return [];
+
     return await ctx.db
       .query("patternInterrupts")
       .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
@@ -15,6 +19,9 @@ export const getPatterns = query({
 export const getActivePatterns = query({
   args: { projectId: v.id("projects") },
   handler: async (ctx, args) => {
+    const authorized = await userOwnsProject(ctx, args.projectId);
+    if (!authorized) return [];
+
     return await ctx.db
       .query("patternInterrupts")
       .withIndex("by_project_resolved", (q) =>
@@ -35,6 +42,8 @@ export const recordPattern = mutation({
     weeksObserved: v.number(),
   },
   handler: async (ctx, args) => {
+    await assertProjectOwner(ctx, args.projectId);
+
     return await ctx.db.insert("patternInterrupts", {
       projectId: args.projectId,
       type: args.type,
@@ -51,6 +60,11 @@ export const recordPattern = mutation({
 export const resolvePattern = mutation({
   args: { patternId: v.id("patternInterrupts") },
   handler: async (ctx, args) => {
+    const pattern = await ctx.db.get(args.patternId);
+    if (!pattern) throw new Error("Pattern not found");
+
+    await assertProjectOwner(ctx, pattern.projectId);
+
     return await ctx.db.patch(args.patternId, { resolved: true });
   },
 });

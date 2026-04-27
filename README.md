@@ -117,9 +117,11 @@ Five questions. AI scoring. A brief that stings when it should.
 | Solo | $19/month | 5 projects, AI proxy access, Pulse hosted form |
 | Pro | $39/month | Unlimited, web dashboard, Pulse widget, BYOK API key |
 
-## Local First
+## Local First, Cloud-Enhanced
 
 All project data lives in `.loopkit/` in your repo. No forced cloud sync. No vendor lock-in.
+
+When you authenticate with `loopkit auth`, your loop logs and ship logs optionally sync to your web dashboard — so you can view trends, benchmarks, and share cards from anywhere. Local data remains the source of truth.
 
 ```
 .loopkit/

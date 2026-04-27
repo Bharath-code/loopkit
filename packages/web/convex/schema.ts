@@ -127,4 +127,35 @@ export default defineSchema({
   })
     .index("by_category", ["category"])
     .index("by_category_createdAt", ["category", "createdAt"]),
+
+  cliAuthSessions: defineTable({
+    code: v.string(),
+    status: v.string(),
+    token: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index("by_code", ["code"])
+    .index("by_status_createdAt", ["status", "createdAt"]),
+
+  shipLogs: defineTable({
+    projectId: v.id("projects"),
+    date: v.string(),
+    whatShipped: v.string(),
+    drafts: v.optional(
+      v.object({
+        hn: v.optional(v.object({ title: v.string(), body: v.string() })),
+        twitter: v.optional(v.object({ tweets: v.array(v.string()) })),
+        ih: v.optional(v.object({ body: v.string() })),
+      })
+    ),
+    checklist: v.optional(v.object({
+      readmeUpdated: v.boolean(),
+      landingPageLive: v.boolean(),
+      analyticsPresent: v.boolean(),
+      feedbackWidgetInstalled: v.boolean(),
+    })),
+    createdAt: v.number(),
+  })
+    .index("by_project", ["projectId"])
+    .index("by_project_date", ["projectId", "date"]),
 });

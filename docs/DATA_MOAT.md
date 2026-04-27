@@ -362,12 +362,12 @@ More users → More data → Better AI → Better outcomes → More users
 
 | Metric | Target (6mo) | Target (12mo) | Current |
 |--------|--------------|---------------|---------|
-| Opt-in rate for telemetry | 60% | 70% | 0% |
-| Avg. founder-weeks per user | 8 | 20 | N/A |
-| Data completeness (all 5 phases) | 50% | 70% | N/A |
-| AI recommendation accuracy (user-reported) | 65% | 75% | N/A |
-| Benchmark queries served | 100/week | 500/week | 0 |
-| Content pieces from data | 2 | 12 | 0 |
+| Opt-in rate for telemetry | 60% | 70% | Measuring |
+| Avg. founder-weeks per user | 8 | 20 | Measuring |
+| Data completeness (all 5 phases) | 50% | 70% | Measuring |
+| AI recommendation accuracy (user-reported) | 65% | 75% | Measuring |
+| Benchmark queries served | 100/week | 500/week | Measuring |
+| Content pieces from data | 2 | 12 | 1 (Monthly Insights #1) |
 
 ---
 
@@ -392,11 +392,11 @@ More users → More data → Better AI → Better outcomes → More users
 5. ✅ **Month 3:** Trending Validations (IE-8) — ICP/problem/MVP aggregate tracking ✅ Done
 6. ✅ **Month 3:** Competitor Ship Radar (IE-15) — PH/HN launch scanning ✅ Done
 7. ✅ **Month 3:** Audit fixes — structured logging, cursor pagination, per-install encryption salt, telemetry compaction, state-machine XML parser, JSON keyword config ✅ Done
-8. **Month 6:** Keyword Opportunity Finder (IE-16) — free SEO data
-9. **Month 6:** Market Timing Signal (IE-17) — funding/dev/hiring trends
+8. ✅ **Month 5:** Keyword Opportunity Finder (IE-16) — free SEO data ✅ Done
+9. ✅ **Month 5:** Market Timing Signal (IE-17) — funding/dev/hiring trends ✅ Done
 10. **Month 6:** Launch personalized AI recommendations based on data
 11. **Month 9:** Publish first "State of Solo Founders" report
 
 ---
 
-*Last updated: April 2026 · IE-8 + IE-15 implemented · Audit fixes complete*
+*Last updated: April 2026 · IE-7 through IE-17 all implemented · P0 launch blockers resolved · Data moat compounding*

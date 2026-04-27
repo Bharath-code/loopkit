@@ -1,9 +1,13 @@
 import { query } from "./_generated/server";
 import { v } from "convex/values";
+import { userOwnsProject } from "./authHelpers";
 
 export const listByProject = query({
   args: { projectId: v.id("projects") },
   handler: async (ctx, args) => {
+    const authorized = await userOwnsProject(ctx, args.projectId);
+    if (!authorized) return [];
+
     return await ctx.db
       .query("loopLogs")
       .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
@@ -15,6 +19,9 @@ export const listByProject = query({
 export const latestByProject = query({
   args: { projectId: v.id("projects") },
   handler: async (ctx, args) => {
+    const authorized = await userOwnsProject(ctx, args.projectId);
+    if (!authorized) return null;
+
     return await ctx.db
       .query("loopLogs")
       .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
@@ -26,6 +33,9 @@ export const latestByProject = query({
 export const streakCount = query({
   args: { projectId: v.id("projects") },
   handler: async (ctx, args) => {
+    const authorized = await userOwnsProject(ctx, args.projectId);
+    if (!authorized) return 0;
+
     const logs = await ctx.db
       .query("loopLogs")
       .withIndex("by_project", (q) => q.eq("projectId", args.projectId))

@@ -1,5 +1,7 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { getAuthUserId } from "@convex-dev/auth/server";
+import { userOwnsProject } from "./authHelpers";
 
 function sanitizeInput(text: string): string {
   const stripped = text.replace(/<[^>]*>/g, "");
@@ -9,20 +11,30 @@ function sanitizeInput(text: string): string {
 
 export const ensureProject = mutation({
   args: {
-    userId: v.id("users"),
     name: v.string(),
     slug: v.string(),
   },
   handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Unauthorized: authentication required");
+    }
+
     const existing = await ctx.db
       .query("projects")
       .withIndex("by_slug", (q) => q.eq("slug", args.slug))
       .first();
 
-    if (existing) return { projectId: existing._id, created: false };
+    if (existing) {
+      // Only return the existing project if the current user owns it
+      if (existing.userId === userId) {
+        return { projectId: existing._id, created: false };
+      }
+      throw new Error("Forbidden: project slug already exists under a different owner");
+    }
 
     const projectId = await ctx.db.insert("projects", {
-      userId: args.userId,
+      userId,
       name: args.name,
       slug: args.slug,
       createdAt: Date.now(),
@@ -93,6 +105,9 @@ export const incrementRateLimit = mutation({
 export const getResponses = query({
   args: { projectId: v.id("projects") },
   handler: async (ctx, args) => {
+    const authorized = await userOwnsProject(ctx, args.projectId);
+    if (!authorized) return [];
+
     return await ctx.db
       .query("pulseResponses")
       .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
@@ -104,6 +119,9 @@ export const getResponses = query({
 export const countResponses = query({
   args: { projectId: v.id("projects") },
   handler: async (ctx, args) => {
+    const authorized = await userOwnsProject(ctx, args.projectId);
+    if (!authorized) return 0;
+
     const responses = await ctx.db
       .query("pulseResponses")
       .withIndex("by_project", (q) => q.eq("projectId", args.projectId))

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { fetchMutation } from "convex/nextjs";
 import { api } from "../../../../../convex/_generated/api";
-import { Id } from "../../../../../convex/_generated/dataModel";
 import { csrfCheck } from "../../ai/_helpers";
 
 export async function POST(req: NextRequest) {
@@ -17,29 +16,27 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { name, slug } = body;
+    const { projectId, date, whatShipped, drafts, checklist } = body;
 
-    if (!name || !slug) {
-      return NextResponse.json({ error: "Missing project name or slug." }, { status: 400 });
+    if (!projectId || !date || !whatShipped) {
+      return NextResponse.json({ error: "Missing required fields." }, { status: 400 });
     }
 
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3099";
-
     const result = await fetchMutation(
-      api.pulse.ensureProject,
-      { name, slug },
+      api.sync.syncShipLog,
+      {
+        projectId,
+        date,
+        whatShipped,
+        drafts,
+        checklist,
+      },
       { token }
     );
 
-    const url = `${baseUrl}/pulse/${result.projectId}`;
-
-    return NextResponse.json({
-      projectId: result.projectId,
-      url,
-      created: result.created,
-    });
+    return NextResponse.json(result);
   } catch (err) {
-    console.error("Pulse share error:", err);
-    return NextResponse.json({ error: "Failed to create share link." }, { status: 500 });
+    console.error("Sync ship log error:", err);
+    return NextResponse.json({ error: "Failed to sync ship log." }, { status: 500 });
   }
 }

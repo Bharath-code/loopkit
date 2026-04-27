@@ -10,6 +10,8 @@
 
 import type * as analytics from "../analytics.js";
 import type * as auth from "../auth.js";
+import type * as authHelpers from "../authHelpers.js";
+import type * as cliAuth from "../cliAuth.js";
 import type * as http from "../http.js";
 import type * as keywords from "../keywords.js";
 import type * as loopLogs from "../loopLogs.js";
@@ -20,6 +22,7 @@ import type * as projects from "../projects.js";
 import type * as pulse from "../pulse.js";
 import type * as rateLimits from "../rateLimits.js";
 import type * as subscriptions from "../subscriptions.js";
+import type * as sync from "../sync.js";
 import type * as users from "../users.js";
 
 import type {
@@ -31,6 +34,8 @@ import type {
 declare const fullApi: ApiFromModules<{
   analytics: typeof analytics;
   auth: typeof auth;
+  authHelpers: typeof authHelpers;
+  cliAuth: typeof cliAuth;
   http: typeof http;
   keywords: typeof keywords;
   loopLogs: typeof loopLogs;
@@ -41,6 +46,7 @@ declare const fullApi: ApiFromModules<{
   pulse: typeof pulse;
   rateLimits: typeof rateLimits;
   subscriptions: typeof subscriptions;
+  sync: typeof sync;
   users: typeof users;
 }>;
 

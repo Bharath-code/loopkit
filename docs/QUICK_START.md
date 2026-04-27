@@ -150,4 +150,4 @@ loopkit telemetry status               # Check current status
 
 ---
 
-*Last updated: April 2026 · v0.1.0 (IE-7 through IE-17 shipped · Pattern Interrupt + Peer Inspiration + Keywords + Timing + Radar + Trending all complete)*
+*Last updated: April 2026 · v0.1.0 (IE-7 through IE-17 shipped · Pattern Interrupt + Peer Inspiration + Keywords + Timing + Radar + Trending + AI Coach all complete · P0 launch blockers resolved)*

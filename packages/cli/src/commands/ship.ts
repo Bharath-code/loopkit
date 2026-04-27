@@ -13,6 +13,7 @@ import {
   saveShipLog,
   shipLogExists,
 } from "../storage/local.js";
+import { pushShipLogToConvex, getConvexProjectId } from "../storage/sync.js";
 import { colors, header, pass, fail, warn, box, nextStep, info, shortcutsHint, emptyState, coachingCard } from "../ui/theme.js";
 import { celebrateCommand } from "./celebrate.js";
 import { fetchPeerShips, recordPeerShip, renderPeerInspiration } from "../analytics/peers.js";
@@ -36,7 +37,7 @@ interface PlatformDraft {
 }
 
 // ─── Generate drafts from AI ───────────────────────────────────
-async function generateDrafts(ctx: ShipContext): Promise<PlatformDraft[]> {
+async function generateDrafts(ctx: ShipContext): Promise<{ platforms: PlatformDraft[]; raw: typeof ShipDraftsSchema._type }> {
   const drafts = await generateStructured({
     command: "ship",
     system: SHIP_SYSTEM_PROMPT,
@@ -46,7 +47,7 @@ async function generateDrafts(ctx: ShipContext): Promise<PlatformDraft[]> {
     temperature: 0.6,
   });
 
-  return [
+  const platforms: PlatformDraft[] = [
     {
       key: "hn",
       label: "Show HN",
@@ -63,6 +64,8 @@ async function generateDrafts(ctx: ShipContext): Promise<PlatformDraft[]> {
       content: drafts.ih.body,
     },
   ];
+
+  return { platforms, raw: drafts };
 }
 
 // ─── Open content in $EDITOR, return edited text ──────────────
@@ -219,9 +222,12 @@ export async function shipCommand(): Promise<void> {
   s.start("Generating drafts for HN, Twitter, and Indie Hackers...");
 
   let platforms: PlatformDraft[];
+  let rawDrafts: typeof ShipDraftsSchema._type | undefined;
 
   try {
-    platforms = await generateDrafts(ctx);
+    const result = await generateDrafts(ctx);
+    platforms = result.platforms;
+    rawDrafts = result.raw;
     s.stop("Drafts ready.");
   } catch {
     s.stop("Draft generation failed.");
@@ -229,6 +235,23 @@ export async function shipCommand(): Promise<void> {
 
     const logContent = buildLogContent(today, productName, whatShipped, checklist, []);
     saveShipLog(logContent, today);
+
+    // ─── Sync ship log to Convex (best-effort) ──────────────────
+    const convexProjectId = slug ? getConvexProjectId(slug) : undefined;
+    if (convexProjectId) {
+      await pushShipLogToConvex({
+        projectId: convexProjectId,
+        date: today,
+        whatShipped,
+        checklist: {
+          readmeUpdated: checklist["readme"] ?? false,
+          landingPageLive: checklist["landing"] ?? false,
+          analyticsPresent: checklist["analytics"] ?? false,
+          feedbackWidgetInstalled: checklist["feedback"] ?? false,
+        },
+      });
+    }
+
     console.log(info(`Ship log saved → .loopkit/ships/${today}.md`));
     console.log(nextStep("loop"));
     p.outro(colors.muted("Shipped. Now close the loop Sunday."));
@@ -279,10 +302,11 @@ export async function shipCommand(): Promise<void> {
         const rs = p.spinner();
         rs.start(`Regenerating ${platform.label}...`);
         try {
-          const newPlatforms = await generateDrafts(ctx);
-          const regenerated = newPlatforms.find((pl) => pl.key === platform.key);
+          const result = await generateDrafts(ctx);
+          const regenerated = result.platforms.find((pl) => pl.key === platform.key);
           if (regenerated) {
             platform = regenerated;
+            rawDrafts = result.raw;
           }
           rs.stop("Done.");
         } catch {
@@ -300,6 +324,29 @@ export async function shipCommand(): Promise<void> {
   const logContent = buildLogContent(today, productName, whatShipped, checklist, usedDrafts);
   saveShipLog(logContent, today);
   console.log(info(`Ship log saved → .loopkit/ships/${today}.md`));
+
+  // ─── Sync ship log to Convex (best-effort) ────────────────────
+  const convexProjectId = slug ? getConvexProjectId(slug) : undefined;
+  if (convexProjectId) {
+    await pushShipLogToConvex({
+      projectId: convexProjectId,
+      date: today,
+      whatShipped,
+      drafts: rawDrafts
+        ? {
+            hn: rawDrafts.hn,
+            twitter: rawDrafts.twitter,
+            ih: rawDrafts.ih,
+          }
+        : undefined,
+      checklist: {
+        readmeUpdated: checklist["readme"] ?? false,
+        landingPageLive: checklist["landing"] ?? false,
+        analyticsPresent: checklist["analytics"] ?? false,
+        feedbackWidgetInstalled: checklist["feedback"] ?? false,
+      },
+    });
+  }
 
   // ─── Record anonymized peer ship (opt-in) ─────────────────────
   if (slug) {

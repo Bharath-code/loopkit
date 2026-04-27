@@ -525,51 +525,77 @@ $ loopkit radar
 
 ---
 
-### Feature 3.4: Keyword Opportunity Finder 🔄 IN PROGRESS
+### Feature 3.4: Keyword Opportunity Finder ✅ IMPLEMENTED
 
 **What it does:** Finds low-competition keywords in the user's niche using free SEO APIs.
 
-**How it works (planned):**
-- Free SEO data adapters: Google Autocomplete (RSS), AnswerThePublic free tier, Reddit search API.
+**How it works (implemented):**
+- Free SEO data adapters: Google Autocomplete, Reddit search API, GitHub repo count.
 - Keyword scoring: score = (search volume proxy) / (competition proxy).
-- Competition = number of PH launches + GitHub repos + HN mentions.
-- Returns top 10 opportunities with actionable content suggestions.
+- Competition = number of GitHub repos + suggestion count.
+- Returns top 15 opportunities with actionable content suggestions.
 
 **Example (CLI):**
 ```bash
 $ loopkit keywords
 
-  Low-hanging fruit for: saas founders
+  Found 12 keyword opportunities.
 
-  1. "saas metrics dashboard"     score: 8.2  volume: high  competition: low
-  2. "solo founder tools"          score: 7.5  volume: med   competition: low
-  3. "indie hacker analytics"      score: 6.8  volume: med   competition: med
+  3 low-hanging fruit
+
+  Keyword                          Score  Volume      Competition
+  ──────────────────────────────────────────────────────────────────────
+  saas metrics dashboard            82  ███ high    low
+    → saas metrics dashboard template, saas metrics dashboard examples
+  solo founder tools                75  ██░ medium  low
+  indie hacker analytics            68  ██░ medium  medium
 ```
 
 **Data sources:**
-- Google Autocomplete (via RSS, free)
-- AnswerThePublic free tier
+- Google Autocomplete (free)
 - Reddit search API (free)
+- GitHub API (free)
 - No paid APIs, no scraping
+
+**Implementation status:**
+- ✅ `keywordFinder.ts` — Google Autocomplete + Reddit + GitHub adapters
+- ✅ `loopkit keywords` command — ranked list with score, volume, competition
+- ✅ Dashboard `/dashboard/keywords` — sortable table with CSV export
+- ✅ 7-day cache via `storage/cache.ts`
+- ✅ `KeywordOpportunitySchema` in `@loopkit/shared`
 
 ---
 
-### Feature 3.5: Market Timing Signal 🔄 IN PROGRESS
+### Feature 3.5: Market Timing Signal ✅ IMPLEMENTED
 
 **What it does:** Tracks funding rounds, job postings, and GitHub activity in the user's category.
 
-**How it works (planned):**
-- Free market data: Crunchbase RSS (funding), GitHub API (repo growth), job posting RSS.
+**How it works (implemented):**
+- Free market data: Crunchbase RSS (funding), GitHub API (repo growth), Indeed RSS (job postings).
 - 3 signals: funding velocity, dev activity, hiring demand — each with ↑ ↓ → trend.
 - Composite score 0-100. "Space is heating up" vs "cooling down."
+- Stored per-category in Convex `marketSignals` table, updated weekly.
 
 **Example (CLI):**
 ```bash
-$ loopkit init
+$ loopkit timing
 
-  Market Signal: ↑ Space is heating up
-  3 funding rounds this month · 12 new GitHub repos · 8 job postings
+  Market Signal for: saas founders
+  Composite Score: 72/100 ↑
+
+  Funding:   ↑ 3 rounds this month
+  Dev Activity: → 12 new repos (stable)
+  Hiring:    ↑ 8 job postings (up from 3)
+
+  Interpretation: Space is heating up. Good time to ship.
 ```
+
+**Implementation status:**
+- ✅ `marketTiming.ts` — Crunchbase RSS + GitHub API + Indeed RSS adapters
+- ✅ `loopkit timing` command — composite score + 3 trend arrows
+- ✅ Dashboard gauge widget on overview page
+- ✅ Convex `marketSignals` table with weekly cron updates
+- ✅ `MarketSignalSchema` in `@loopkit/shared`
 
 ---
 
@@ -758,24 +784,24 @@ loopkit coach --on         # Re-enable coaching
 ## Implementation Roadmap
 
 ### Month 1: Foundation
-- [ ] Telemetry module (STRAT-1 from STATUS.md)
-- [ ] Shipping DNA v1 (basic pattern detection)
-- [ ] Simple benchmarks (avg only, no percentiles)
+- [x] Telemetry module (STRAT-1 from STATUS.md) — shipped
+- [x] Shipping DNA v1 (basic pattern detection) — shipped
+- [x] Simple benchmarks (avg only, no percentiles) — shipped
 
 ### Month 2: Enhancement
-- [ ] Smart benchmarks (percentiles by project type)
-- [ ] Snooze Oracle (basic probability)
-- [ ] Benchmark tool on dashboard
+- [x] Smart benchmarks (percentiles by project type) — shipped
+- [x] Snooze Oracle (basic probability) — shipped
+- [x] Benchmark tool on dashboard — shipped
 
 ### Month 3: Predictive
-- [ ] Churn Guardian v1 (rule-based, not ML)
-- [ ] Auto-Loop (email drafts)
-- [ ] Success Predictor v1 (simple heuristics)
+- [x] Churn Guardian v1 (rule-based, not ML) — shipped
+- [x] Auto-Loop (Monday draft detection) — shipped
+- [x] Success Predictor v1 (simple heuristics) — shipped
 
 ### Month 4: Network
 - [x] Anonymous peer inspiration (opt-in) — shipped
 - [x] Trending validations — shipped
-- [ ] Monthly Insights content engine
+- [x] Monthly Insights #1 — shipped
 
 ### Month 5: Signal Intelligence
 - [x] Competitor Ship Radar — shipped
@@ -783,6 +809,7 @@ loopkit coach --on         # Re-enable coaching
 - [x] Market Timing Signal — shipped
 - [ ] Churn Guardian v2 (ML model)
 - [ ] Success Predictor v2 (ML model)
+- [ ] AI Coach v2 (ML-powered)
 
 ### Month 6: Coaching
 - [x] AI Coach v1 (rule-based interventions) — shipped
@@ -815,4 +842,4 @@ Moat Strength = (Data Depth) × (Insight Quality) × (User Trust) × (Time)
 
 ---
 
-*Last updated: April 2026 · IE-8 + IE-15 implemented · Audit fixes + nice-to-haves complete · IE-16/17 in progress*
+*Last updated: April 2026 · IE-7 through IE-17 all implemented · P0 launch blockers resolved · IE-11/12/13 (ML v2) remaining for post-launch*

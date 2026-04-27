@@ -14,6 +14,7 @@ import {
   readLastNLoopLogs,
   getConsecutiveWeeksStreak,
 } from "../storage/local.js";
+import { pushLoopLogToConvex, getConvexProjectId } from "../storage/sync.js";
 import { recordEvent, startTelemetryPrompt, isTelemetryEnabled } from "../analytics/telemetry.js";
 import { computeShippingDNA, type ShippingDNA } from "../analytics/dna.js";
 import { detectChurnRisk, renderChurnWarning } from "../analytics/churn.js";
@@ -163,6 +164,19 @@ export async function loopCommand(): Promise<void> {
 
       saveLoopLog(weekNum, logContent);
       console.log(info(`Loop log saved → .loopkit/logs/week-${weekNum}.md`));
+
+      const convexProjectId = getConvexProjectId(slug);
+      if (convexProjectId) {
+        await pushLoopLogToConvex({
+          projectId: convexProjectId,
+          weekNumber: weekNum,
+          date: formatDate(),
+          tasksCompleted: tasksCompleted.length,
+          tasksTotal: totalTasks,
+          shippingScore,
+          overridden: false,
+        });
+      }
     }
 
     p.outro(colors.muted(`Week ${weekNum} baseline set. See you next Sunday.`));
@@ -378,6 +392,27 @@ export async function loopCommand(): Promise<void> {
     saveLoopLog(weekNum, logContent);
     console.log(info(`Loop log saved → .loopkit/logs/week-${weekNum}.md`));
 
+    const convexProjectId2 = getConvexProjectId(slug);
+    if (convexProjectId2) {
+      await pushLoopLogToConvex({
+        projectId: convexProjectId2,
+        weekNumber: weekNum,
+        date: formatDate(),
+        tasksCompleted: tasksCompleted.length,
+        tasksTotal: totalTasks,
+        shippingScore,
+        synthesis: {
+          oneThing: finalOneThing,
+          rationale: synthesis.rationale,
+          tension: synthesis.tension || null,
+          bipPost: synthesis.bipPost,
+        },
+        overridden,
+        overrideReason,
+        bipPost: synthesis.bipPost,
+      });
+    }
+
     // ─── Shipping DNA (after 4+ weeks) ────────────────────────────
     const dna = computeShippingDNA();
     if (dna) {
@@ -428,6 +463,19 @@ export async function loopCommand(): Promise<void> {
     ].join("\n");
 
     saveLoopLog(weekNum, logContent);
+
+    const convexProjectId3 = getConvexProjectId(slug);
+    if (convexProjectId3) {
+      await pushLoopLogToConvex({
+        projectId: convexProjectId3,
+        weekNumber: weekNum,
+        date: formatDate(),
+        tasksCompleted: tasksCompleted.length,
+        tasksTotal: totalTasks,
+        shippingScore,
+        overridden: false,
+      });
+    }
 
     // Still show pattern interrupt even when AI is down
     const patternResultOffline = detectPatterns(slug);

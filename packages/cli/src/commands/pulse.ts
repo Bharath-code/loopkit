@@ -8,6 +8,7 @@ import {
   readPulseResponses,
   appendPulseResponse,
   readBriefJson,
+  saveBrief,
 } from "../storage/local.js";
 import { colors, header, box, pass, warn, info, nextStep, shortcutsHint, emptyState } from "../ui/theme.js";
 
@@ -57,8 +58,13 @@ export async function pulseCommand(options: PulseOptions): Promise<void> {
         throw new Error(err.error || `HTTP ${res.status}`);
       }
 
-      const { url } = await res.json();
+      const { url, projectId: convexProjectId } = await res.json();
       s.stop("Feedback form ready!");
+
+      // Store Convex project ID for future sync
+      if (convexProjectId && brief) {
+        saveBrief(slug, brief.answers, brief, convexProjectId);
+      }
 
       console.log(header("Shareable Pulse URL"));
       console.log(box([

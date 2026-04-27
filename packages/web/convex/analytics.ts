@@ -1,6 +1,7 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { Id } from "./_generated/dataModel";
+import { userOwnsProject } from "./authHelpers";
 
 // ─── Anonymized aggregate benchmarks across all users ────────────
 
@@ -15,6 +16,11 @@ interface LogEntry {
 export const getBenchmarks = query({
   args: { projectId: v.id("projects") },
   handler: async (ctx, args) => {
+    const authorized = await userOwnsProject(ctx, args.projectId);
+    if (!authorized) {
+      return { user: null, message: "Unauthorized." };
+    }
+
     const logs = await ctx.db
       .query("loopLogs")
       .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
@@ -80,6 +86,9 @@ export const getBenchmarks = query({
 export const getShareCard = query({
   args: { projectId: v.id("projects") },
   handler: async (ctx, args) => {
+    const authorized = await userOwnsProject(ctx, args.projectId);
+    if (!authorized) return null;
+
     const project = await ctx.db.get(args.projectId);
     const logs = await ctx.db
       .query("loopLogs")
@@ -195,6 +204,9 @@ export type Archetype = "Sprinter" | "Marathoner" | "Perfectionist" | "Reactor" 
 export const getArchetype = query({
   args: { projectId: v.id("projects") },
   handler: async (ctx, args) => {
+    const authorized = await userOwnsProject(ctx, args.projectId);
+    if (!authorized) return null;
+
     const logs = await ctx.db
       .query("loopLogs")
       .withIndex("by_project", (q) => q.eq("projectId", args.projectId))

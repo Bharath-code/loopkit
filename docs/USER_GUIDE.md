@@ -506,7 +506,7 @@ A: `loopkit track --project other-project` switches contexts. Each project has i
 A: Yes. LoopKit writes to standard files (`tasks.md`, `brief.md`) that you can edit manually. It complements, not replaces, your IDE and git workflow.
 
 **Q: What happens to my data?**
-A: Everything is stored locally in `.loopkit/` (except feedback forms, which use Convex for real-time collection). Your data is yours.
+A: Everything is stored locally in `.loopkit/` by default. Feedback forms use Convex for real-time collection. If you authenticate with `loopkit auth`, your loop logs and ship logs optionally sync to your web dashboard so you can view trends and benchmarks. Local data remains the source of truth — sync is best-effort and never required.
 
 **Q: Does LoopKit work offline?**
 A: Mostly. `init`, `track`, and `loop` work fully offline. `ship` and `pulse` need internet for AI features, but your work is saved locally.
@@ -541,4 +541,4 @@ LoopKit keeps you honest about that.
 
 ---
 
-*Last updated: April 2026 · v0.1.0 (IE-8 + IE-15 shipped · Audit fixes complete)*
+*Last updated: April 2026 · v0.1.0 (IE-7 through IE-17 shipped · Pattern Interrupt + Peer Inspiration + Keywords + Timing + Radar + Trending + AI Coach all complete · P0 launch blockers resolved)*

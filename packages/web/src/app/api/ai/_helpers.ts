@@ -78,7 +78,7 @@ export async function verifyAndRateLimit(req: NextRequest) {
     const tier = (user.tier as string) || "free";
     const limitCheck = await fetchQuery(
       api.rateLimits.checkLimit,
-      { userId: user._id, tier },
+      { tier },
       { token }
     );
 
@@ -95,11 +95,11 @@ export async function verifyAndRateLimit(req: NextRequest) {
   }
 }
 
-export async function incrementAIUsage(token: string, userId: string) {
+export async function incrementAIUsage(token: string) {
   try {
     await fetchMutation(
       api.rateLimits.incrementUsage,
-      { userId: userId as any },
+      {},
       { token }
     );
   } catch (err) {

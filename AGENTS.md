@@ -25,6 +25,7 @@ packages/cli/src/
   ai/prompts/      ← system prompts
   ai/client.ts     ← generateStructured() wrapper (with cache + resolveAuth)
   storage/local.ts ← all .loopkit/ file I/O
+  storage/sync.ts  ← CLI → Convex push (loop logs + ship logs)
   storage/cache.ts ← AI result cache (hash-based, 7-day TTL)
   ui/theme.ts      ← terminal colors/UI helpers
 

@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
       temperature: 0.2,
     });
 
-    await incrementAIUsage(auth.token, auth.user._id);
+    await incrementAIUsage(auth.token);
 
     return NextResponse.json({ result: object });
   } catch (error) {

@@ -30,7 +30,8 @@ export async function GET(req: NextRequest) {
       
       const iframe = document.createElement('iframe');
       // In production this would use the real domain (process.env.NEXT_PUBLIC_APP_URL)
-      iframe.src = \`http://localhost:3099/pulse/\${encodeURIComponent('${projectId}')}\`;
+      const appUrl = typeof process !== 'undefined' && process.env.NEXT_PUBLIC_APP_URL ? process.env.NEXT_PUBLIC_APP_URL : 'https://loopkit.dev';
+      iframe.src = \`\${appUrl}/pulse/\${encodeURIComponent('${projectId}')}\`;
       iframe.style.cssText = 'width: 100%; height: 100%; border: none;';
       
       iframeContainer.appendChild(iframe);

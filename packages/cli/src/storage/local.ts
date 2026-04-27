@@ -222,12 +222,20 @@ export function projectExists(slug: string): boolean {
 export function saveBrief(
   slug: string,
   answers: InitAnswers,
-  brief?: Brief
+  brief?: Brief,
+  convexProjectId?: string
 ): void {
   ensureProjectDir(slug);
 
   // Save raw JSON for machine consumption
-  const jsonData = { answers, brief: brief || null, createdAt: new Date().toISOString() };
+  const jsonData: Record<string, unknown> = {
+    answers,
+    brief: brief || null,
+    createdAt: new Date().toISOString(),
+  };
+  if (convexProjectId) {
+    jsonData.convexProjectId = convexProjectId;
+  }
   fs.writeFileSync(getBriefJsonPath(slug), JSON.stringify(jsonData, null, 2));
 
   // Save human-readable markdown
@@ -237,7 +245,7 @@ export function saveBrief(
 
 export function readBriefJson(
   slug: string
-): { answers: InitAnswers; brief: Brief | null } | null {
+): { answers: InitAnswers; brief: Brief | null; convexProjectId?: string } | null {
   const jsonPath = getBriefJsonPath(slug);
   if (!fs.existsSync(jsonPath)) return null;
   try {
