@@ -11,6 +11,7 @@ import { celebrateCommand } from "./commands/celebrate.js";
 import { radarCommand } from "./commands/radar.js";
 import { keywordsCommand } from "./commands/keywords.js";
 import { timingCommand } from "./commands/timing.js";
+import { coachCommand } from "./commands/coach.js";
 import { recordEvent, telemetryCommand } from "./analytics/telemetry.js";
 
 const program = new Command();
@@ -26,6 +27,7 @@ program
   .command("init [name]")
   .description("Turn a fuzzy idea into a scored, falsifiable brief")
   .option("--analyze <name>", "Run AI analysis on a previously saved session")
+  .option("-t, --template <id>", "Use a project template (saas|api|mobile|cli|newsletter|agency|open-source|marketplace|ai-wrapper)")
   .action((name, options) => {
     recordEvent({ command: "init" });
     initCommand(name, options);
@@ -116,6 +118,16 @@ program
   .action((options) => {
     recordEvent({ command: "timing" });
     timingCommand(options);
+  });
+
+program
+  .command("coach")
+  .description("AI coaching based on your shipping patterns and milestones")
+  .option("--on", "Enable coaching")
+  .option("--off", "Disable coaching")
+  .action((options) => {
+    recordEvent({ command: "coach" });
+    coachCommand(options);
   });
 
 program.parse(process.argv);

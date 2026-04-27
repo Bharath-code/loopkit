@@ -16,7 +16,8 @@ import {
 } from "../storage/local.js";
 import { computeBenchmarks, renderBenchmarks } from "../analytics/benchmarks.js";
 import { getSnoozeWarning } from "../analytics/oracle.js";
-import { colors, header, pass, warn, info, nextStep, shortcutsHint, emptyState } from "../ui/theme.js";
+import { getPriorityMoment, recordMomentShown } from "../analytics/coach.js";
+import { colors, header, pass, warn, info, nextStep, shortcutsHint, emptyState, coachingCard } from "../ui/theme.js";
 
 export async function trackCommand(options?: {
   add?: string;
@@ -148,6 +149,15 @@ export async function trackCommand(options?: {
   console.log(
     `\n  ${colors.white.bold("Shipping")} ${renderProgressBar(shippingScore)} ${colors.white.bold(`${shippingScore}%`)}`
   );
+
+  // ─── AI Coach v1 (IE-10) — stuck state ────────────────────────
+  if (config.coaching?.enabled !== false && done.length === 0 && visibleOpen.length === 0) {
+    const coachMoment = getPriorityMoment(slug);
+    if (coachMoment) {
+      console.log(coachingCard(coachMoment));
+      recordMomentShown(coachMoment.id);
+    }
+  }
 
   // ─── Smart Benchmarks ──────────────────────────────────────────
   const benchmarks = computeBenchmarks();

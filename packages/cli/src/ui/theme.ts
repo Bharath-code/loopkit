@@ -108,6 +108,79 @@ export function emptyState(message: string, action: string, command: string): st
   ].join("\n");
 }
 
+// ─── Coaching Card ──────────────────────────────────────────────
+
+export function coachingCard(
+  moment: {
+    id: string;
+    priority: "critical" | "warning" | "info";
+    title: string;
+    message: string;
+    action: string;
+    command?: string;
+  }
+): string {
+  const emojiMap: Record<string, string> = {
+    critical: "🚨",
+    warning: "⚠️",
+    info: "💡",
+  };
+
+  const color =
+    moment.priority === "critical"
+      ? colors.danger
+      : moment.priority === "warning"
+        ? colors.warning
+        : colors.secondary;
+
+  const lines: string[] = [];
+  lines.push(`${emojiMap[moment.priority]} ${color.bold(moment.title)}`);
+  lines.push("");
+  lines.push(moment.message);
+  lines.push("");
+  lines.push(`${colors.muted("→")} ${color.bold(moment.action)}`);
+  if (moment.command) {
+    lines.push(colors.dim(`   Run: ${moment.command}`));
+  }
+
+  return box(lines.join("\n"), `${emojiMap[moment.priority]} Coach`);
+}
+
+export function coachingPlanCard(plan: {
+  moments: Array<{
+    id: string;
+    priority: "critical" | "warning" | "info";
+    title: string;
+    message: string;
+    action: string;
+    command?: string;
+  }>;
+  totalWeeks: number;
+}): string {
+  if (plan.moments.length === 0) {
+    return box(
+      `${colors.success("✓")} No urgent coaching moments. You're on track.`,
+      "💡 Coach"
+    );
+  }
+
+  const lines: string[] = [];
+  lines.push(colors.secondary.bold(`Coaching Plan — ${plan.totalWeeks} weeks tracked`));
+  lines.push("");
+
+  const priorityOrder = { critical: 0, warning: 1, info: 2 };
+  const sorted = [...plan.moments].sort(
+    (a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]
+  );
+
+  for (const m of sorted) {
+    lines.push(coachingCard(m).split("\n").slice(1, -1).join("\n"));
+    lines.push("");
+  }
+
+  return box(lines.join("\n"), "💡 Coach");
+}
+
 // ─── Pattern Interrupt Card ─────────────────────────────────────
 
 export function patternCard(

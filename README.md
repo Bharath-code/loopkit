@@ -30,6 +30,8 @@ Solo founders are strong builders but weak shippers. The loop — define → dev
 | `loopkit radar` | Intelligence | Scan PH & HN for competitor launches in your category |
 | `loopkit keywords` | Intelligence | Find low-competition keywords for content strategy |
 | `loopkit timing` | Intelligence | Market timing signal — is your space heating up? |
+| `loopkit coach` | Intelligence | AI coaching based on your shipping patterns |
+| `loopkit init --template <id>` | Define | Pre-fill tasks with 9 project templates |
 
 ## Quick Start
 

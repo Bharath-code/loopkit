@@ -386,6 +386,74 @@ $ loopkit ship
 
 Only appears if telemetry is opted in. No usernames or identifying details — category and ship description only.
 
+### AI Coach (IE-10)
+
+Your personal shipping coach that analyzes your patterns and tells you exactly what to do next.
+
+```bash
+loopkit coach              # Full coaching plan
+loopkit coach --off        # Disable
+loopkit coach --on         # Re-enable
+```
+
+**When coaching appears:**
+- After `loopkit loop` — one priority moment based on your current state
+- After `loopkit track` — when you're stuck with 0 tasks
+- During `loopkit ship` — if you're avoiding shipping
+- Dashboard — `CoachingWidget` on overview page
+
+**Example moments:**
+
+```
+🚨 Critical: Ship Avoider Detected
+   You haven't shipped in 4 weeks. Building without shipping is just inventory.
+   → Ship anything this week — even if it's imperfect.
+   Run: loopkit ship
+```
+
+```
+💡 Week 3 Milestone
+   You've been validating for 3 weeks. 73% of founders who ship by week 4 reach revenue.
+   → Make this the week you ship something public.
+   Run: loopkit ship
+```
+
+Coaching respects your attention: max 1 moment per command, never the same moment twice in a row, and critical moments are never silenced.
+
+### Project Templates (F5)
+
+Skip the blank page. Start with a pre-scaffolded task list matched to your project type.
+
+```bash
+loopkit init my-saas --template saas
+loopkit init my-app --template mobile
+```
+
+**Available templates:**
+
+| Template | Best For |
+|---|---|
+| `saas` | Subscription B2B/B2C software |
+| `api` | Developer-facing services |
+| `mobile` | iOS/Android apps |
+| `cli` | Terminal tools |
+| `newsletter` | Curated content products |
+| `agency` | Client service businesses |
+| `open-source` | Public libraries/frameworks |
+| `marketplace` | Two-sided platforms |
+| `ai-wrapper` | LLM-powered interfaces |
+
+Templates pre-fill:
+- **ICP hint** in the `init` prompt placeholder
+- **Tasks.md scaffold** with 8 category-appropriate tasks in your backlog
+
+You can also select interactively:
+```bash
+loopkit init my-project
+# → Use a project template? Yes
+# → Choose a template: [select from list]
+```
+
 ### Telemetry & Privacy
 
 LoopKit's intelligence features require opt-in telemetry:

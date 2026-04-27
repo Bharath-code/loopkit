@@ -305,6 +305,9 @@ export default function DashboardOverviewPage() {
 
         {/* Peer Inspiration (IE-7) */}
         <PeerInspirationWidget activeProject={activeProject} />
+
+        {/* AI Coach v1 (IE-10) */}
+        <CoachingWidget activeProject={activeProject} loopLogs={latestLoop} />
       </div>
     </div>
   );
@@ -414,6 +417,147 @@ function PeerInspirationWidget({ activeProject }: { activeProject: { name: strin
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+function CoachingWidget({
+  activeProject,
+  loopLogs,
+}: {
+  activeProject: { _id: string; name: string } | undefined;
+  loopLogs: { weekNumber: number; shippingScore: number; tasksCompleted: number; tasksTotal: number } | null | undefined;
+}) {
+  const projectId = activeProject?._id;
+  const allLoops = useQuery(
+    api.loopLogs.listByProject,
+    projectId ? { projectId: projectId as Id<"projects"> } : "skip"
+  );
+
+  if (allLoops === undefined) {
+    return (
+      <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/20 animate-pulse">
+        <div className="h-5 w-40 bg-zinc-800 rounded mb-4"></div>
+        <div className="space-y-3">
+          <div className="h-4 bg-zinc-800 rounded w-full"></div>
+          <div className="h-4 bg-zinc-800 rounded w-3/4"></div>
+        </div>
+      </div>
+    );
+  }
+
+  const totalWeeks = allLoops?.length ?? 0;
+
+  // Not enough data for coaching
+  if (totalWeeks < 2) return null;
+
+  // Derive coaching moments from loop log data
+  const moments: Array<{
+    id: string;
+    priority: "critical" | "warning" | "info";
+    title: string;
+    message: string;
+    action: string;
+    command?: string;
+  }> = [];
+
+  // Check for declining score
+  if (allLoops && allLoops.length >= 3) {
+    const recent = allLoops.slice(-3);
+    const scores = recent.map((l) => l.shippingScore);
+    if (scores[0] < scores[1] && scores[1] < scores[2]) {
+      moments.push({
+        id: "dashboard_declining_score",
+        priority: "warning",
+        title: "Score Declining",
+        message: `Your shipping score dropped for 3 consecutive weeks (${scores[2]}% → ${scores[0]}%).`,
+        action: "Reduce scope to 1-2 tasks this week and ship something.",
+        command: "loopkit loop",
+      });
+    }
+  }
+
+  // Check for low shipping score
+  if (loopLogs && loopLogs.shippingScore < 30 && loopLogs.tasksTotal > 0) {
+    moments.push({
+      id: "dashboard_low_score",
+      priority: "warning",
+      title: "Low Completion Rate",
+      message: `This week you completed ${loopLogs.tasksCompleted}/${loopLogs.tasksTotal} tasks (${loopLogs.shippingScore}%).`,
+      action: "Pick one task and finish it. Momentum beats volume.",
+      command: "loopkit track",
+    });
+  }
+
+  // Milestone tips
+  if (totalWeeks === 3) {
+    moments.push({
+      id: "dashboard_week_3",
+      priority: "info",
+      title: "Week 3 Milestone",
+      message: "73% of founders who ship by week 4 reach revenue within 6 months.",
+      action: "Make this the week you ship something public.",
+      command: "loopkit ship",
+    });
+  } else if (totalWeeks === 8) {
+    moments.push({
+      id: "dashboard_week_8",
+      priority: "info",
+      title: "Week 8 Check-In",
+      message: "You've been at this for 8 weeks. Time to review what's working.",
+      action: "Run the success predictor to see your trajectory.",
+      command: "loopkit loop",
+    });
+  } else if (totalWeeks === 16) {
+    moments.push({
+      id: "dashboard_week_16",
+      priority: "info",
+      title: "Week 16 — Archetype Check",
+      message: "You're building real momentum. Does your brief still match user feedback?",
+      action: "Revisit your brief and verify your riskiest assumption.",
+      command: "loopkit init --analyze",
+    });
+  }
+
+  // Nothing to show
+  if (moments.length === 0) return null;
+
+  // Sort by priority
+  const priorityOrder = { critical: 0, warning: 1, info: 2 };
+  const sorted = [...moments].sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+  const top = sorted[0];
+
+  const priorityColor = {
+    critical: "border-red-500/20 bg-red-500/5",
+    warning: "border-amber-500/20 bg-amber-500/5",
+    info: "border-cyan-500/20 bg-cyan-500/5",
+  };
+
+  const titleColor = {
+    critical: "text-red-400",
+    warning: "text-amber-400",
+    info: "text-cyan-400",
+  };
+
+  return (
+    <div className={`p-6 rounded-2xl border ${priorityColor[top.priority]}`}>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className={`text-base font-semibold ${titleColor[top.priority]}`}>
+          {top.priority === "critical" ? "🚨" : top.priority === "warning" ? "⚠️" : "💡"} Coach
+        </h2>
+        <span className="text-xs text-zinc-500">{totalWeeks} weeks tracked</span>
+      </div>
+      <p className="text-sm text-white font-medium mb-2">{top.title}</p>
+      <p className="text-sm text-zinc-400 mb-4">{top.message}</p>
+      <div className="flex items-center justify-between">
+        <p className="text-xs text-zinc-300">→ {top.action}</p>
+        {top.command && (
+          <code className="text-xs text-violet-400 bg-zinc-800/50 px-2 py-1 rounded">{top.command}</code>
+        )}
+      </div>
+      {sorted.length > 1 && (
+        <p className="text-xs text-zinc-600 mt-3">+{sorted.length - 1} more coaching moments</p>
+      )}
     </div>
   );
 }

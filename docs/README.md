@@ -41,6 +41,8 @@ Welcome to the LoopKit documentation. This directory contains everything you nee
 | **IE-17: Market Timing Signal** | ✅ **Shipped** | `loopkit timing` | Overview widget |
 | **IE-9: Pattern Interrupt** | ✅ **Shipped** | Shown in `loop` | Overview widget |
 | **IE-7: Anonymous Peer Inspiration** | ✅ **Shipped** | Shown in `ship` | Overview widget |
+| **IE-10: AI Coach v1** | ✅ **Shipped** | `loopkit coach` | Overview widget |
+| **F5: Project Templates** | ✅ **Shipped** | `loopkit init --template` | — |
 
 ## Document Relationships
 

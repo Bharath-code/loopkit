@@ -13,9 +13,10 @@ import {
   saveShipLog,
   shipLogExists,
 } from "../storage/local.js";
-import { colors, header, pass, fail, warn, box, nextStep, info, shortcutsHint, emptyState } from "../ui/theme.js";
+import { colors, header, pass, fail, warn, box, nextStep, info, shortcutsHint, emptyState, coachingCard } from "../ui/theme.js";
 import { celebrateCommand } from "./celebrate.js";
 import { fetchPeerShips, recordPeerShip, renderPeerInspiration } from "../analytics/peers.js";
+import { getPriorityMoment, recordMomentShown } from "../analytics/coach.js";
 
 // ─── Context shape passed to AI ────────────────────────────────
 interface ShipContext {
@@ -142,6 +143,15 @@ export async function shipCommand(): Promise<void> {
         "loopkit track"
       )
     );
+  }
+
+  // ─── AI Coach v1 (IE-10) — ship avoidance ─────────────────────
+  if (slug && config.coaching?.enabled !== false) {
+    const coachMoment = getPriorityMoment(slug);
+    if (coachMoment && coachMoment.id === "ship_avoider_critical") {
+      console.log(coachingCard(coachMoment));
+      recordMomentShown(coachMoment.id);
+    }
   }
 
   // ─── What shipped ────────────────────────────────────────────

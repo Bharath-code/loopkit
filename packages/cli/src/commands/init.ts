@@ -1,5 +1,5 @@
 import * as p from "@clack/prompts";
-import { slugify, BriefSchema, type InitAnswers } from "@loopkit/shared";
+import { slugify, BriefSchema, type InitAnswers, formatDate } from "@loopkit/shared";
 import { generateStructured } from "../ai/client.js";
 import { INIT_SYSTEM_PROMPT, buildInitPrompt } from "../ai/prompts/init.js";
 import {
@@ -14,10 +14,11 @@ import {
 import { colors, scoreBar, box, header, nextStep, info, shortcutsHint } from "../ui/theme.js";
 import { recordBriefCategories, getLocalTrendingData, isTelemetryEnabled } from "../analytics/telemetry.js";
 import { categorizeICP, categorizeProblem, categorizeMVP } from "../analytics/competitorRadar.js";
+import { getTemplate, getTemplateList } from "../templates/index.js";
 
 export async function initCommand(
   resumeName?: string,
-  options?: { analyze?: string }
+  options?: { analyze?: string; template?: string }
 ): Promise<void> {
   // Handle --analyze flag
   if (options?.analyze) {
@@ -30,6 +31,39 @@ export async function initCommand(
   p.intro(colors.primary.bold("LoopKit — Define your product"));
   console.log(shortcutsHint());
   console.log(colors.muted("This takes 4 minutes. Be honest, not optimistic.\n"));
+
+  // ─── Template selection ───────────────────────────────────────
+  let selectedTemplate = options?.template ? getTemplate(options.template) : undefined;
+
+  if (options?.template && !selectedTemplate) {
+    console.log(colors.warning(`Template "${options.template}" not found. Available templates:`));
+    for (const t of getTemplateList()) {
+      console.log(colors.dim(`  • ${t.id}: ${t.name} — ${t.description}`));
+    }
+    console.log(colors.muted("  Continuing without a template...\n"));
+  }
+
+  if (!selectedTemplate && options?.template === undefined) {
+    const useTemplate = await p.confirm({
+      message: "Use a project template? (pre-fills task scaffold)",
+    });
+
+    if (!p.isCancel(useTemplate) && useTemplate) {
+      const templateOptions = getTemplateList().map((t) => ({
+        value: t.id,
+        label: `${t.name} — ${t.description}`,
+      }));
+
+      const choice = await p.select({
+        message: "Choose a template:",
+        options: templateOptions,
+      });
+
+      if (!p.isCancel(choice)) {
+        selectedTemplate = getTemplate(choice);
+      }
+    }
+  }
 
   // ─── Check for resume ────────────────────────────────────────
   let answers: Partial<InitAnswers> = {};
@@ -89,7 +123,9 @@ export async function initCommand(
       key: "problem" as const,
       message:
         "Describe the problem in one sentence — not your solution, the actual pain.",
-      placeholder: "e.g. Freelancers lose deals because proposals look amateur",
+      placeholder: selectedTemplate
+        ? `e.g. ${selectedTemplate.icpHint.split(" who ")[0]} struggle with...`
+        : "e.g. Freelancers lose deals because proposals look amateur",
       validate: (value: string) => {
         if (value.length < 5) return undefined; // Allow short, will soft-warn
         const solutionPatterns = /^(i want to build|a tool that|an app that|a platform)/i;
@@ -103,8 +139,7 @@ export async function initCommand(
       key: "icp" as const,
       message:
         "Who has this problem the worst? Be specific — role, context, how often they hit this pain.",
-      placeholder:
-        "e.g. Senior freelancers, $3K+ projects, 2-5 proposals/month",
+      placeholder: selectedTemplate?.icpHint || "e.g. Senior freelancers, $3K+ projects, 2-5 proposals/month",
     },
     {
       key: "whyUnsolved" as const,
@@ -116,7 +151,9 @@ export async function initCommand(
       key: "mvp" as const,
       message:
         'What does "done" look like for the MVP? Describe what a user does and what they get.',
-      placeholder: "e.g. Fill a form, get a PDF in 60 seconds",
+      placeholder: selectedTemplate
+        ? `e.g. A ${selectedTemplate.category} tool that lets users...`
+        : "e.g. Fill a form, get a PDF in 60 seconds",
     },
   ];
 
@@ -207,6 +244,22 @@ export async function initCommand(
 
     // Render
     renderBrief(finalAnswers, brief, slug);
+
+    // Create tasks.md scaffold from template (F5)
+    if (selectedTemplate) {
+      const { createTasksScaffold, writeTasksFile, readTasksFile } = await import("../storage/local.js");
+      createTasksScaffold(slug, finalAnswers.name);
+      const existing = readTasksFile(slug) || "";
+      const scaffoldTasks = selectedTemplate.taskScaffold
+        .map((t) => `- [ ] ${t} — created:${formatDate(new Date())}`)
+        .join("\n");
+      const updated = existing.replace(
+        "## Backlog\n",
+        `## Backlog\n${scaffoldTasks}\n`
+      );
+      writeTasksFile(slug, updated);
+      console.log(info(`Template "${selectedTemplate.name}" applied — ${selectedTemplate.taskScaffold.length} tasks added to backlog.`));
+    }
 
     // Show trend hint (IE-8.4)
     renderTrendHint(finalAnswers);

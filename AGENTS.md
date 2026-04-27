@@ -19,8 +19,9 @@ node packages/cli/dist/index.js --help
 
 ```
 packages/cli/src/
-  commands/        ← one file per command
-  analytics/       ← telemetry, benchmarks, dna, oracle, churn, autoLoop, predictor, competitorRadar, keywordFinder, marketTiming, patterns, peers
+  commands/        ← one file per command (init, track, ship, pulse, loop, auth, celebrate, telemetry, radar, keywords, timing, coach)
+  analytics/       ← telemetry, benchmarks, dna, oracle, churn, autoLoop, predictor, competitorRadar, keywordFinder, marketTiming, patterns, peers, coach
+  templates/       ← project template scaffolds (saas, api, mobile, cli, newsletter, agency, open-source, marketplace, ai-wrapper)
   ai/prompts/      ← system prompts
   ai/client.ts     ← generateStructured() wrapper (with cache + resolveAuth)
   storage/local.ts ← all .loopkit/ file I/O
@@ -92,7 +93,7 @@ const result = await generateStructured({
 - Team collaboration
 - Mobile app / VS Code extension
 - Zapier/Make integrations
-- Any 9th command beyond init/track/ship/pulse/loop/auth/celebrate/telemetry
+- Any 13th command beyond the current 12 (init/track/ship/pulse/loop/auth/celebrate/telemetry/radar/keywords/timing/coach)
 - New npm deps that duplicate existing functionality
 
 ---
@@ -101,7 +102,7 @@ const result = await generateStructured({
 
 - [ ] `pnpm --filter loopkit build` → 0 errors
 - [ ] Web changed? → `cd packages/web && npx next build` → clean
-- [ ] Tests pass: `pnpm --filter loopkit test` (94 tests)
+- [ ] Tests pass: `pnpm --filter loopkit test` (152 tests)
 - [ ] Acceptance criteria from relevant PRD section pass
 - [ ] Ctrl+C exits gracefully at every prompt
 - [ ] AI failure is handled gracefully (fallback, not crash)

@@ -632,50 +632,79 @@ Week 8 Review
 
 ---
 
-### Feature 4.2: The AI Coach
+### Feature 4.2: The AI Coach ✅ IMPLEMENTED
 
-**What it does:** A proactive coaching layer that surfaces personalized advice based on your specific patterns.
+**What it does:** A rule-based coaching layer that consumes all existing analytics (DNA, churn, predictor, patterns) and delivers contextual, actionable suggestions at milestone weeks and trigger points.
+
+**CLI Usage:**
+```bash
+loopkit coach              # Show full coaching plan
+loopkit coach --off        # Disable coaching
+loopkit coach --on         # Re-enable coaching
+```
+
+**Integration points:**
+- `loop` — shows priority moment post-synthesis
+- `track` — shows coaching when stuck (0 tasks)
+- `ship` — shows coaching when ship-avoider pattern detected
+- Dashboard — `CoachingWidget` on overview page
+
+**12 Coaching Rules:**
+
+| Priority | Rule | Trigger |
+|---|---|---|
+| Critical | Ship Avoider | 3+ weeks without shipping |
+| Critical | ICP Drift | Feedback says wrong problem + declining score |
+| Critical | Low Velocity | <1 task/week for 3+ weeks |
+| Critical | High Churn Risk | 2+ warning signals active |
+| Warning | Overplanner | 8+ tasks, <30% completion rate |
+| Warning | Snooze Loop | Tasks snoozed repeatedly |
+| Warning | Scope Creep | Mid-week task additions |
+| Warning | Medium Churn | 1 warning signal |
+| Warning | Low Probability | Success predictor <40% |
+| Info | Week 3 Milestone | Exactly 3 weeks tracked |
+| Info | Week 8 Check-In | Exactly 8 weeks + predictor available |
+| Info | Week 16 Archetype | Exactly 16 weeks + DNA available |
 
 **Example interventions:**
 
-**Week 3 (early):**
+**Critical — Ship Avoider:**
 ```
-💡 Coach says: You're validating well (3 user interviews).
-   But you haven't added validation tasks to your track plan.
-   Run: `loopkit track --add "Interview user #4"`
-   This keeps validation visible in your shipping score.
-```
-
-**Week 8 (mid):**
-```
-💡 Coach says: Your shipping score is strong (78%) but you haven't
-   shipped anything public in 3 weeks. Internal progress is good,
-   but external validation is critical.
-
-   Suggestion: Ship a landing page update this week.
-   Even small public ships maintain momentum and collect feedback.
+🚨 Coach: Ship Avoider Detected
+   You haven't shipped in 4 weeks. Building without shipping is just inventory.
+   → Ship anything this week — even if it's imperfect.
+   Run: loopkit ship
 ```
 
-**Week 16 (late):**
+**Warning — Overplanner:**
 ```
-💡 Coach says: You've been in "iterate mode" for 8 weeks.
-   Your pulse responses show users want API access.
-   But your tasks focus on UI polish.
+⚠️ Coach: Overplanning
+   You plan 8+ tasks but finish ~30% of them.
+   → Plan 3 must-do tasks per week. Everything else goes to backlog.
+   Run: loopkit track
+```
 
-   Tension detected: User feedback ≠ your task list.
-   Consider pivoting 50% of this week's tasks to API v1.
+**Info — Week 3 Milestone:**
 ```
+💡 Coach: Week 3 Milestone
+   You've been validating for 3 weeks. 73% of founders who ship by week 4 reach revenue within 6 months.
+   → Make this the week you ship something public.
+   Run: loopkit ship
+```
+
+**Deduplication:** Same moment is never shown twice in a row. Critical moments bypass all throttling. Max 1 moment per command invocation.
 
 **Data used:**
-- All behavioral data
-- Pulse feedback themes
-- Task-to-feedback alignment
-- Historical patterns of successful founders
+- Loop logs (tasks, scores, overrides, shipping habit)
+- Pattern interrupts (5 anti-patterns)
+- Churn risk signals (4 risk types)
+- Success prediction (8-week heuristic model)
+- Shipping DNA (archetype, velocity, completion style)
 
 **Why it wows:**
 - Feels like a personal coach who understands your specific situation.
 - Proactive, not reactive. Surfaces insights before you ask.
-- Specific, not generic. "Add validation to track" vs. "validate more."
+- Specific, not generic. "Ship today" vs. "ship more."
 
 **How it retains:**
 - Users feel supported, not just managed.
@@ -702,8 +731,8 @@ Week 8 Review
 | 3 | Peer Inspiration | "Founders like you shipped..." | Community feeling | Critical mass network |
 | 3 | Trending Validations ✅ | "5 founders exploring similar ICPs" | Market intelligence | Proprietary aggregate data |
 | 3 | Competitor Ship Radar ✅ | "3 competitors shipped this week" | Market awareness | Keyword mapping + relevance scoring |
-| 4 | Pattern Interrupt | "This is your 4th project in 6 months" | Preventing failure | Longitudinal user data |
-| 4 | AI Coach | "Tension detected: feedback ≠ tasks" | Personal relationship | Deep behavioral understanding |
+| 4 | Pattern Interrupt ✅ | "This is your 4th project in 6 months" | Preventing failure | Longitudinal user data |
+| 4 | AI Coach ✅ | "Ship anything this week — even if imperfect" | Personal relationship | Deep behavioral understanding |
 
 ---
 

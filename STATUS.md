@@ -1,8 +1,8 @@
 # LoopKit — Build Status
 
-**Last updated:** April 27, 2026 (Week 6 P2 sprint COMPLETE · IE Phase 3: IE-8 + IE-15 IMPLEMENTED + AUDIT FIXES · IE-16 COMPLETE · IE-17 COMPLETE · IE-9 COMPLETE · IE-7 COMPLETE)  
+**Last updated:** April 27, 2026 (Week 11-12 P3 sprint COMPLETE · IE-10 AI Coach v1 + F5 Project Templates IMPLEMENTED)  
 **Version:** 0.1.0  
-**Overall:** MVP complete · Weeks 1-2 shipped · Week 3 P0 done · Week 4 P1 done · Week 5 P1 done · Week 6 P2 done · Strategic + IE Phase 2 shipped · IE Phase 3: IE-8 (Trending Validations) + IE-15 (Competitor Ship Radar) implemented · Audit fixes applied (17 issues resolved, 5 nice-to-haves shipped) · IE-16 (Keyword Opportunity Finder) COMPLETE · IE-17 (Market Timing Signal) COMPLETE · IE-9 (Pattern Interrupt) COMPLETE · IE-7 (Anonymous Peer Inspiration) COMPLETE
+**Overall:** MVP complete · Weeks 1-2 shipped · Week 3 P0 done · Week 4 P1 done · Week 5 P1 done · Week 6 P2 done · Strategic + IE Phase 2 shipped · IE Phase 3: IE-8 (Trending Validations) + IE-15 (Competitor Ship Radar) + IE-16 (Keywords) + IE-17 (Timing) + IE-9 (Patterns) + IE-7 (Peers) COMPLETE · IE Phase 4: IE-10 (AI Coach v1) + F5 (Project Templates) COMPLETE
 
 ---
 
@@ -196,15 +196,15 @@
 
 | # | Task | Effort | Files | Acceptance Criteria |
 |---|---|---|---|---|
-| D3 | **Dashboard task CRUD** | L | New files in `dashboard/` | Create/edit tasks from web. Sync with local `tasks.md`. Drag-to-reorder. |
-| F5 / W6 | **Project templates** | M | `commands/init.ts`, `templates/` (new) | `loopkit init --template [saas\|api\|mobile\|cli\|newsletter\|agency]` pre-fills hints. |
+| D3 | **Dashboard task CRUD** | L | New files in `dashboard/` | ⏸ DEFERRED — blocked by missing CLI↔Convex sync layer. |
+| F5 / W6 | **Project templates** | M | `commands/init.ts`, `templates/` (new) | ✅ 9 templates (saas/api/mobile/cli/newsletter/agency/open-source/marketplace/ai-wrapper). `loopkit init --template <id>` pre-fills ICP hints + tasks.md scaffold. Interactive selection available. |
 | W3 | **Weekly email digest** | L | `convex/crons.ts` (new) | Sunday cron: tasks done, shipping score, streak, BIP post, next week rec. |
 | W4 | **Public ship log** | L | `commands/ship.ts`, new web route | `loopkit ship --public` → shareable URL (`loopkit.dev/@username/ships`). |
 | W5 | **GitHub Issues sync** | L | `commands/track.ts`, `sync/` module | `loopkit track --sync` two-way sync. ID mapping table. |
 | STRAT-5 | **Annual report framework** | L | `web/src/app/state-of-solo-founders/` | Landing page + data pipeline for "State of Solo Founders 2027". Launch Month 9. |
 | IE-7 | **Anonymous Peer Inspiration** | M | `cli/src/analytics/peers.ts` (new), `commands/ship.ts` | ✅ Show what anonymized founders with similar projects shipped this week. Opt-in. Fetched from Convex via `/api/peers`. Dashboard widget + CLI output. |
 | IE-9 | **Pattern Interrupt** | M | `cli/src/analytics/patterns.ts` (new), `commands/loop.ts` | ✅ Detect 5 repeated failure patterns (overplanner, snooze loop, ship avoider, ICP drift, scope creep). Interrupt with data in `loop` command. Dashboard widget. Suggest `--narrow` ICP refinement. |
-| IE-10 | **AI Coach v1** | L | `cli/src/analytics/coach.ts` (new), all command files | Rule-based coaching layer. Week 3/8/16 contextual suggestions. |
+| IE-10 | **AI Coach v1** | L | `cli/src/analytics/coach.ts` (new), all command files | ✅ 12 rule-based coaching moments across 5 categories. Week 3/8/16 milestones + trigger-based critical/warning moments. Deduplication (never same moment twice). `loopkit coach` command. Dashboard CoachingWidget. Integrated into loop/track/ship. |
 | IE-11 | **Churn Guardian v2 (ML)** | L | `convex/analytics.ts` + model training pipeline | Replace rule-based with ML model trained on proprietary behavioral data. |
 | IE-12 | **Success Predictor v2 (ML)** | L | `convex/analytics.ts` + model training pipeline | Replace heuristics with ML model correlating behavior with revenue/outcome reports. |
 | IE-13 | **AI Coach v2 (ML-powered)** | L | `cli/src/analytics/coach.ts`, `convex/analytics.ts` | ML-powered coaching interventions calibrated to individual patterns + aggregate data. |
@@ -284,15 +284,15 @@ WEEK 9-10 (P3 — IE Phase 3: Keywords + Timing + Patterns)  ✅ COMPLETE
     ├── IE-9.3: Dashboard widget                      ✅ PatternInterruptWidget on overview page
     └── IE-9.4: Zod schema + Convex storage           ✅ PatternInterrupts table, getActivePatterns query
 
-WEEK 11-12 (P3 — Platform Expansion)
-├── D3: Dashboard task CRUD
-├── F5/W6: Project templates
+WEEK 11-12 (P3 — Platform Expansion) ✅ COMPLETE
+├── D3: Dashboard task CRUD                          ⏸ DEFERRED (needs CLI↔Convex sync layer)
+├── F5/W6: Project templates                         ✅ 9 templates + `loopkit init --template`
+└── IE-10: AI Coach v1                               ✅ 12 rule-based coaching moments + dashboard widget
+
+WEEK 13+ (P3 — IE Phase 4-5 ML + Platform)
 ├── W3: Weekly email digest
 ├── W4: Public ship log
 ├── W5: GitHub sync
-└── IE-10: AI Coach v1
-
-WEEK 13+ (P3 — IE Phase 4-5 ML)
 ├── IE-11: Churn Guardian v2 (ML)
 ├── IE-12: Success Predictor v2 (ML)
 ├── IE-13: AI Coach v2 (ML-powered)

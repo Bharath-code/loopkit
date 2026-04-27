@@ -19,8 +19,9 @@ import { computeShippingDNA, type ShippingDNA } from "../analytics/dna.js";
 import { detectChurnRisk, renderChurnWarning } from "../analytics/churn.js";
 import { checkMissedSunday, saveAutoLoopDraft } from "../analytics/autoLoop.js";
 import { predictSuccess, renderPrediction } from "../analytics/predictor.js";
-import { detectPatterns, renderPatternInterrupt } from "../analytics/patterns.js";
-import { colors, header, box, pass, warn, info, nextStep, scoreBar, shortcutsHint, emptyState, patternCard } from "../ui/theme.js";
+import { detectPatterns } from "../analytics/patterns.js";
+import { getPriorityMoment, recordMomentShown } from "../analytics/coach.js";
+import { colors, header, box, pass, warn, info, nextStep, scoreBar, shortcutsHint, emptyState, patternCard, coachingCard } from "../ui/theme.js";
 
 export async function loopCommand(): Promise<void> {
   const config = readConfig();
@@ -399,6 +400,15 @@ export async function loopCommand(): Promise<void> {
     const prediction = predictSuccess(slug);
     if (prediction) {
       renderPrediction(prediction);
+    }
+
+    // ─── AI Coach v1 (IE-10) ─────────────────────────────────────
+    if (config.coaching?.enabled !== false) {
+      const coachMoment = getPriorityMoment(slug);
+      if (coachMoment) {
+        console.log(coachingCard(coachMoment));
+        recordMomentShown(coachMoment.id);
+      }
     }
 
     // ─── Override rate warning ───────────────────────────────────

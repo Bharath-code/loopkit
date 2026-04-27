@@ -131,6 +131,63 @@ export const LoopLogSchema = z.object({
 
 export type LoopLog = z.infer<typeof LoopLogSchema>;
 
+// ─── Analytics: Shipping DNA ────────────────────────────────────
+
+export const ShippingDNASchema = z.object({
+  pattern: z.enum(["Marathoner", "Sprinter", "Perfectionist", "Reactor", "All-Star"]),
+  patternDescription: z.string(),
+  velocityTrend: z.enum(["accelerating", "steady", "declining", "volatile"]),
+  avgTasksCompleted: z.number(),
+  avgScore: z.number(),
+  peakDay: z.string(),
+  completionStyle: z.enum(["finisher", "starter", "balancer"]),
+  totalWeeks: z.number(),
+  streak: z.number(),
+  riskWarnings: z.array(z.string()),
+  strengths: z.array(z.string()),
+});
+
+export type ShippingDNA = z.infer<typeof ShippingDNASchema>;
+
+// ─── Analytics: Churn Risk ──────────────────────────────────────
+
+export const ChurnSignalSchema = z.object({
+  type: z.enum(["declining_score", "skipped_loops", "rising_overrides", "low_velocity"]),
+  severity: z.enum(["warning", "critical"]),
+  message: z.string(),
+});
+
+export type ChurnSignal = z.infer<typeof ChurnSignalSchema>;
+
+export const ChurnRiskSchema = z.object({
+  level: z.enum(["low", "medium", "high"]),
+  signals: z.array(ChurnSignalSchema),
+  suggestions: z.array(z.string()),
+});
+
+export type ChurnRisk = z.infer<typeof ChurnRiskSchema>;
+
+// ─── Analytics: Success Predictor ───────────────────────────────
+
+export const ShiftFactorSchema = z.object({
+  factor: z.string(),
+  impact: z.number(),
+  direction: z.enum(["positive", "negative"]),
+});
+
+export type ShiftFactor = z.infer<typeof ShiftFactorSchema>;
+
+export const SuccessPredictionSchema = z.object({
+  probability: z.number(),
+  confidence: z.enum(["low", "medium", "high"]),
+  strengths: z.array(z.string()),
+  risks: z.array(z.string()),
+  shiftFactors: z.array(ShiftFactorSchema),
+  weeksAnalyzed: z.number(),
+});
+
+export type SuccessPrediction = z.infer<typeof SuccessPredictionSchema>;
+
 // ─── Config ─────────────────────────────────────────────────────
 
 export const TelemetryEventSchema = z.object({
@@ -178,6 +235,13 @@ export const ConfigSchema = z.object({
       optedIn: z.boolean().default(false),
       prompted: z.boolean().default(false),
       promptWeek: z.number().optional(),
+    })
+    .optional(),
+  coaching: z
+    .object({
+      enabled: z.boolean().default(true),
+      lastShownMomentId: z.string().optional(),
+      lastShownAt: z.string().optional(),
     })
     .optional(),
 });
@@ -340,6 +404,36 @@ export const PeerInspirationResponseSchema = z.object({
 
 export type PeerInspirationResponse = z.infer<typeof PeerInspirationResponseSchema>;
 
+// ─── IE-10: AI Coach ────────────────────────────────────────────
+
+export const CoachingPrioritySchema = z.enum(["critical", "warning", "info"]);
+export type CoachingPriority = z.infer<typeof CoachingPrioritySchema>;
+
+export const CoachingMomentSchema = z.object({
+  id: z.string(),
+  week: z.number().optional(),
+  priority: CoachingPrioritySchema,
+  title: z.string(),
+  message: z.string(),
+  action: z.string(),
+  command: z.string().optional(),
+  condition: z.string(),
+});
+
+export type CoachingMoment = z.infer<typeof CoachingMomentSchema>;
+
+export const CoachingPlanSchema = z.object({
+  moments: z.array(CoachingMomentSchema),
+  totalWeeks: z.number(),
+  dna: ShippingDNASchema.optional(),
+  churnRisk: ChurnRiskSchema.optional(),
+  prediction: SuccessPredictionSchema.optional(),
+  activePatterns: z.array(DetectedPatternSchema).optional(),
+  generatedAt: z.string(),
+});
+
+export type CoachingPlan = z.infer<typeof CoachingPlanSchema>;
+
 // ─── Helpers ────────────────────────────────────────────────────
 
 export function slugify(name: string): string {
@@ -358,6 +452,19 @@ export function getWeekNumber(date: Date = new Date()): number {
 export function formatDate(date: Date = new Date()): string {
   return date.toISOString().split("T")[0];
 }
+
+// ─── F5: Project Templates ──────────────────────────────────────
+
+export const ProjectTemplateSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  description: z.string(),
+  icpHint: z.string(),
+  taskScaffold: z.array(z.string()),
+  category: z.string(),
+});
+
+export type ProjectTemplate = z.infer<typeof ProjectTemplateSchema>;
 
 // ─── Project Category Detection ─────────────────────────────────
 
