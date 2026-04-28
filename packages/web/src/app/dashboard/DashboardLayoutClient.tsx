@@ -13,11 +13,13 @@ import {
   BarChart3,
   TrendingUp,
   Search,
+  Radar,
+  Clock,
   X,
   Menu,
   LogOut,
+  type LucideIcon,
 } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
 
 const navLinks: { name: string; href: string; icon: LucideIcon }[] = [
   { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
@@ -25,6 +27,8 @@ const navLinks: { name: string; href: string; icon: LucideIcon }[] = [
   { name: "Loop History", href: "/dashboard/loop", icon: History },
   { name: "Benchmarks", href: "/dashboard/benchmarks", icon: BarChart3 },
   { name: "Trends", href: "/dashboard/trends", icon: TrendingUp },
+  { name: "Radar", href: "/dashboard/radar", icon: Radar },
+  { name: "Timing", href: "/dashboard/timing", icon: Clock },
   { name: "Keywords", href: "/dashboard/keywords", icon: Search },
 ];
 

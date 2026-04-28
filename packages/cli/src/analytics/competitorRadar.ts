@@ -30,28 +30,85 @@ function loadKeywords(): KeywordsConfig {
     _keywordsCache = {
       version: 1,
       categoryKeywords: {
-        "freelancers": ["freelance", "contractor", "gig economy", "upwork", "fiverr"],
-        "saas founders": ["saas", "startup", "founder", "no-code", "indie hacker"],
-        "creators": ["creator", "influencer", "content creator", "youtube", "podcast"],
-        "ecommerce": ["ecommerce", "shopify", "d2c", "online store", "retail"],
-        "developers": ["developer tools", "devtools", "api", "sdk", "cli"],
-        "students": ["education", "learning", "student", "course", "e-learning"],
-        "health & wellness": ["health", "fitness", "wellness", "meditation", "mental health"],
-        "finance": ["fintech", "finance", "crypto", "investing", "trading"],
-        "marketers": ["marketing", "seo", "growth", "email marketing", "social media"],
-        "general": ["tool", "productivity", "automation", "workflow"],
+        freelancers: [
+          "freelance",
+          "contractor",
+          "gig economy",
+          "upwork",
+          "fiverr",
+        ],
+        "saas founders": [
+          "saas",
+          "startup",
+          "founder",
+          "no-code",
+          "indie hacker",
+        ],
+        creators: [
+          "creator",
+          "influencer",
+          "content creator",
+          "youtube",
+          "podcast",
+        ],
+        ecommerce: ["ecommerce", "shopify", "d2c", "online store", "retail"],
+        developers: ["developer tools", "devtools", "api", "sdk", "cli"],
+        students: ["education", "learning", "student", "course", "e-learning"],
+        "health & wellness": [
+          "health",
+          "fitness",
+          "wellness",
+          "meditation",
+          "mental health",
+        ],
+        finance: ["fintech", "finance", "crypto", "investing", "trading"],
+        marketers: [
+          "marketing",
+          "seo",
+          "growth",
+          "email marketing",
+          "social media",
+        ],
+        general: ["tool", "productivity", "automation", "workflow"],
       },
       problemKeywords: {
         "proposal creation": ["proposal", "pitch deck", "presentation", "bid"],
-        "email outreach": ["cold email", "outreach", "follow-up", "email sequence"],
-        "content creation": ["content", "writing", "blog", "social media", "copywriting"],
-        "scheduling": ["scheduling", "calendar", "booking", "meeting"],
+        "email outreach": [
+          "cold email",
+          "outreach",
+          "follow-up",
+          "email sequence",
+        ],
+        "content creation": [
+          "content",
+          "writing",
+          "blog",
+          "social media",
+          "copywriting",
+        ],
+        scheduling: ["scheduling", "calendar", "booking", "meeting"],
         "billing & payments": ["invoic", "billing", "payment", "subscription"],
-        "analytics": ["analytics", "tracking", "metrics", "dashboard", "reporting"],
+        analytics: [
+          "analytics",
+          "tracking",
+          "metrics",
+          "dashboard",
+          "reporting",
+        ],
         "customer management": ["crm", "customer", "lead", "pipeline", "sales"],
-        "workflow automation": ["automation", "workflow", "zapier", "integration"],
-        "hiring & recruiting": ["hiring", "recruiting", "talent", "job posting"],
-        "other": ["tool", "app", "platform", "software"],
+        "workflow automation": [
+          "automation",
+          "workflow",
+          "zapier",
+          "integration",
+        ],
+        "hiring & recruiting": [
+          "hiring",
+          "recruiting",
+          "talent",
+          "job posting",
+        ],
+        other: ["tool", "app", "platform", "software"],
       },
     };
     return _keywordsCache;
@@ -60,12 +117,16 @@ function loadKeywords(): KeywordsConfig {
 
 export function getSearchKeywords(category: string): string[] {
   const config = loadKeywords();
-  return config.categoryKeywords[category] || config.categoryKeywords["general"];
+  return (
+    config.categoryKeywords[category] || config.categoryKeywords["general"]
+  );
 }
 
 export function getProblemKeywords(problemCategory: string): string[] {
   const config = loadKeywords();
-  return config.problemKeywords[problemCategory] || config.problemKeywords["other"];
+  return (
+    config.problemKeywords[problemCategory] || config.problemKeywords["other"]
+  );
 }
 
 interface PHRSSItem {
@@ -98,7 +159,10 @@ function parseRSSItems(xml: string): PHRSSItem[] {
 
       const tagContent = xml.slice(i + 1, closeIdx);
       const isClosing = tagContent.startsWith("/");
-      const tagName = tagContent.replace(/^\/?\s*/, "").split(/[\s/>]/)[0].toLowerCase();
+      const tagName = tagContent
+        .replace(/^\/?\s*/, "")
+        .split(/[\s/>]/)[0]
+        .toLowerCase();
 
       if (tagName === "item" && !isClosing) {
         inItem = true;
@@ -115,11 +179,16 @@ function parseRSSItems(xml: string): PHRSSItem[] {
             pubDate: currentItem.pubDate || new Date().toISOString(),
           });
         }
-      } else if (inItem && !isClosing && ["title", "link", "description", "pubdate"].includes(tagName)) {
+      } else if (
+        inItem &&
+        !isClosing &&
+        ["title", "link", "description", "pubdate"].includes(tagName)
+      ) {
         currentTag = tagName;
         currentText = "";
       } else if (inItem && isClosing && currentTag === tagName) {
-        (currentItem as Record<string, string>)[currentTag] = currentText.trim();
+        (currentItem as Record<string, string>)[currentTag] =
+          currentText.trim();
         currentTag = "";
         currentText = "";
       }
@@ -145,7 +214,10 @@ function cleanTitle(title: string): string {
   return title.replace(/\s*[-–—|]\s*Product Hunt$/, "").trim();
 }
 
-function computeRelevance(item: { title: string; description: string }, keywords: string[]): number {
+function computeRelevance(
+  item: { title: string; description: string },
+  keywords: string[],
+): number {
   const text = `${item.title} ${item.description}`.toLowerCase();
   let score = 0;
   for (const kw of keywords) {
@@ -154,7 +226,9 @@ function computeRelevance(item: { title: string; description: string }, keywords
   return Math.min(score, 100);
 }
 
-async function fetchProductHuntRSS(keywords: string[]): Promise<CompetitorLaunch[]> {
+async function fetchProductHuntRSS(
+  keywords: string[],
+): Promise<CompetitorLaunch[]> {
   try {
     const response = await fetch("https://www.producthunt.com/rss", {
       signal: AbortSignal.timeout(5000),
@@ -194,7 +268,9 @@ async function fetchProductHuntRSS(keywords: string[]): Promise<CompetitorLaunch
   }
 }
 
-async function fetchHackerNews(keywords: string[]): Promise<CompetitorLaunch[]> {
+async function fetchHackerNews(
+  keywords: string[],
+): Promise<CompetitorLaunch[]> {
   try {
     const queries = keywords.slice(0, 3);
 
@@ -221,8 +297,8 @@ async function fetchHackerNews(keywords: string[]): Promise<CompetitorLaunch[]> 
       })
       .map((hit) => {
         const relevance = computeRelevance(
-          { title: hit.title, description: "", link: hit.url, pubDate: hit.created_at },
-          keywords
+          { title: hit.title, description: "" },
+          keywords,
         );
         if (relevance < 20) return null;
 
@@ -232,7 +308,9 @@ async function fetchHackerNews(keywords: string[]): Promise<CompetitorLaunch[]> 
           date: hit.created_at,
           platform: "hackernews" as const,
           relevance: Math.min(relevance + Math.min(hit.points, 30), 100),
-          description: sanitizeText(`${hit.points} points · ${hit.num_comments} comments`),
+          description: sanitizeText(
+            `${hit.points} points · ${hit.num_comments} comments`,
+          ),
           tagline: sanitizeText(hit.title),
         });
       })
@@ -250,7 +328,10 @@ async function fetchHackerNews(keywords: string[]): Promise<CompetitorLaunch[]> 
   }
 }
 
-export async function scanCompetitors(category: string, problemCategory?: string): Promise<{
+export async function scanCompetitors(
+  category: string,
+  problemCategory?: string,
+): Promise<{
   launches: CompetitorLaunch[];
   category: string;
   scannedAt: string;
@@ -302,9 +383,11 @@ export async function scanCompetitors(category: string, problemCategory?: string
 
 export function categorizeICP(icp: string): string {
   const lower = icp.toLowerCase();
-  if (/freelance|contractor|consultant|agency/.test(lower)) return "freelancers";
+  if (/freelance|contractor|consultant|agency/.test(lower))
+    return "freelancers";
   if (/saas|startup|founder|ceo|cto/.test(lower)) return "saas founders";
-  if (/creator|influencer|youtuber|podcaster|writer/.test(lower)) return "creators";
+  if (/creator|influencer|youtuber|podcaster|writer/.test(lower))
+    return "creators";
   if (/ecommerce|shopify|d2c|retail|store/.test(lower)) return "ecommerce";
   if (/developer|engineer|programmer|devops/.test(lower)) return "developers";
   if (/student|education|learning|course/.test(lower)) return "students";
@@ -316,14 +399,16 @@ export function categorizeICP(icp: string): string {
 
 export function categorizeProblem(problem: string): string {
   const lower = problem.toLowerCase();
-  if (/proposal|pitch|presentation|deck/.test(lower)) return "proposal creation";
+  if (/proposal|pitch|presentation|deck/.test(lower))
+    return "proposal creation";
   if (/email|outreach|cold|follow.?up/.test(lower)) return "email outreach";
   if (/content|writing|blog|social|post/.test(lower)) return "content creation";
   if (/scheduling|calendar|booking|meeting/.test(lower)) return "scheduling";
   if (/invoic|billing|payment|pricing/.test(lower)) return "billing & payments";
   if (/analytics|tracking|metrics|dashboard/.test(lower)) return "analytics";
   if (/crm|customer|lead|pipeline/.test(lower)) return "customer management";
-  if (/automation|workflow|process|repetitive/.test(lower)) return "workflow automation";
+  if (/automation|workflow|process|repetitive/.test(lower))
+    return "workflow automation";
   if (/hiring|recruiting|team|staff/.test(lower)) return "hiring & recruiting";
   return "other";
 }
@@ -332,7 +417,8 @@ export function categorizeMVP(mvp: string): string {
   const lower = mvp.toLowerCase();
   if (/web app|saas|platform|dashboard/.test(lower)) return "web app";
   if (/mobile|ios|android|app/.test(lower)) return "mobile app";
-  if (/chrome|browser|browser extension|browser plugin/.test(lower)) return "browser extension";
+  if (/chrome|browser|browser extension|browser plugin/.test(lower))
+    return "browser extension";
   if (/api|integration|plugin/.test(lower)) return "api/plugin";
   if (/cli|command|terminal|tool/.test(lower)) return "cli tool";
   if (/newsletter|email|content|blog/.test(lower)) return "content/newsletter";

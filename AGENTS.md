@@ -25,15 +25,15 @@ packages/cli/src/
   ai/prompts/      ← system prompts
   ai/client.ts     ← generateStructured() wrapper (with cache + resolveAuth)
   storage/local.ts ← all .loopkit/ file I/O
-  storage/sync.ts  ← CLI → Convex push (loop logs + ship logs)
+  storage/sync.ts  ← CLI → Convex push (loop logs + ship logs + radar + timing)
   storage/cache.ts ← AI result cache (hash-based, 7-day TTL)
   ui/theme.ts      ← terminal colors/UI helpers
 
 packages/shared/src/index.ts  ← ALL Zod schemas (single source of truth)
 
-packages/web/src/app/         ← Next.js pages
-packages/web/src/app/api/     ← API routes (all have CSRF protection)
-packages/web/convex/          ← Convex backend (schema, queries, mutations, analytics)
+packages/web/src/app/         ← Next.js pages (dashboard, radar, timing, keywords, trends, benchmarks, pulse, loop)
+packages/web/src/app/api/     ← API routes (all have CSRF protection, includes /sync/radar and /sync/timing)
+packages/web/convex/          ← Convex backend (schema, queries, mutations, analytics, competitorRadar, marketTiming)
 ```
 
 **Never touch:** `node_modules/`, `dist/`, `.next/`, `pnpm-lock.yaml`, `.git/hooks/`
@@ -103,7 +103,7 @@ const result = await generateStructured({
 
 - [ ] `pnpm --filter @loopkit/cli build` → 0 errors
 - [ ] Web changed? → `cd packages/web && npx next build` → clean
-- [ ] Tests pass: `pnpm --filter @loopkit/cli test` (152 tests)
+- [ ] Tests pass: `pnpm --filter @loopkit/cli test` + `pnpm --filter @loopkit/web test` + `pnpm --filter @loopkit/shared test` (369 total)
 - [ ] Acceptance criteria from relevant PRD section pass
 - [ ] Ctrl+C exits gracefully at every prompt
 - [ ] AI failure is handled gracefully (fallback, not crash)

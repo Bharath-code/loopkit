@@ -10,7 +10,17 @@ import {
   readBriefJson,
   saveBrief,
 } from "../storage/local.js";
-import { colors, header, box, pass, warn, info, nextStep, shortcutsHint, emptyState } from "../ui/theme.js";
+import {
+  colors,
+  header,
+  box,
+  pass,
+  warn,
+  info,
+  nextStep,
+  shortcutsHint,
+  emptyState,
+} from "../ui/theme.js";
 
 interface PulseOptions {
   raw?: boolean;
@@ -26,13 +36,17 @@ export async function pulseCommand(options: PulseOptions): Promise<void> {
   // ─── --share: Generate shareable feedback URL ────────────────
   if (options.share) {
     if (!slug) {
-      console.log(colors.danger("No active project. Run `loopkit init` first."));
+      console.log(
+        colors.danger("No active project. Run `loopkit init` first."),
+      );
       process.exit(1);
     }
 
     const token = config.auth?.apiKey;
     if (!token) {
-      console.log(colors.danger("Authentication required. Run `loopkit auth` first."));
+      console.log(
+        colors.danger("Authentication required. Run `loopkit auth` first."),
+      );
       process.exit(1);
     }
 
@@ -48,7 +62,7 @@ export async function pulseCommand(options: PulseOptions): Promise<void> {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ name, slug }),
       });
@@ -62,31 +76,48 @@ export async function pulseCommand(options: PulseOptions): Promise<void> {
       s.stop("Feedback form ready!");
 
       // Store Convex project ID for future sync
-      if (convexProjectId && brief) {
-        saveBrief(slug, brief.answers, brief, convexProjectId);
+      if (convexProjectId && brief?.brief) {
+        saveBrief(slug, brief.answers, brief.brief, convexProjectId);
       }
 
       console.log(header("Shareable Pulse URL"));
-      console.log(box([
-        colors.primary(url),
-        "",
-        "Share this link to collect feedback:",
-        "  • Email it to beta users",
-        "  • Post it in your community",
-        "  • Embed it with the widget script",
-      ].join("\n")));
+      console.log(
+        box(
+          [
+            colors.primary(url),
+            "",
+            "Share this link to collect feedback:",
+            "  • Email it to beta users",
+            "  • Post it in your community",
+            "  • Embed it with the widget script",
+          ].join("\n"),
+        ),
+      );
 
       try {
-        const qr = await QRCode.toString(url, { type: "terminal", small: true });
+        const qr = await QRCode.toString(url, {
+          type: "terminal",
+          small: true,
+        });
         console.log("\n" + qr);
       } catch {
         // QR generation failed, URL is already shown
       }
 
-      console.log(colors.muted("\n  Embed widget: <script src=\"" + API_URL + "/api/pulse/widget?projectId=...\"></script>\n"));
+      console.log(
+        colors.muted(
+          '\n  Embed widget: <script src="' +
+            API_URL +
+            '/api/pulse/widget?projectId=..."></script>\n',
+        ),
+      );
     } catch (err) {
       s.stop("Failed to create share link.");
-      console.log(colors.danger(`Error: ${err instanceof Error ? err.message : "Unknown error"}`));
+      console.log(
+        colors.danger(
+          `Error: ${err instanceof Error ? err.message : "Unknown error"}`,
+        ),
+      );
       process.exit(1);
     }
 
@@ -114,7 +145,9 @@ export async function pulseCommand(options: PulseOptions): Promise<void> {
     p.intro(colors.primary.bold("LoopKit — Pulse Setup"));
 
     if (!slug) {
-      console.log(colors.danger("No active project. Run `loopkit init` first."));
+      console.log(
+        colors.danger("No active project. Run `loopkit init` first."),
+      );
       process.exit(1);
     }
 
@@ -131,8 +164,8 @@ export async function pulseCommand(options: PulseOptions): Promise<void> {
           "",
           "Web-hosted feedback form coming in the next release.",
         ].join("\n"),
-        "Pulse Setup"
-      )
+        "Pulse Setup",
+      ),
     );
 
     p.outro(colors.muted("Collect at least 5 responses for AI clustering."));
@@ -150,11 +183,13 @@ export async function pulseCommand(options: PulseOptions): Promise<void> {
       emptyState(
         "No feedback responses yet. Your users have thoughts — you just need to ask.",
         "Set up your feedback channel",
-        "loopkit pulse --setup"
-      )
+        "loopkit pulse --setup",
+      ),
     );
     console.log(
-      colors.muted("  After 7 days with 0 responses: is your feedback channel visible?\n")
+      colors.muted(
+        "  After 7 days with 0 responses: is your feedback channel visible?\n",
+      ),
     );
     p.outro("");
     return;
@@ -164,7 +199,9 @@ export async function pulseCommand(options: PulseOptions): Promise<void> {
   if (options.raw || responses.length < 5) {
     if (responses.length < 5) {
       console.log(
-        warn(`Not enough responses to cluster reliably (${responses.length}/5 minimum). Showing raw.`)
+        warn(
+          `Not enough responses to cluster reliably (${responses.length}/5 minimum). Showing raw.`,
+        ),
       );
     }
 
@@ -173,7 +210,11 @@ export async function pulseCommand(options: PulseOptions): Promise<void> {
       console.log(`  ${colors.dim(`${i + 1}.`)} "${responses[i]}"`);
     }
 
-    console.log(colors.muted("\n  Tip: Your feedback channel may need better placement.\n"));
+    console.log(
+      colors.muted(
+        "\n  Tip: Your feedback channel may need better placement.\n",
+      ),
+    );
     p.outro("");
     return;
   }
@@ -218,7 +259,9 @@ export async function pulseCommand(options: PulseOptions): Promise<void> {
     }
 
     console.log(
-      colors.dim(`\n  Confidence: ${Math.round(clusters.confidence * 100)}% clearly clustered`)
+      colors.dim(
+        `\n  Confidence: ${Math.round(clusters.confidence * 100)}% clearly clustered`,
+      ),
     );
     if (clusters.note) {
       console.log(colors.dim(`  ${clusters.note}`));

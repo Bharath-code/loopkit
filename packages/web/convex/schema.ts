@@ -133,6 +133,21 @@ export default defineSchema({
     .index("by_category", ["category"])
     .index("by_category_createdAt", ["category", "createdAt"]),
 
+  competitorLaunches: defineTable({
+    category: v.string(),
+    name: v.string(),
+    url: v.optional(v.string()),
+    date: v.string(),
+    platform: v.string(),
+    relevance: v.number(),
+    description: v.optional(v.string()),
+    tagline: v.optional(v.string()),
+    scannedAt: v.string(),
+  })
+    .index("by_category", ["category"])
+    .index("by_category_date", ["category", "date"])
+    .index("by_category_relevance", ["category", "relevance"]),
+
   cliAuthSessions: defineTable({
     code: v.string(),
     status: v.string(),

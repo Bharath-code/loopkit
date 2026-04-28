@@ -1,6 +1,6 @@
 # LoopKit Intelligence Engine
 
-> *"The best products don't just collect data. They use it to make users feel seen, understood, and unstoppable."*
+> _"The best products don't just collect data. They use it to make users feel seen, understood, and unstoppable."_
 
 **Date:** April 2026  
 **Goal:** Turn behavioral data into product intelligence that wows users, deepens retention, and builds an unassailable moat
@@ -63,6 +63,7 @@
 **What it does:** After 4 weeks of usage, LoopKit generates your "Shipping DNA" — a personalized profile of how you work.
 
 **Example output:**
+
 ```
 Your Shipping DNA (Week 4)
 
@@ -90,6 +91,7 @@ Your Shipping DNA (Week 4)
 ```
 
 **Data used:**
+
 - Tasks created/completed/snoozed/cut per week
 - Day-of-week completion patterns
 - Time from task creation to completion
@@ -97,16 +99,19 @@ Your Shipping DNA (Week 4)
 - Override history
 
 **Why it wows:**
+
 - Users see themselves in the data. It's a mirror, not a dashboard.
 - Specific insights ("Wednesday is your power day") feel like magic.
 - The "Shipping DNA" language creates identity attachment.
 
 **How it retains:**
+
 - Identity reinforcement: "I'm a Marathoner" becomes self-fulfilling.
 - Progress visualization: Trend lines show improvement, motivating continuation.
 - Risk warnings: Snooze accumulation alert prevents gradual disengagement.
 
 **How it builds moat:**
+
 - 4 weeks of data required = switching cost increases every week.
 - Personalized insights can't be replicated by a competitor on day 1.
 
@@ -117,6 +122,7 @@ Your Shipping DNA (Week 4)
 **What it does:** Compares your metrics to anonymized founders with similar profiles.
 
 **Example output:**
+
 ```bash
 $ loopkit track
 
@@ -124,7 +130,7 @@ Your Week 4 Board
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ✓ #1 Landing page      ✓ #2 Stripe config
 ✓ #3 Auth flow         ○ #4 Privacy policy
-○ #5 Analytics         
+○ #5 Analytics
 
 Shipping Score: 60% (3/5)
 
@@ -139,21 +145,25 @@ Shipping Score: 60% (3/5)
 ```
 
 **Data used:**
+
 - Aggregate shipping scores by project type (SaaS, mobile, API, etc.)
 - Aggregate by week number (Week 1 averages, Week 4 averages)
 - Aggregate by ICP score bracket
 
 **Why it wows:**
+
 - Social proof + competition. "I'm better than average" feels good.
 - Specific percentile (72%) feels precise and credible.
 - "Week 5 is where most drop" — actionable warning based on data.
 
 **How it retains:**
+
 - Benchmark anxiety: Users don't want to fall behind peers.
 - Benchmark pride: Users want to maintain their "above average" status.
 - Predictive warnings: "Week 5 dropoff" prepares users for their hardest week.
 
 **How it builds moat:**
+
 - Requires hundreds of users for meaningful benchmarks. New competitor has no data.
 - Benchmarks improve with scale. More users = more precise percentiles.
 
@@ -164,6 +174,7 @@ Shipping Score: 60% (3/5)
 **What it does:** When you snooze a task, LoopKit tells you the probability it will ever get done — based on historical data.
 
 **Example interaction:**
+
 ```
 Task #7 "Add dark mode" has been open for 4 days. Keep / Snooze / Cut?
 
@@ -181,20 +192,24 @@ Task #7 "Add dark mode" has been open for 4 days. Keep / Snooze / Cut?
 ```
 
 **Data used:**
+
 - Snooze-to-completion rates across all users
 - Snooze frequency per task
 - Task characteristics (age, category, snooze history)
 
 **Why it wows:**
+
 - Brutal honesty. Most task managers let you defer forever. LoopKit calls you out.
 - Data-backed. Not opinion — probability.
 - Surprising. Users don't expect their CLI to be this smart.
 
 **How it retains:**
+
 - Prevents task list bloat. A clean task list = less overwhelm = more shipping.
 - Builds trust. When the oracle is right, users trust LoopKit more.
 
 **How it builds moat:**
+
 - Requires months of snooze-to-completion data. Can't fake it.
 - Accuracy improves with scale.
 
@@ -208,6 +223,7 @@ Task #7 "Add dark mode" has been open for 4 days. Keep / Snooze / Cut?
 
 **How it works:**
 ML model trained on:
+
 - Shipping score trend (declining for 2+ weeks)
 - Phase adherence (skipping `loop` or `pulse`)
 - Task creation rate (creating fewer tasks)
@@ -215,6 +231,7 @@ ML model trained on:
 - Streak breaks (missed Sunday loop)
 
 **Example intervention:**
+
 ```bash
 $ loopkit track
 
@@ -237,16 +254,19 @@ Want me to suggest 3 micro-tasks to get momentum back?
 ```
 
 **Why it wows:**
+
 - Feels like a caring coach, not a nagging app.
 - Specific stats ("40% turned it around") give hope.
 - Actionable suggestions, not generic advice.
 
 **How it retains:**
+
 - Early intervention before user fully disengages.
 - Reduces guilt. "It's normal to have bad weeks" normalizes struggle.
 - Micro-tasks provide achievable wins.
 
 **How it builds moat:**
+
 - Churn prediction model is trained on proprietary behavioral data.
 - Interventions are calibrated to our specific user base.
 
@@ -257,6 +277,7 @@ Want me to suggest 3 micro-tasks to get momentum back?
 **What it does:** If a user misses Sunday `loopkit loop`, LoopKit auto-generates a draft loop log on Monday morning and sends it via email/notification.
 
 **Example:**
+
 ```
 Subject: Your Week 7 Loop — Draft Ready
 
@@ -281,22 +302,26 @@ Just reply with your override and I'll update your log.
 ```
 
 **Data used:**
+
 - Tasks completed (from tasks.md)
 - Ship logs (from `.loopkit/ships/`)
 - Pulse responses (from Convex)
 - Historical loop patterns
 
 **Why it wows:**
+
 - "You didn't even have to run the command. I did it for you."
 - Removes friction. One click to confirm vs. running a command.
 - Feels proactive, not reactive.
 
 **How it retains:**
+
 - Breaks the "I missed a week, might as well quit" cycle.
 - Maintains streak psychology. "Your draft is ready" = loop is still alive.
 - Email = re-engagement channel outside the CLI.
 
 **How it builds moat:**
+
 - Requires understanding of individual user's historical patterns.
 - Competitor would need same data + same user trust to be this proactive.
 
@@ -307,6 +332,7 @@ Just reply with your override and I'll update your log.
 **What it does:** After 8 weeks, LoopKit predicts the probability of project success based on behavioral patterns.
 
 **Example:**
+
 ```bash
 $ loopkit loop
 
@@ -337,21 +363,25 @@ Week 8 Synthesis
 ```
 
 **Data used:**
+
 - 8 weeks of behavioral data
 - Outcome data (when users eventually report revenue, users, etc.)
 - Historical correlations between behaviors and outcomes
 
 **Why it wows:**
+
 - Brutal honesty + hope. "68%" feels scientific.
 - Specific actionable advice tied to probability changes.
 - Gamification. Users want to improve their "success score."
 
 **How it retains:**
+
 - Creates stakes. Users don't want to be in the "34%" group.
 - Provides specific fixes, not vague advice.
 - Regular updates (every 4 weeks) create anticipation.
 
 **How it builds moat:**
+
 - Requires outcome data that only LoopKit has (structured founder journeys).
 - Model improves with every user who reports outcomes.
 
@@ -364,6 +394,7 @@ Week 8 Synthesis
 **What it does:** Shows what anonymized founders with similar projects shipped this week.
 
 **Example:**
+
 ```bash
 $ loopkit ship
 
@@ -378,23 +409,28 @@ What's the main thing you shipped? Added PDF export for invoices
 ```
 
 **How it works:**
+
 - After you run `loopkit ship`, LoopKit stores an anonymized record of what you shipped (category + one-line description)
 - When you or other founders ship in the same category, those records are surfaced
 - Only shown if telemetry is opted in. No usernames, project names, or identifying details
 
 **Data used:**
+
 - Anonymized ship descriptions by project category
 - Category matching via brief ICP/MVP keywords
 
 **Why it wows:**
+
 - "I'm not alone." Solo founders are isolated. Peer visibility reduces loneliness.
 - Inspiration. "If they shipped API docs, maybe I should too."
 
 **How it retains:**
+
 - Community feeling without community overhead.
 - Weekly novelty. "What did others ship?" creates anticipation.
 
 **How it builds moat:**
+
 - Requires critical mass (100+ active users per project type).
 - Network effect: more users = better peer matches.
 
@@ -405,12 +441,14 @@ What's the main thing you shipped? Added PDF export for invoices
 **What it does:** Shows what ICPs, problems, and MVPs are trending among LoopKit founders.
 
 **How it works (implemented):**
+
 - When a founder runs `loopkit init` with telemetry opted in, their ICP, problem, and MVP are categorized into one of 10 ICP types, 10 problem types, and 8 MVP types.
 - Categories are stored as anonymized aggregates in Convex (`briefAggregates` table).
 - The dashboard `/dashboard/trends` page shows top 10 in each category with 7-day and 30-day trend deltas.
 - After `init`, if similar founders exist, a CLI hint appears: "X other founders are exploring similar spaces this month."
 
 **Example (CLI):**
+
 ```
   Trending Validation
   5 other founders are exploring similar ICP spaces this month.
@@ -418,6 +456,7 @@ What's the main thing you shipped? Added PDF export for invoices
 ```
 
 **Example (Dashboard):**
+
 ```
 Trending Validations
 5 founders opted in
@@ -429,25 +468,30 @@ Top ICPs          Top Problems        Top MVP Types
 ```
 
 **Data used:**
+
 - Anonymized ICP, problem, and MVP categories from briefs
 - Aggregate counts with 7d/30d trend windows
 - No raw brief content, no user identifiers
 
 **Why it wows:**
+
 - Market intelligence for free. Founders pay for this kind of data.
 - Trend detection. "Market may be crowded" is valuable signal.
 - Content goldmine. Monthly Insights writes itself from this data.
 
 **How it retains:**
+
 - Users come back just to see "what's trending."
 - Helps with ideation. "What's a validated ICP I haven't considered?"
 
 **How it builds moat:**
+
 - Proprietary market data no one else has.
 - Becomes a research destination, not just a tool.
 - Compounds with every new user who opts in.
 
 **Implementation status:**
+
 - ✅ `recordBriefCategories()` in `telemetry.ts` — captures categorized brief data
 - ✅ `getTrendingValidations` in `convex/analytics.ts` — returns top 10 per category with trend deltas
 - ✅ `/dashboard/trends` — 3-column layout (ICPs, Problems, MVP types)
@@ -461,12 +505,14 @@ Top ICPs          Top Problems        Top MVP Types
 **What it does:** Scans Product Hunt and Hacker News for recent launches in the user's category.
 
 **How it works (implemented):**
+
 - Maps the user's ICP category (from their brief) to search keywords.
 - Fetches Product Hunt RSS feed and HN Algolia Search API (free, no API keys).
 - Scores each launch for relevance (0-100%) based on keyword matches.
 - Results cached for 24 hours. API failures return empty arrays, not crashes.
 
 **Example (CLI):**
+
 ```bash
 $ loopkit radar
 
@@ -487,34 +533,36 @@ $ loopkit radar
 ```
 
 **Data sources:**
+
 - Product Hunt RSS (`https://www.producthunt.com/rss`) — free, official
 - HN Algolia Search API (`https://hn.algolia.com/api/v1/search`) — free, official
 - No scraping, no unofficial endpoints, no API keys required
 
 **Why it wows:**
+
 - "I didn't know 3 competitors shipped this week." Market awareness without manual research.
 - Relevance scoring surfaces what matters, not everything.
 - Works out of the box — no configuration needed.
 
 **How it retains:**
+
 - Founders check radar weekly to stay aware of their space.
 - Drives back to dashboard for deeper trends analysis.
 
 **How it builds moat:**
+
 - Keyword mapping + relevance scoring tuned to LoopKit's ICP taxonomy.
 - Combined with trending data, creates a unique market intelligence layer.
 
 **Implementation status:**
-- ✅ `competitorRadar.ts` — PH RSS parser + HN Algolia adapter, keyword mapping, relevance scoring
-- ✅ `loopkit radar` command — auto-detects category from brief, supports `--category` flag
-- ✅ 24-hour cache via existing `cache.ts` pattern
-- ✅ Trending widget on dashboard overview page
-- ✅ 10 ICP categories + 10 problem categories mapped to search keywords
 
-**Implementation status:**
 - ✅ `competitorRadar.ts` — PH RSS parser + HN Algolia adapter, keyword mapping, relevance scoring
 - ✅ `loopkit radar` command — auto-detects category from brief, supports `--category` flag
 - ✅ 24-hour cache via existing `cache.ts` pattern
+- ✅ Dedicated `/dashboard/radar` page — sortable/filterable launch table, platform badges, relevance scores, "this week" stats, search, avg relevance, platform distribution
+- ✅ CLI→Convex sync — `pushRadarToConvex()` pushes radar results to Convex after scan via `/api/sync/radar`
+- ✅ Convex `competitorLaunches` table with `by_category`, `by_category_date`, `by_category_relevance` indexes
+- ✅ `getCompetitorLaunches` + `getCompetitorLaunchesHistory` queries in `convex/competitorRadar.ts`
 - ✅ Trending widget on dashboard overview page
 - ✅ 10 ICP categories + 10 problem categories mapped to search keywords
 - ✅ State-machine XML parser — handles nested tags, CDATA, namespace prefixes without external deps
@@ -530,12 +578,14 @@ $ loopkit radar
 **What it does:** Finds low-competition keywords in the user's niche using free SEO APIs.
 
 **How it works (implemented):**
+
 - Free SEO data adapters: Google Autocomplete, Reddit search API, GitHub repo count.
 - Keyword scoring: score = (search volume proxy) / (competition proxy).
 - Competition = number of GitHub repos + suggestion count.
 - Returns top 15 opportunities with actionable content suggestions.
 
 **Example (CLI):**
+
 ```bash
 $ loopkit keywords
 
@@ -552,12 +602,14 @@ $ loopkit keywords
 ```
 
 **Data sources:**
+
 - Google Autocomplete (free)
 - Reddit search API (free)
 - GitHub API (free)
 - No paid APIs, no scraping
 
 **Implementation status:**
+
 - ✅ `keywordFinder.ts` — Google Autocomplete + Reddit + GitHub adapters
 - ✅ `loopkit keywords` command — ranked list with score, volume, competition
 - ✅ Dashboard `/dashboard/keywords` — sortable table with CSV export
@@ -571,12 +623,14 @@ $ loopkit keywords
 **What it does:** Tracks funding rounds, job postings, and GitHub activity in the user's category.
 
 **How it works (implemented):**
+
 - Free market data: Crunchbase RSS (funding), GitHub API (repo growth), Indeed RSS (job postings).
 - 3 signals: funding velocity, dev activity, hiring demand — each with ↑ ↓ → trend.
 - Composite score 0-100. "Space is heating up" vs "cooling down."
 - Stored per-category in Convex `marketSignals` table, updated weekly.
 
 **Example (CLI):**
+
 ```bash
 $ loopkit timing
 
@@ -591,9 +645,12 @@ $ loopkit timing
 ```
 
 **Implementation status:**
+
 - ✅ `marketTiming.ts` — Crunchbase RSS + GitHub API + Indeed RSS adapters
-- ✅ `loopkit timing` command — composite score + 3 trend arrows
-- ✅ Dashboard gauge widget on overview page
+- ✅ `loopkit timing` command — composite score + 3 trend arrows + CLI→Convex sync
+- ✅ Dedicated `/dashboard/timing` page — composite score hero with signal indicator, breakdown cards with sparklines, history chart, interpretation guide
+- ✅ Dashboard gauge widget on overview page (retained)
+- ✅ CLI→Convex sync — `pushTimingToConvex()` pushes market signal to Convex via `/api/sync/timing`
 - ✅ Convex `marketSignals` table with weekly cron updates
 - ✅ `MarketSignalSchema` in `@loopkit/shared`
 
@@ -606,6 +663,7 @@ $ loopkit timing
 **What it does:** Detects recurring failure patterns from your local loop/task history and surfaces them with data-backed suggestions.
 
 **Example:**
+
 ```bash
 $ loopkit loop
 
@@ -630,29 +688,33 @@ Week 8 Review
 
 **5 Pattern Detectors:**
 
-| Pattern | Trigger | Suggestion |
-|---|---|---|
-| **Overplanner** | 8+ tasks planned, ≤30% completion for 3+ weeks | "Plan 3 must-do tasks only" |
-| **Snooze Loop** | Low completion + recurring snoozed tasks | "Batch annoying tasks Monday morning" |
-| **Ship Avoider** | 3+ weeks no ship + score ≤40% | "Ship anything by Friday 4pm" |
-| **ICP Drift** | Declining score + "Fix now" pulse clusters | "Run `loopkit init --analyze` to re-examine ICP" |
-| **Scope Creep** | Mid-week task additions ≥3 times in 4 weeks | "Lock scope on Sunday" |
+| Pattern          | Trigger                                        | Suggestion                                       |
+| ---------------- | ---------------------------------------------- | ------------------------------------------------ |
+| **Overplanner**  | 8+ tasks planned, ≤30% completion for 3+ weeks | "Plan 3 must-do tasks only"                      |
+| **Snooze Loop**  | Low completion + recurring snoozed tasks       | "Batch annoying tasks Monday morning"            |
+| **Ship Avoider** | 3+ weeks no ship + score ≤40%                  | "Ship anything by Friday 4pm"                    |
+| **ICP Drift**    | Declining score + "Fix now" pulse clusters     | "Run `loopkit init --analyze` to re-examine ICP" |
+| **Scope Creep**  | Mid-week task additions ≥3 times in 4 weeks    | "Lock scope on Sunday"                           |
 
 **Data used:**
+
 - Local loop logs (shipping scores, task counts, override history)
 - Local tasks.md (snoozed items, mid-week additions)
 - Pulse responses (negative feedback signals)
 
 **Why it wows:**
+
 - Brutal honesty from a tool that cares.
 - Prevents repeated mistakes. "I didn't realize I was doing this again."
 - Actionable, not vague. Every pattern comes with 2 specific suggestions.
 
 **How it retains:**
+
 - Prevents churn by preventing failure.
 - Builds trust. "LoopKit saved me from myself."
 
 **How it builds moat:**
+
 - Requires longitudinal data per user (months of history).
 - Pattern recognition is calibrated to our specific user base.
 
@@ -663,6 +725,7 @@ Week 8 Review
 **What it does:** A rule-based coaching layer that consumes all existing analytics (DNA, churn, predictor, patterns) and delivers contextual, actionable suggestions at milestone weeks and trigger points.
 
 **CLI Usage:**
+
 ```bash
 loopkit coach              # Show full coaching plan
 loopkit coach --off        # Disable coaching
@@ -670,6 +733,7 @@ loopkit coach --on         # Re-enable coaching
 ```
 
 **Integration points:**
+
 - `loop` — shows priority moment post-synthesis
 - `track` — shows coaching when stuck (0 tasks)
 - `ship` — shows coaching when ship-avoider pattern detected
@@ -677,24 +741,25 @@ loopkit coach --on         # Re-enable coaching
 
 **12 Coaching Rules:**
 
-| Priority | Rule | Trigger |
-|---|---|---|
-| Critical | Ship Avoider | 3+ weeks without shipping |
-| Critical | ICP Drift | Feedback says wrong problem + declining score |
-| Critical | Low Velocity | <1 task/week for 3+ weeks |
-| Critical | High Churn Risk | 2+ warning signals active |
-| Warning | Overplanner | 8+ tasks, <30% completion rate |
-| Warning | Snooze Loop | Tasks snoozed repeatedly |
-| Warning | Scope Creep | Mid-week task additions |
-| Warning | Medium Churn | 1 warning signal |
-| Warning | Low Probability | Success predictor <40% |
-| Info | Week 3 Milestone | Exactly 3 weeks tracked |
-| Info | Week 8 Check-In | Exactly 8 weeks + predictor available |
-| Info | Week 16 Archetype | Exactly 16 weeks + DNA available |
+| Priority | Rule              | Trigger                                       |
+| -------- | ----------------- | --------------------------------------------- |
+| Critical | Ship Avoider      | 3+ weeks without shipping                     |
+| Critical | ICP Drift         | Feedback says wrong problem + declining score |
+| Critical | Low Velocity      | <1 task/week for 3+ weeks                     |
+| Critical | High Churn Risk   | 2+ warning signals active                     |
+| Warning  | Overplanner       | 8+ tasks, <30% completion rate                |
+| Warning  | Snooze Loop       | Tasks snoozed repeatedly                      |
+| Warning  | Scope Creep       | Mid-week task additions                       |
+| Warning  | Medium Churn      | 1 warning signal                              |
+| Warning  | Low Probability   | Success predictor <40%                        |
+| Info     | Week 3 Milestone  | Exactly 3 weeks tracked                       |
+| Info     | Week 8 Check-In   | Exactly 8 weeks + predictor available         |
+| Info     | Week 16 Archetype | Exactly 16 weeks + DNA available              |
 
 **Example interventions:**
 
 **Critical — Ship Avoider:**
+
 ```
 🚨 Coach: Ship Avoider Detected
    You haven't shipped in 4 weeks. Building without shipping is just inventory.
@@ -703,6 +768,7 @@ loopkit coach --on         # Re-enable coaching
 ```
 
 **Warning — Overplanner:**
+
 ```
 ⚠️ Coach: Overplanning
    You plan 8+ tasks but finish ~30% of them.
@@ -711,6 +777,7 @@ loopkit coach --on         # Re-enable coaching
 ```
 
 **Info — Week 3 Milestone:**
+
 ```
 💡 Coach: Week 3 Milestone
    You've been validating for 3 weeks. 73% of founders who ship by week 4 reach revenue within 6 months.
@@ -721,6 +788,7 @@ loopkit coach --on         # Re-enable coaching
 **Deduplication:** Same moment is never shown twice in a row. Critical moments bypass all throttling. Max 1 moment per command invocation.
 
 **Data used:**
+
 - Loop logs (tasks, scores, overrides, shipping habit)
 - Pattern interrupts (5 anti-patterns)
 - Churn risk signals (4 risk types)
@@ -728,16 +796,19 @@ loopkit coach --on         # Re-enable coaching
 - Shipping DNA (archetype, velocity, completion style)
 
 **Why it wows:**
+
 - Feels like a personal coach who understands your specific situation.
 - Proactive, not reactive. Surfaces insights before you ask.
 - Specific, not generic. "Ship today" vs. "ship more."
 
 **How it retains:**
+
 - Users feel supported, not just managed.
 - Coach builds relationship. Users don't want to "fire" their coach.
 - Prevents common failure modes before they happen.
 
 **How it builds moat:**
+
 - Requires months of individual + aggregate data.
 - Coaching logic is tuned to our methodology.
 - Competitor would need same data depth + same methodology understanding.
@@ -746,34 +817,35 @@ loopkit coach --on         # Re-enable coaching
 
 ## The Wow Moments Summary
 
-| Phase | Feature | Wow Moment | Retention Mechanic | Moat Contribution |
-|-------|---------|-----------|-------------------|-------------------|
-| 1 | Shipping DNA | "Wednesday is your power day" | Identity attachment | 4 weeks of data required |
-| 1 | Smart Benchmarks | "You ship faster than 72% of founders" | Social competition | Aggregate data scale |
-| 1 | Snooze Oracle | "Probability of completion: 12%" | Honest accountability | Snooze-completion data |
-| 2 | Churn Guardian | "40% turned it around. Here's how." | Early intervention | Churn prediction model |
-| 2 | Auto-Loop | "I drafted your loop. Confirm?" | Friction removal | Individual pattern data |
-| 2 | Success Predictor | "68% probability of revenue" | Stakes + hope | Outcome correlations |
-| 3 | Peer Inspiration | "Founders like you shipped..." | Community feeling | Critical mass network |
-| 3 | Trending Validations ✅ | "5 founders exploring similar ICPs" | Market intelligence | Proprietary aggregate data |
-| 3 | Competitor Ship Radar ✅ | "3 competitors shipped this week" | Market awareness | Keyword mapping + relevance scoring |
-| 4 | Pattern Interrupt ✅ | "This is your 4th project in 6 months" | Preventing failure | Longitudinal user data |
-| 4 | AI Coach ✅ | "Ship anything this week — even if imperfect" | Personal relationship | Deep behavioral understanding |
+| Phase | Feature                  | Wow Moment                                    | Retention Mechanic    | Moat Contribution                                              |
+| ----- | ------------------------ | --------------------------------------------- | --------------------- | -------------------------------------------------------------- |
+| 1     | Shipping DNA             | "Wednesday is your power day"                 | Identity attachment   | 4 weeks of data required                                       |
+| 1     | Smart Benchmarks         | "You ship faster than 72% of founders"        | Social competition    | Aggregate data scale                                           |
+| 1     | Snooze Oracle            | "Probability of completion: 12%"              | Honest accountability | Snooze-completion data                                         |
+| 2     | Churn Guardian           | "40% turned it around. Here's how."           | Early intervention    | Churn prediction model                                         |
+| 2     | Auto-Loop                | "I drafted your loop. Confirm?"               | Friction removal      | Individual pattern data                                        |
+| 2     | Success Predictor        | "68% probability of revenue"                  | Stakes + hope         | Outcome correlations                                           |
+| 3     | Peer Inspiration         | "Founders like you shipped..."                | Community feeling     | Critical mass network                                          |
+| 3     | Trending Validations ✅  | "5 founders exploring similar ICPs"           | Market intelligence   | Proprietary aggregate data                                     |
+| 3     | Competitor Ship Radar ✅ | "3 competitors shipped this week"             | Market awareness      | Keyword mapping + relevance scoring + dedicated dashboard page |
+| 4     | Pattern Interrupt ✅     | "This is your 4th project in 6 months"        | Preventing failure    | Longitudinal user data                                         |
+| 4     | AI Coach ✅              | "Ship anything this week — even if imperfect" | Personal relationship | Deep behavioral understanding                                  |
 
 ---
 
 ## Data Requirements by Phase
 
-| Phase | Users Needed | Weeks of Data | Key Data |
-|-------|-------------|---------------|----------|
-| 1 (Personalization) | 50+ | 4+ weeks | Tasks, shipping scores, timing patterns |
-| 2 (Predictive) | 200+ | 8+ weeks | + Outcomes (revenue, users, abandonment) |
-| 3 (Network) | 500+ | 12+ weeks | + Aggregate patterns by project type |
-| 4 (Coaching) | 1,000+ | 20+ weeks | + Longitudinal per-user patterns |
+| Phase               | Users Needed | Weeks of Data | Key Data                                 |
+| ------------------- | ------------ | ------------- | ---------------------------------------- |
+| 1 (Personalization) | 50+          | 4+ weeks      | Tasks, shipping scores, timing patterns  |
+| 2 (Predictive)      | 200+         | 8+ weeks      | + Outcomes (revenue, users, abandonment) |
+| 3 (Network)         | 500+         | 12+ weeks     | + Aggregate patterns by project type     |
+| 4 (Coaching)        | 1,000+       | 20+ weeks     | + Longitudinal per-user patterns         |
 
 **Critical path:** We need 200 users with 8 weeks of data to unlock Phase 2. That's 1,600 founder-weeks. At our current trajectory, this takes 6-12 months.
 
 **Acceleration strategies:**
+
 1. **Onboarding cohorts:** Invite 50 beta users with a "12-week challenge"
 2. **Content engine:** Monthly Insights + benchmark tool drive organic signups
 3. **Partnerships:** Integrate with solo founder communities (Indie Hackers, Pieter Levels' community)
@@ -784,39 +856,46 @@ loopkit coach --on         # Re-enable coaching
 ## Implementation Roadmap
 
 ### Month 1: Foundation
+
 - [x] Telemetry module (STRAT-1 from STATUS.md) — shipped
 - [x] Shipping DNA v1 (basic pattern detection) — shipped
 - [x] Simple benchmarks (avg only, no percentiles) — shipped
 
 ### Month 2: Enhancement
+
 - [x] Smart benchmarks (percentiles by project type) — shipped
 - [x] Snooze Oracle (basic probability) — shipped
 - [x] Benchmark tool on dashboard — shipped
 
 ### Month 3: Predictive
+
 - [x] Churn Guardian v1 (rule-based, not ML) — shipped
 - [x] Auto-Loop (Monday draft detection) — shipped
 - [x] Success Predictor v1 (simple heuristics) — shipped
 
 ### Month 4: Network
+
 - [x] Anonymous peer inspiration (opt-in) — shipped
 - [x] Trending validations — shipped
 - [x] Monthly Insights #1 — shipped
 
 ### Month 5: Signal Intelligence
-- [x] Competitor Ship Radar — shipped
+
+- [x] Competitor Ship Radar — shipped (with dedicated dashboard page + CLI→Convex sync)
 - [x] Keyword Opportunity Finder — shipped
-- [x] Market Timing Signal — shipped
+- [x] Market Timing Signal — shipped (with dedicated dashboard page + CLI→Convex sync)
 - [ ] Churn Guardian v2 (ML model)
 - [ ] Success Predictor v2 (ML model)
 - [ ] AI Coach v2 (ML-powered)
 
 ### Month 6: Coaching
+
 - [x] AI Coach v1 (rule-based interventions) — shipped
 - [x] Pattern Interrupt — shipped
 - [x] Founder archetype detection — shipped
 
 ### Month 9: Scale
+
 - [ ] AI Coach v2 (ML-powered)
 - [ ] Real-time dashboard insights
 - [ ] First annual report (State of Solo Founders)
@@ -829,17 +908,17 @@ loopkit coach --on         # Re-enable coaching
 Moat Strength = (Data Depth) × (Insight Quality) × (User Trust) × (Time)
 ```
 
-| Factor | How We Build It | Competitor Barrier |
-|--------|----------------|-------------------|
-| **Data Depth** | Telemetry + explicit prompts + behavioral signals | 6-12 months to catch up |
-| **Insight Quality** | ML models + domain expertise + founder feedback | Need same data + same expertise |
-| **User Trust** | Privacy-first + transparency + accuracy | Hard to earn quickly |
-| **Time** | We started now. Competitors start later. | Cannot buy time |
+| Factor              | How We Build It                                   | Competitor Barrier              |
+| ------------------- | ------------------------------------------------- | ------------------------------- |
+| **Data Depth**      | Telemetry + explicit prompts + behavioral signals | 6-12 months to catch up         |
+| **Insight Quality** | ML models + domain expertise + founder feedback   | Need same data + same expertise |
+| **User Trust**      | Privacy-first + transparency + accuracy           | Hard to earn quickly            |
+| **Time**            | We started now. Competitors start later.          | Cannot buy time                 |
 
 **The ultimate moat:** After 2 years, LoopKit knows more about how solo founders build than any other tool, person, or organization in the world. That knowledge is embedded in our AI, our content, our community, and our brand.
 
-> *"We don't just help founders ship. We understand shipping better than anyone. And we use that understanding to make every founder unstoppable."*
+> _"We don't just help founders ship. We understand shipping better than anyone. And we use that understanding to make every founder unstoppable."_
 
 ---
 
-*Last updated: April 2026 · IE-7 through IE-17 all implemented · P0 launch blockers resolved · IE-11/12/13 (ML v2) remaining for post-launch*
+_Last updated: April 2026 · IE-7 through IE-17 all implemented · P0 launch blockers resolved · IE-11/12/13 (ML v2) remaining for post-launch_

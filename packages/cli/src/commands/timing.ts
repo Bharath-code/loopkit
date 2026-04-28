@@ -3,6 +3,7 @@ import { readConfig, readBriefJson, listProjects } from "../storage/local.js";
 import { colors, header, info, shortcutsHint } from "../ui/theme.js";
 import { analyzeMarket } from "../analytics/marketTiming.js";
 import { detectProjectCategory } from "@loopkit/shared";
+import { pushTimingToConvex } from "../storage/sync.js";
 
 export async function timingCommand(options?: {
   category?: string;
@@ -19,16 +20,16 @@ export async function timingCommand(options?: {
       const projects = listProjects();
       if (projects.includes(options.project)) {
         const brief = readBriefJson(options.project);
-        if (brief) {
-          category = detectProjectCategory(brief.mvpPlainEnglish);
+        if (brief?.brief) {
+          category = detectProjectCategory(brief.brief.mvpPlainEnglish);
         }
       }
     }
 
     if (!category && config?.activeProject) {
       const brief = readBriefJson(config.activeProject);
-      if (brief) {
-        category = detectProjectCategory(brief.mvpPlainEnglish);
+      if (brief?.brief) {
+        category = detectProjectCategory(brief.brief.mvpPlainEnglish);
       }
     }
 
@@ -116,6 +117,22 @@ export async function timingCommand(options?: {
         `  Last updated: ${new Date(signal.lastUpdated).toLocaleDateString()}`,
       ),
     );
+
+    try {
+      await pushTimingToConvex({
+        category: signal.category,
+        fundingTrend: signal.fundingTrend,
+        fundingCount: signal.fundingCount,
+        devTrend: signal.devTrend,
+        devGrowth: signal.devGrowth,
+        hiringTrend: signal.hiringTrend,
+        hiringCount: signal.hiringCount,
+        compositeScore: signal.compositeScore,
+        signal: signal.signal,
+      });
+    } catch {
+      // Silently skip sync failure
+    }
   } catch (error) {
     console.log("");
     console.log(colors.danger("  Market analysis failed."));

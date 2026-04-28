@@ -2,7 +2,7 @@
 
 **Last updated:** April 27, 2026 (Design System Overhaul Plan Added — 6 Phases, 37 Tasks)  
 **Version:** 0.1.0  
-**Overall:** MVP complete · All sprints shipped · 152 tests passing · 0 launch blockers · Ready to ship
+**Overall:** MVP complete · All sprints shipped · 369 tests passing · 0 launch blockers · Ready to ship
 
 ---
 
@@ -57,7 +57,7 @@
 
 - [x] Next.js 16 App Router, Tailwind v4, dark theme
 - [x] Landing page (hero, demo, pricing, footer, SEO, animations)
-- [x] Dashboard routes (overview, pulse inbox, loop history, benchmarks) with live Convex queries
+- [x] Dashboard routes (overview, pulse inbox, loop history, benchmarks, trends, radar, timing, keywords) with live Convex queries
 - [x] Auth pages (login, signup via Convex)
 - [x] Public pulse form (`/pulse/[projectId]`) + embed widget
 - [x] Free tier read-only dashboard with upgrade CTA
@@ -66,7 +66,7 @@
 
 ### Backend (Convex)
 
-- [x] Schema: `pulseResponses`, `projects`, `loopLogs`, `subscriptions`, `aiUsage`
+- [x] Schema: `pulseResponses`, `projects`, `loopLogs`, `subscriptions`, `aiUsage`, `competitorLaunches`, `marketSignals`
 - [x] Auth: GitHub + email via `@convex-dev/auth`
 - [x] Payments: Polar.sh integration (Solo $19, Pro $39)
 - [x] Rate limiting: 10/day free, 100/day Solo, 1000/day Pro
@@ -174,13 +174,13 @@ _Aggregate what ICPs/problems LoopKit users are pursuing. Proprietary data no on
 
 _Scan Product Hunt/HN/Twitter for launches in user's space. Alert: "3 competitors shipped this week."_
 
-| Sub-Task | Effort                       | Files | Acceptance Criteria                                           |
-| -------- | ---------------------------- | ----- | ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| IE-15.1  | **External API adapters**    | M     | `cli/src/analytics/competitorRadar.ts` (new)                  | ✅ Free APIs only: Product Hunt RSS, HN Algolia search API. No scraping, no API keys required.                              |
-| IE-15.2  | **Category keyword mapping** | S     | `cli/src/analytics/competitorRadar.ts`, `shared/src/index.ts` | ✅ Map brief category → search keywords. Zod schema for `CompetitorLaunchSchema`.                                           |
-| IE-15.3  | **Cached scan results**      | S     | `cli/src/analytics/competitorRadar.ts`, `storage/cache.ts`    | ✅ Results cached 24h. Returns `{ launches: [{ name, url, date, platform, relevance }] }`. Handles API failures gracefully. |
-| IE-15.4  | **CLI radar command**        | S     | `commands/radar.ts` (new)                                     | ✅ `loopkit radar` → shows recent launches in user's category. Opt-in, respects telemetry consent.                          |
-| IE-15.5  | **Dashboard radar widget**   | M     | `web/src/app/dashboard/page.tsx`                              | ✅ Widget on overview page. Shows trending validations with link to full trends page.                                       |
+| Sub-Task | Effort                       | Files | Acceptance Criteria                                                 |
+| -------- | ---------------------------- | ----- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| IE-15.1  | **External API adapters**    | M     | `cli/src/analytics/competitorRadar.ts` (new)                        | ✅ Free APIs only: Product Hunt RSS, HN Algolia search API. No scraping, no API keys required.                                                                                                    |
+| IE-15.2  | **Category keyword mapping** | S     | `cli/src/analytics/competitorRadar.ts`, `shared/src/index.ts`       | ✅ Map brief category → search keywords. Zod schema for `CompetitorLaunchSchema`.                                                                                                                 |
+| IE-15.3  | **Cached scan results**      | S     | `cli/src/analytics/competitorRadar.ts`, `storage/cache.ts`          | ✅ Results cached 24h. Returns `{ launches: [{ name, url, date, platform, relevance }] }`. Handles API failures gracefully.                                                                       |
+| IE-15.4  | **CLI radar command**        | S     | `commands/radar.ts` (new)                                           | ✅ `loopkit radar` → shows recent launches in user's category. Opt-in, respects telemetry consent.                                                                                                |
+| IE-15.5  | **Dashboard radar page**     | M     | `web/src/app/dashboard/radar/page.tsx`, `convex/competitorRadar.ts` | ✅ Dedicated `/dashboard/radar` page with sortable/filterable launch table, platform badges, relevance scoring, search, "this week" stats, avg relevance, platform distribution, CLI→Convex sync. |
 
 #### IE-16: Keyword Opportunity Finder (M) ✅ COMPLETE
 
@@ -196,13 +196,13 @@ _Scan Product Hunt/HN/Twitter for launches in user's space. Alert: "3 competitor
 
 _Track funding rounds, job postings, GitHub stars in user's category. "Space is heating up" vs "cooling down."_
 
-| Sub-Task | Effort                          | Files | Acceptance Criteria                                                 |
-| -------- | ------------------------------- | ----- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| IE-17.1  | **Market data adapters**        | M     | `cli/src/analytics/marketTiming.ts` (new)                           | Free sources: Crunchbase RSS (funding), GitHub API (repo growth), Indeed RSS (job postings). No scraping. All requests cached 7d. ✅ DONE                     |
-| IE-17.2  | **Signal computation**          | S     | `cli/src/analytics/marketTiming.ts`                                 | 3 signals: funding velocity (rounds/30d), dev activity (GitHub stars/30d), hiring demand (postings/30d). Each: ↑ ↓ → trend. Composite score 0-100. ✅ DONE    |
-| IE-17.3  | **Zod schema + Convex storage** | S     | `shared/src/index.ts`, `convex/marketTiming.ts`, `convex/schema.ts` | `MarketSignalSchema`: `{ category, fundingTrend, devTrend, hiringTrend, compositeScore, lastUpdated }`. Stored per-category, updated weekly via cron. ✅ DONE |
-| IE-17.4  | **CLI timing command**          | S     | `commands/timing.ts` (new)                                          | `loopkit timing` → shows composite score, 3 trend arrows, and interpretation. Opt-in, respects telemetry consent. ✅ DONE                                     |
-| IE-17.5  | **Dashboard signal widget**     | M     | `web/src/app/dashboard/page.tsx`                                    | Gauge card showing composite score + 3 trend arrows on overview page. ✅ DONE                                                                                 |
+| Sub-Task | Effort                          | Files | Acceptance Criteria                                                       |
+| -------- | ------------------------------- | ----- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| IE-17.1  | **Market data adapters**        | M     | `cli/src/analytics/marketTiming.ts` (new)                                 | Free sources: Crunchbase RSS (funding), GitHub API (repo growth), Indeed RSS (job postings). No scraping. All requests cached 7d. ✅ DONE                                                                                 |
+| IE-17.2  | **Signal computation**          | S     | `cli/src/analytics/marketTiming.ts`                                       | 3 signals: funding velocity (rounds/30d), dev activity (GitHub stars/30d), hiring demand (postings/30d). Each: ↑ ↓ → trend. Composite score 0-100. ✅ DONE                                                                |
+| IE-17.3  | **Zod schema + Convex storage** | S     | `shared/src/index.ts`, `convex/marketTiming.ts`, `convex/schema.ts`       | `MarketSignalSchema`: `{ category, fundingTrend, devTrend, hiringTrend, compositeScore, lastUpdated }`. Stored per-category, updated weekly via cron. ✅ DONE                                                             |
+| IE-17.4  | **CLI timing command**          | S     | `commands/timing.ts` (new)                                                | `loopkit timing` → shows composite score, 3 trend arrows, and interpretation. Opt-in, respects telemetry consent. ✅ DONE                                                                                                 |
+| IE-17.5  | **Dashboard signal page**       | M     | `web/src/app/dashboard/timing/page.tsx`, `web/src/app/dashboard/page.tsx` | ✅ Dedicated `/dashboard/timing` page with composite score hero, signal breakdown cards with sparklines, history chart, interpretation guide. Widget on overview page retained. CLI→Convex sync via `pushTimingToConvex`. |
 
 #### Remaining P3 (Other)
 
@@ -271,7 +271,7 @@ WEEK 7-8 (P3 — IE Phase 3: Trending + Radar + Peers)  ✅ COMPLETE
 │   ├── IE-15.2: Category keyword mapping        ✅ 10 ICP + 10 problem keyword maps
 │   ├── IE-15.3: Cached scan results             ✅ 24h TTL via existing cache.ts
 │   ├── IE-15.4: CLI radar command               ✅ loopkit radar with auto-detect from brief
-│   └── IE-15.5: Dashboard radar widget          ✅ Trending widget on overview page
+│   ├── IE-15.5: Dashboard radar page             ✅ Dedicated /dashboard/radar with table, filters, sync
 └── IE-7: Anonymous Peer Inspiration (3 sub-tasks) ✅ ALL DONE
     ├── IE-7.1: Convex peerShips table + API     ✅ /api/peers GET/POST, category matching
     ├── IE-7.2: CLI peers module                 ✅ fetchPeerShips + recordPeerShip, telemetry gated
@@ -289,7 +289,7 @@ WEEK 9-10 (P3 — IE Phase 3: Keywords + Timing + Patterns)  ✅ COMPLETE
 │   ├── IE-17.2: Signal computation                   ✅ DONE (composite 0-100 score)
 │   ├── IE-17.3: Zod schema + Convex storage          ✅ DONE (marketSignals table)
 │   ├── IE-17.4: CLI timing command                   ✅ DONE (loopkit timing)
-│   └── IE-17.5: Dashboard signal widget              ✅ DONE (overview page card)
+│   └── IE-17.5: Dashboard timing page              ✅ Dedicated /dashboard/timing with score hero, sparklines, history
 └── IE-9: Pattern Interrupt (4 sub-tasks)             ✅ ALL DONE
     ├── IE-9.1: Pattern detection engine              ✅ 5 pattern detectors, rule-based, local data
     ├── IE-9.2: CLI integration                       ✅ Shown in `loop` after churn check
@@ -315,19 +315,19 @@ WEEK 13+ (P3 — IE Phase 4-5 ML + Platform)
 
 ## Known Issues
 
-| Issue                                  | Severity | Status                                       |
-| -------------------------------------- | -------- | -------------------------------------------- |
-| No automated tests (zero coverage)     | High     | ✅ Resolved — 135 tests (41 shared + 94 CLI) |
-| No AI streaming                        | High     | ✅ Resolved (P1)                             |
-| Auth token stored unencrypted          | Medium   | ✅ Resolved (S1)                             |
-| "Fast" and "creative" tiers same model | Medium   | ✅ Resolved (P4)                             |
-| Dashboard uses placeholder data        | Medium   | ✅ Resolved (D1)                             |
-| `config.json` parsed 2-3x per command  | Low      | ✅ Resolved (P2 — Week 6: resolveAuth())     |
-| Pulse `--share` missing                | Low      | ✅ Resolved (F1)                             |
-| No rate limiting on free tier          | Medium   | ✅ Resolved (S4)                             |
-| No input sanitization on pulse form    | High     | ✅ Resolved (S2 — Week 3)                    |
-| No CSRF protection on API routes       | High     | ✅ Resolved (S3 — Week 6)                    |
-| Next.js Turbopack workspace root warn  | Info     | Cosmetic — no functional impact              |
+| Issue                                  | Severity | Status                                                 |
+| -------------------------------------- | -------- | ------------------------------------------------------ |
+| No automated tests (zero coverage)     | High     | ✅ Resolved — 369 tests (75 shared + 257 CLI + 37 web) |
+| No AI streaming                        | High     | ✅ Resolved (P1)                                       |
+| Auth token stored unencrypted          | Medium   | ✅ Resolved (S1)                                       |
+| "Fast" and "creative" tiers same model | Medium   | ✅ Resolved (P4)                                       |
+| Dashboard uses placeholder data        | Medium   | ✅ Resolved (D1)                                       |
+| `config.json` parsed 2-3x per command  | Low      | ✅ Resolved (P2 — Week 6: resolveAuth())               |
+| Pulse `--share` missing                | Low      | ✅ Resolved (F1)                                       |
+| No rate limiting on free tier          | Medium   | ✅ Resolved (S4)                                       |
+| No input sanitization on pulse form    | High     | ✅ Resolved (S2 — Week 3)                              |
+| No CSRF protection on API routes       | High     | ✅ Resolved (S3 — Week 6)                              |
+| Next.js Turbopack workspace root warn  | Info     | Cosmetic — no functional impact                        |
 
 ---
 
@@ -363,7 +363,7 @@ WEEK 13+ (P3 — IE Phase 4-5 ML + Platform)
 - [ ] Web changed? → `cd packages/web && npx next build` → clean
 - [ ] New AI paths: `generateStructured()` works for both auth paths
 - [ ] Ctrl+C exits gracefully at every prompt
-- [ ] Tests pass: `pnpm --filter @loopkit/cli test` (127 tests total)
+- [ ] Tests pass: `pnpm --filter @loopkit/cli test` + `pnpm --filter @loopkit/web test` + `pnpm --filter @loopkit/shared test` (369 total)
 - [ ] `STATUS.md` updated with task completion checkmark
 
 ---
@@ -379,13 +379,13 @@ WEEK 13+ (P3 — IE Phase 4-5 ML + Platform)
 
 ### New P0 — Launch Blockers (Fix Before Public)
 
-| #          | Task                                 | Effort | Files                                                                                                                           | Acceptance Criteria                                                                                                                                                                                                                    |
-| ---------- | ------------------------------------ | ------ | ------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **SEC-1**  | **Convex Authorization Hardening**   | M      | `convex/loopLogs.ts`, `convex/pulse.ts`, `convex/patterns.ts`, `convex/analytics.ts`                                            | ✅ All queries/mutations verify `ctx.auth.getUserIdentity()` or `getAuthUserId()` before returning data. No query accepts raw `projectId` or `userId` from client without ownership check. Unauthorized access returns `[]` or `null`. |
-| **SEC-2**  | **Remove Client-Provided `userId`**  | S      | `convex/pulse.ts:ensureProject`, `web/src/app/api/**`                                                                           | ✅ `ensureProject` derives `userId` from auth context, not args. API routes use server-side auth exclusively.                                                                                                                          |
-| **SEC-3**  | **Persistent CLI Auth Sessions**     | M      | `web/src/app/api/cli/auth/route.ts`, `convex/schema.ts`, `convex/cliAuth.ts`                                                    | ✅ Uses Convex `cliAuth` table (persistent). Device flow works across Vercel serverless instances. Sessions auto-expire after 10 min.                                                                                                  |
-| **SEC-4**  | **Widget Production URL**            | XS     | `web/src/app/api/pulse/widget/route.ts:33`                                                                                      | ✅ `iframe.src` uses `process.env.NEXT_PUBLIC_APP_URL` (falls back to `https://loopkit.dev`). No `localhost` hardcoding.                                                                                                               |
-| **SYNC-1** | **CLI → Convex Data Sync (Minimal)** | L      | `cli/src/commands/loop.ts`, `cli/src/commands/ship.ts`, `cli/src/storage/local.ts`, `web/src/app/api/sync/**`, `convex/sync.ts` | ✅ After `loop` or `ship`, CLI pushes logs to Convex via authenticated API. `pushLoopLogToConvex` + `pushShipLogToConvex` in `storage/sync.ts`. Dashboard shows real CLI data.                                                         |
+| #          | Task                                 | Effort | Files                                                                                                                                                                                                                                                                        | Acceptance Criteria                                                                                                                                                                                                                                                        |
+| ---------- | ------------------------------------ | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **SEC-1**  | **Convex Authorization Hardening**   | M      | `convex/loopLogs.ts`, `convex/pulse.ts`, `convex/patterns.ts`, `convex/analytics.ts`                                                                                                                                                                                         | ✅ All queries/mutations verify `ctx.auth.getUserIdentity()` or `getAuthUserId()` before returning data. No query accepts raw `projectId` or `userId` from client without ownership check. Unauthorized access returns `[]` or `null`.                                     |
+| **SEC-2**  | **Remove Client-Provided `userId`**  | S      | `convex/pulse.ts:ensureProject`, `web/src/app/api/**`                                                                                                                                                                                                                        | ✅ `ensureProject` derives `userId` from auth context, not args. API routes use server-side auth exclusively.                                                                                                                                                              |
+| **SEC-3**  | **Persistent CLI Auth Sessions**     | M      | `web/src/app/api/cli/auth/route.ts`, `convex/schema.ts`, `convex/cliAuth.ts`                                                                                                                                                                                                 | ✅ Uses Convex `cliAuth` table (persistent). Device flow works across Vercel serverless instances. Sessions auto-expire after 10 min.                                                                                                                                      |
+| **SEC-4**  | **Widget Production URL**            | XS     | `web/src/app/api/pulse/widget/route.ts:33`                                                                                                                                                                                                                                   | ✅ `iframe.src` uses `process.env.NEXT_PUBLIC_APP_URL` (falls back to `https://loopkit.dev`). No `localhost` hardcoding.                                                                                                                                                   |
+| **SYNC-1** | **CLI → Convex Data Sync (Minimal)** | L      | `cli/src/commands/loop.ts`, `cli/src/commands/ship.ts`, `cli/src/commands/radar.ts`, `cli/src/commands/timing.ts`, `cli/src/storage/local.ts`, `cli/src/storage/sync.ts`, `web/src/app/api/sync/**`, `convex/sync.ts`, `convex/competitorRadar.ts`, `convex/marketTiming.ts` | ✅ After `loop` or `ship`, CLI pushes logs to Convex via authenticated API. After `radar` or `timing`, CLI pushes results. `pushLoopLogToConvex` + `pushShipLogToConvex` + `pushRadarToConvex` + `pushTimingToConvex` in `storage/sync.ts`. Dashboard shows real CLI data. |
 
 **Why P0:** SEC-1/2 allow cross-user data leaks on day one. SEC-3 breaks auth on Vercel. SEC-4 breaks pulse widget for all paying users. SYNC-1 makes the Pro dashboard actually useful.
 
@@ -393,16 +393,16 @@ WEEK 13+ (P3 — IE Phase 4-5 ML + Platform)
 
 ### P1 — High Impact (Ship Within 2 Weeks)
 
-| #          | Task                                     | Effort | Files                                                               | Acceptance Criteria                                                                                                                                     |
-| ---------- | ---------------------------------------- | ------ | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **BUG-1**  | **Fix `timing.ts` `--project` Flag**     | XS     | `commands/timing.ts`, `storage/local.ts`                            | ✅ `listProjects()` returns strings; timing.ts checks `includes()` and reads brief. Category fallback uses `detectProjectCategory()`.                   |
-| **BUG-2**  | **Fix `coach.ts` Ctrl+C Graceful Exit**  | XS     | `commands/coach.ts`                                                 | ✅ `p.isCancel(ack)` breaks loop and calls `p.outro()` immediately. Never continues to next moment.                                                     |
-| **BUG-3**  | **Fix `celebrate.ts` Theme Abstraction** | XS     | `commands/celebrate.ts`, `ui/theme.ts`                              | ✅ Raw `chalk` removed. `colors.pink` / `colors.orange` added to `theme.ts`. Celebrate uses theme helpers exclusively.                                  |
-| **TEST-1** | **Backfill Analytics Schema Tests**      | M      | `shared/src/__tests__/schemas.test.ts`                              | ✅ 22 tests added for 9 analytics schemas (valid + invalid each). `SuccessPredictionSchema.probability` now bounded `.min(0).max(1)`.                   |
-| **TEST-2** | **Add API Route Integration Tests**      | M      | `web/src/app/api/**/__tests__/`                                     | ✅ 11 integration tests for `POST /api/ai/init`, `POST /api/pulse/submit`, `GET /api/cli/me`. CSRF 403, rate limit 429, auth 401, success 200 verified. |
-| **PERF-1** | **Paginate Dashboard Queries**           | M      | `convex/loopLogs.ts`, `convex/pulse.ts`, `web/src/app/dashboard/**` | ✅ `listByProject` and `getResponses` accept optional `limit` arg (default 100, max 100). `.take(limit)` prevents unbounded returns.                    |
-| **SEC-5**  | **Check Subscription Expiration**        | S      | `convex/users.ts`, `convex/subscriptions.ts`                        | ✅ `users.me` checks `currentPeriodEnd > Date.now()`. Expired subscriptions downgrade tier to "free".                                                   |
-| **SEC-6**  | **Remove `as any` in web source**        | XS     | `web/src/app/api/webhooks/polar/route.ts`                           | ✅ Replaced `as any` in polar webhook with `PolarWebhookEvent` interface. No `as any` remains in `src/`.                                                |
+| #          | Task                                     | Effort | Files                                                               | Acceptance Criteria                                                                                                                                                                                                                                   |
+| ---------- | ---------------------------------------- | ------ | ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **BUG-1**  | **Fix `timing.ts` `--project` Flag**     | XS     | `commands/timing.ts`, `storage/local.ts`                            | ✅ `listProjects()` returns strings; timing.ts checks `includes()` and reads brief. Category fallback uses `detectProjectCategory()`.                                                                                                                 |
+| **BUG-2**  | **Fix `coach.ts` Ctrl+C Graceful Exit**  | XS     | `commands/coach.ts`                                                 | ✅ `p.isCancel(ack)` breaks loop and calls `p.outro()` immediately. Never continues to next moment.                                                                                                                                                   |
+| **BUG-3**  | **Fix `celebrate.ts` Theme Abstraction** | XS     | `commands/celebrate.ts`, `ui/theme.ts`                              | ✅ Raw `chalk` removed. `colors.pink` / `colors.orange` added to `theme.ts`. Celebrate uses theme helpers exclusively.                                                                                                                                |
+| **TEST-1** | **Backfill Analytics Schema Tests**      | M      | `shared/src/__tests__/schemas.test.ts`                              | ✅ 22 tests added for 9 analytics schemas (valid + invalid each). `SuccessPredictionSchema.probability` now bounded `.min(0).max(1)`.                                                                                                                 |
+| **TEST-2** | **Add API Route Integration Tests**      | M      | `web/src/app/api/**/__tests__/`                                     | ✅ 37 integration tests for 8 route groups: ai/init (4), pulse/submit (4), cli/me (3), cli/auth (6), peers GET/POST (6), sync/loop (4), sync/ship (3), pulse/share (3), webhooks/polar (4). CSRF 403, rate limit 429, auth 401, success 200 verified. |
+| **PERF-1** | **Paginate Dashboard Queries**           | M      | `convex/loopLogs.ts`, `convex/pulse.ts`, `web/src/app/dashboard/**` | ✅ `listByProject` and `getResponses` accept optional `limit` arg (default 100, max 100). `.take(limit)` prevents unbounded returns.                                                                                                                  |
+| **SEC-5**  | **Check Subscription Expiration**        | S      | `convex/users.ts`, `convex/subscriptions.ts`                        | ✅ `users.me` checks `currentPeriodEnd > Date.now()`. Expired subscriptions downgrade tier to "free".                                                                                                                                                 |
+| **SEC-6**  | **Remove `as any` in web source**        | XS     | `web/src/app/api/webhooks/polar/route.ts`                           | ✅ Replaced `as any` in polar webhook with `PolarWebhookEvent` interface. No `as any` remains in `src/`.                                                                                                                                              |
 
 **Why P1:** Bugs erode trust. Missing schema tests block safe refactors. Unpaginated queries will OOM at scale. Subscription gap = free Pro rides.
 
@@ -410,16 +410,16 @@ WEEK 13+ (P3 — IE Phase 4-5 ML + Platform)
 
 ### P2 — Important Polish (Ship Within 4 Weeks)
 
-| #          | Task                                       | Effort | Files                                                                          | Acceptance Criteria                                                                                                                                                                                                          |
-| ---------- | ------------------------------------------ | ------ | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **UX-1**   | **Dashboard Loading Skeletons**            | M      | `web/src/app/dashboard/page.tsx`, `web/src/components/skeletons.tsx`           | ✅ Reusable `SkeletonMetric`, `SkeletonCard`, `SkeletonActivity`, `SkeletonLoopSynthesis`, `SkeletonArchetype`, `SkeletonMarketTiming` components. All widgets use them consistently. No ad-hoc `animate-pulse` divs remain. |
-| **UX-2**   | **React Error Boundaries**                 | S      | `web/src/components/ErrorBoundary.tsx`, `web/src/app/dashboard/page.tsx`       | ✅ `ErrorBoundary` class component with `DefaultErrorFallback`. Each widget (MarketTiming, PatternInterrupt, PeerInspiration, Coaching) wrapped individually. Crash shows friendly fallback with refresh button.             |
-| **PERF-2** | **Add Time-Window Indexes to Analytics**   | S      | `convex/schema.ts`, `convex/analytics.ts`                                      | ✅ `loopLogs` gets `by_project_date` (projectId + date) and `by_date` (date) indexes. `getBenchmarks` and `getShareCard` query last 90 days only via `q.gte("date", cutoff)`. No full table scans.                           |
-| **DEV-1**  | **GitHub Actions CI Pipeline**             | M      | `.github/workflows/ci.yml`                                                     | 🟡 Open — not yet implemented.                                                                                                                                                                                               |
-| **DEV-2**  | **Pre-Commit Hooks (Husky + lint-staged)** | S      | `.husky/pre-commit`, `package.json`                                            | ✅ `prepare: "husky"` script. `lint-staged` runs `prettier --write` on staged files + `tsc --noEmit` per package. Blocks commit on type error.                                                                               |
-| **SEC-7**  | **Trusted Proxy IP Validation**            | S      | `web/src/app/api/pulse/submit/route.ts`                                        | ✅ `getClientIp` supports `TRUSTED_PROXIES` env var with CIDR matching. Walks `x-forwarded-for` from right to left, returns first untrusted IP. Documented in `.env.example`.                                                |
-| **FEAT-1** | **Dedicated Radar Dashboard Page**         | M      | `web/src/app/dashboard/radar/page.tsx`, `cli/src/analytics/competitorRadar.ts` | 🟡 Open — not yet implemented.                                                                                                                                                                                               |
-| **FEAT-2** | **Dedicated Timing Dashboard Page**        | M      | `web/src/app/dashboard/timing/page.tsx`                                        | 🟡 Open — not yet implemented.                                                                                                                                                                                               |
+| #          | Task                                       | Effort | Files                                                                                                                                                              | Acceptance Criteria                                                                                                                                                                                                          |
+| ---------- | ------------------------------------------ | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **UX-1**   | **Dashboard Loading Skeletons**            | M      | `web/src/app/dashboard/page.tsx`, `web/src/components/skeletons.tsx`                                                                                               | ✅ Reusable `SkeletonMetric`, `SkeletonCard`, `SkeletonActivity`, `SkeletonLoopSynthesis`, `SkeletonArchetype`, `SkeletonMarketTiming` components. All widgets use them consistently. No ad-hoc `animate-pulse` divs remain. |
+| **UX-2**   | **React Error Boundaries**                 | S      | `web/src/components/ErrorBoundary.tsx`, `web/src/app/dashboard/page.tsx`                                                                                           | ✅ `ErrorBoundary` class component with `DefaultErrorFallback`. Each widget (MarketTiming, PatternInterrupt, PeerInspiration, Coaching) wrapped individually. Crash shows friendly fallback with refresh button.             |
+| **PERF-2** | **Add Time-Window Indexes to Analytics**   | S      | `convex/schema.ts`, `convex/analytics.ts`                                                                                                                          | ✅ `loopLogs` gets `by_project_date` (projectId + date) and `by_date` (date) indexes. `getBenchmarks` and `getShareCard` query last 90 days only via `q.gte("date", cutoff)`. No full table scans.                           |
+| **DEV-1**  | **GitHub Actions CI Pipeline**             | M      | `.github/workflows/ci.yml`                                                                                                                                         | 🟡 Open — not yet implemented.                                                                                                                                                                                               |
+| **DEV-2**  | **Pre-Commit Hooks (Husky + lint-staged)** | S      | `.husky/pre-commit`, `package.json`                                                                                                                                | ✅ `prepare: "husky"` script. `lint-staged` runs `prettier --write` on staged files + `tsc --noEmit` per package. Blocks commit on type error.                                                                               |
+| **SEC-7**  | **Trusted Proxy IP Validation**            | S      | `web/src/app/api/pulse/submit/route.ts`                                                                                                                            | ✅ `getClientIp` supports `TRUSTED_PROXIES` env var with CIDR matching. Walks `x-forwarded-for` from right to left, returns first untrusted IP. Documented in `.env.example`.                                                |
+| **FEAT-1** | **Dedicated Radar Dashboard Page**         | M      | `web/src/app/dashboard/radar/page.tsx`, `convex/competitorRadar.ts`, `web/src/app/api/sync/radar/route.ts`, `cli/src/commands/radar.ts`, `cli/src/storage/sync.ts` | ✅ Dedicated radar dashboard with launch table, platform badges, relevance scoring, sort/filter/search, CLI→Convex sync.                                                                                                     |
+| **FEAT-2** | **Dedicated Timing Dashboard Page**        | M      | `web/src/app/dashboard/timing/page.tsx`, `web/src/app/api/sync/timing/route.ts`, `cli/src/commands/timing.ts`                                                      | ✅ Dedicated timing dashboard with composite score hero, signal breakdowns with sparklines, history chart, interpretation guide, CLI→Convex sync.                                                                            |
 
 **Why P2:** UX polish separates MVP from professional product. CI prevents regressions. Dedicated pages complete the dashboard story.
 

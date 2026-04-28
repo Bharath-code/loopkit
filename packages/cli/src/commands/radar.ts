@@ -1,9 +1,24 @@
 import * as p from "@clack/prompts";
 import { readConfig, readBriefJson, listProjects } from "../storage/local.js";
-import { colors, header, info, pass, fail, shortcutsHint } from "../ui/theme.js";
-import { scanCompetitors, categorizeICP, categorizeProblem } from "../analytics/competitorRadar.js";
+import {
+  colors,
+  header,
+  info,
+  pass,
+  fail,
+  shortcutsHint,
+} from "../ui/theme.js";
+import {
+  scanCompetitors,
+  categorizeICP,
+  categorizeProblem,
+} from "../analytics/competitorRadar.js";
+import { pushRadarToConvex } from "../storage/sync.js";
 
-export async function radarCommand(options?: { category?: string; project?: string }): Promise<void> {
+export async function radarCommand(options?: {
+  category?: string;
+  project?: string;
+}): Promise<void> {
   p.intro(colors.primary.bold("LoopKit — Competitor Ship Radar"));
   console.log(shortcutsHint());
 
@@ -22,7 +37,9 @@ export async function radarCommand(options?: { category?: string; project?: stri
 
         console.log(colors.dim(`  Scanning for: ${colors.white(category)}`));
         if (problemCategory !== "other") {
-          console.log(colors.dim(`  Problem area: ${colors.white(problemCategory)}`));
+          console.log(
+            colors.dim(`  Problem area: ${colors.white(problemCategory)}`),
+          );
         }
       }
     }
@@ -54,7 +71,8 @@ export async function radarCommand(options?: { category?: string; project?: stri
 
     if (!category) {
       const input = await p.text({
-        message: "Enter a category to scan (e.g., saas, ecommerce, developers):",
+        message:
+          "Enter a category to scan (e.g., saas, ecommerce, developers):",
         placeholder: "e.g. saas founders",
       });
 
@@ -70,8 +88,9 @@ export async function radarCommand(options?: { category?: string; project?: stri
   const s = p.spinner();
   s.start(`Scanning Product Hunt & Hacker News for "${category}"...`);
 
+  let result;
   try {
-    const result = await scanCompetitors(category, problemCategory);
+    result = await scanCompetitors(category, problemCategory);
     s.stop(`Found ${result.totalFound} relevant launches.`);
 
     if (result.totalFound === 0) {
@@ -89,22 +108,32 @@ export async function radarCommand(options?: { category?: string; project?: stri
 
     if (thisWeek.length > 0) {
       console.log("");
-      console.log(colors.primary.bold(`  ${thisWeek.length} launches this week`));
+      console.log(
+        colors.primary.bold(`  ${thisWeek.length} launches this week`),
+      );
       console.log("");
     }
 
     for (const launch of result.launches.slice(0, 10)) {
       const dateStr = formatDate(launch.date);
-      const relevanceColor = launch.relevance >= 70 ? colors.success : launch.relevance >= 40 ? colors.warning : colors.muted;
-      const platformBadge = launch.platform === "producthunt"
-        ? colors.primary("[PH]")
-        : colors.secondary("[HN]");
+      const relevanceColor =
+        launch.relevance >= 70
+          ? colors.success
+          : launch.relevance >= 40
+            ? colors.warning
+            : colors.muted;
+      const platformBadge =
+        launch.platform === "producthunt"
+          ? colors.primary("[PH]")
+          : colors.secondary("[HN]");
 
       console.log(`  ${platformBadge} ${colors.white.bold(launch.name)}`);
       if (launch.tagline && launch.tagline !== launch.name) {
         console.log(`    ${colors.dim(launch.tagline)}`);
       }
-      console.log(`    ${colors.dim(dateStr)} · ${relevanceColor(`relevance: ${launch.relevance}%`)}`);
+      console.log(
+        `    ${colors.dim(dateStr)} · ${relevanceColor(`relevance: ${launch.relevance}%`)}`,
+      );
       if (launch.description) {
         console.log(`    ${colors.dim(launch.description)}`);
       }
@@ -117,7 +146,31 @@ export async function radarCommand(options?: { category?: string; project?: stri
     console.log(colors.dim(`  Cached for 24 hours. Run again to refresh.`));
   } catch (error) {
     s.stop("Scan failed.");
-    console.log(colors.danger("  Could not fetch competitor data. Check your internet connection."));
+    console.log(
+      colors.danger(
+        "  Could not fetch competitor data. Check your internet connection.",
+      ),
+    );
+  }
+
+  if (result) {
+    try {
+      await pushRadarToConvex({
+        category: result.category,
+        launches: result.launches.map((l) => ({
+          name: l.name,
+          url: l.url,
+          date: l.date,
+          platform: l.platform,
+          relevance: l.relevance,
+          description: l.description,
+          tagline: l.tagline,
+        })),
+        scannedAt: result.scannedAt,
+      });
+    } catch {
+      // Silently skip sync failure
+    }
   }
 
   p.outro(colors.muted("Stay aware. Build different."));

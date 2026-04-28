@@ -11,6 +11,7 @@
 LoopKit is a command-line tool that helps solo founders ship products consistently. It closes the entire product loop — from idea to launch to feedback to iteration — in one lightweight workflow.
 
 If you've ever:
+
 - Started a project and abandoned it at 80%
 - Built something nobody wanted
 - Felt overwhelmed by scattered tools (Notion, Trello, Twitter, email)
@@ -26,6 +27,7 @@ If you've ever:
 LoopKit is built on one belief: **Shipping is a skill, not a talent.** And like any skill, it improves with practice and a system.
 
 Most founders fail not because they can't code, but because they:
+
 1. Don't validate before building
 2. Don't ship consistently
 3. Don't learn from feedback
@@ -48,9 +50,11 @@ Every successful product follows this loop. LoopKit makes it explicit and automa
 ```
 
 ### Phase 1: DEFINE (`loopkit init`)
-**Question:** *What should I build?*
+
+**Question:** _What should I build?_
 
 Before you write a single line of code, LoopKit forces you to answer 5 questions:
+
 1. What are you building? (one-liner)
 2. What problem does it solve? (be specific)
 3. Who is your ideal customer? (the narrower, the better)
@@ -58,6 +62,7 @@ Before you write a single line of code, LoopKit forces you to answer 5 questions
 5. What's your MVP? (the smallest version that delivers value)
 
 An AI then scores your answers on three dimensions:
+
 - **ICP Clarity** (1-10): Do you really know who you're building for?
 - **Problem Strength** (1-10): Is this a real, painful problem?
 - **MVP Focus** (1-10): Is your MVP small enough to ship this month?
@@ -71,7 +76,8 @@ An AI then scores your answers on three dimensions:
 ---
 
 ### Phase 2: DEVELOP (`loopkit track`)
-**Question:** *Am I making progress?*
+
+**Question:** _Am I making progress?_
 
 LoopKit replaces your scattered task manager with a simple `tasks.md` file:
 
@@ -79,16 +85,19 @@ LoopKit replaces your scattered task manager with a simple `tasks.md` file:
 # MyProject — Tasks
 
 ## This Week
+
 - [ ] #1 Set up landing page
 - [ ] #2 Configure Stripe
 - [ ] #3 Implement auth
 
 ## Backlog
+
 - [ ] #4 Add dark mode
 - [ ] #5 Write API docs
 ```
 
 **Magic features:**
+
 - **Auto-close via git:** Write `[#1]` in your commit message → task automatically marks as done
 - **Shipping score:** Done tasks / Total tasks × 100. Aim for > 70%.
 - **Stale task detection:** Tasks open for 3+ days get flagged. Keep, snooze, or cut them.
@@ -103,11 +112,13 @@ LoopKit replaces your scattered task manager with a simple `tasks.md` file:
 ---
 
 ### Phase 3: DELIVER (`loopkit ship`)
-**Question:** *How do I tell the world?*
+
+**Question:** _How do I tell the world?_
 
 Shipping isn't just deploying code. It's announcing it to the right people on the right platforms.
 
 LoopKit asks: "What did you ship?" Then AI generates:
+
 - **Hacker News:** Title + body (no hype, developer tone)
 - **Twitter:** 3-tweet thread (build in public style)
 - **Indie Hackers:** Narrative post (story-driven)
@@ -123,15 +134,18 @@ You can use, edit, regenerate, or skip each draft.
 ---
 
 ### Phase 4: LEARN (`loopkit pulse`)
-**Question:** *What do my users think?*
+
+**Question:** _What do my users think?_
 
 Most founders build in a vacuum. LoopKit makes feedback collection automatic.
 
 **Two ways to collect:**
+
 1. **Inline:** `loopkit pulse --add "User said the pricing is confusing"`
 2. **Shareable form:** `loopkit pulse --share` → get a URL + QR code → embed on your site
 
 Once you have 5+ responses, AI clusters them into:
+
 - **Fix now** (critical issues)
 - **Validate later** (ideas to explore)
 - **Noise** (outliers and off-topic feedback)
@@ -145,15 +159,18 @@ Once you have 5+ responses, AI clusters them into:
 ---
 
 ### Phase 5: ITERATE (`loopkit loop`)
-**Question:** *What should I do next week?*
+
+**Question:** _What should I do next week?_
 
 Every Sunday, LoopKit synthesizes your week:
+
 - Tasks completed vs. planned
 - What you shipped
 - Feedback received
 - Your shipping streak
 
 Then AI recommends **The One Thing** to focus on next week, following this priority:
+
 1. **Fix now** (critical user issues)
 2. **Ship** (finish what's almost done)
 3. **Validate** (test your riskiest assumption)
@@ -172,6 +189,7 @@ You can accept it, change it, or skip it. Your choice is recorded.
 ## Your First Week with LoopKit
 
 ### Day 1 (Monday): Define
+
 ```bash
 loopkit init my-project
 # Answer the 5 questions
@@ -179,6 +197,7 @@ loopkit init my-project
 ```
 
 ### Day 2-4 (Tue-Thu): Develop
+
 ```bash
 loopkit track --add "Set up landing page"
 # Work, commit with [#1], task auto-closes
@@ -186,6 +205,7 @@ loopkit track  # Check your progress
 ```
 
 ### Day 5 (Friday): Deliver
+
 ```bash
 loopkit ship
 # "What did you ship?" → "Landing page with email capture"
@@ -193,6 +213,7 @@ loopkit ship
 ```
 
 ### Day 6 (Saturday): Learn
+
 ```bash
 loopkit pulse --share
 # Share the link in communities
@@ -200,6 +221,7 @@ loopkit pulse --share
 ```
 
 ### Day 7 (Sunday): Iterate
+
 ```bash
 loopkit loop
 # Review your week
@@ -214,28 +236,32 @@ loopkit loop
 ## Key Concepts
 
 ### The Shipping Score
+
 Your shipping score is `done tasks / total tasks × 100`.
 
-| Score | Meaning |
-|-------|---------|
-| 90-100% | Crushing it |
-| 70-89%  | On track |
+| Score   | Meaning                              |
+| ------- | ------------------------------------ |
+| 90-100% | Crushing it                          |
+| 70-89%  | On track                             |
 | 50-69%  | Falling behind — cut or snooze tasks |
-| < 50%   | Stuck — loopkit loop will help |
+| < 50%   | Stuck — loopkit loop will help       |
 
 **Don't aim for 100% every week.** That's a recipe for burnout. Aim for consistency (70%+).
 
 ### The Streak
+
 Consecutive weeks where you run `loopkit loop` and close your synthesis.
 
 A 4-week streak means you've shipped and reflected for a month straight. This is the #1 predictor of eventual success.
 
 ### The Override
+
 Sometimes you'll disagree with the AI's recommendation. That's fine — override it and record your reason.
 
-But if you're overriding > 50% of the time for a month, ask yourself: *Is the system wrong, or am I avoiding hard truths?*
+But if you're overriding > 50% of the time for a month, ask yourself: _Is the system wrong, or am I avoiding hard truths?_
 
 ### Cut vs. Snooze
+
 - **Cut:** "This task is no longer relevant." (Saved to `cut.md` forever)
 - **Snooze:** "I'll do this later." (Hidden until the date you pick)
 
@@ -246,21 +272,25 @@ But if you're overriding > 50% of the time for a month, ask yourself: *Is the sy
 ## Tips from Successful Users
 
 ### For Consistency
+
 - **Run `loopkit loop` every Sunday at the same time.** Make it a ritual.
 - **Set a calendar reminder.** "Sunday 9 AM — LoopKit Loop"
 - **Share your BIP post every week.** Public commitment = accountability.
 
 ### For Better Scores
+
 - **Break tasks into < 2 hour chunks.** Small tasks get done. Big tasks linger.
 - **Front-load your week.** Do hard tasks Monday-Tuesday. Momentum carries you.
 - **Use the `--add` flag constantly.** Ideas become tasks in 10 seconds.
 
 ### For Better Feedback
+
 - **Share your pulse link in 3 places minimum.** One community isn't enough.
 - **Ask specific questions.** "What confused you?" gets better answers than "What do you think?"
 - **Respond to feedback publicly.** "Thanks for the feedback, fixing this week!" builds loyalty.
 
 ### For Better Briefs
+
 - **Spend 5 extra minutes on the ICP question.** The narrower, the better. "Dentists in Texas" beats "healthcare professionals."
 - **If your problem score is < 6, interview 5 potential users before building.**
 - **If your MVP score is < 6, cut features until it hurts.**
@@ -292,17 +322,46 @@ loopkit radar
 ```
 
 LoopKit auto-detects your project's category from your brief and searches for relevant launches. Results show:
+
 - Launch name, tagline, and URL
 - Platform (Product Hunt or Hacker News)
 - Relevance score (0-100%)
 - How recent the launch is
 
 You can also scan any category:
+
 ```bash
 loopkit radar --category "ecommerce"
 ```
 
 Results are cached for 24 hours. No API keys required.
+
+View competitor radar on your dashboard at `/dashboard/radar` — a full page with sortable/filterable launch table, platform badges, relevance scores, "this week" stats, and average relevance across all tracked launches.
+
+### Market Timing Signal
+
+Track funding rounds, developer activity, and hiring in your category:
+
+```bash
+loopkit timing
+```
+
+LoopKit auto-detects your project's category and analyzes:
+
+- **Funding velocity** — recent funding rounds in your space (↑ ↓ → trend)
+- **Developer activity** — GitHub repo growth and star counts (↑ ↓ → trend)
+- **Hiring demand** — job postings in your category (↑ ↓ → trend)
+- **Composite score** — 0-100 score with signal label (heating / stable / cooling)
+
+You can also scan any category:
+
+```bash
+loopkit timing --category "ecommerce"
+```
+
+Results are cached for 7 days. No API keys required.
+
+View market timing on your dashboard at `/dashboard/timing` — a full page with composite score hero card, signal breakdowns with sparklines, history chart, and interpretation guide with actionable recommendations.
 
 ### Keyword Opportunity Finder
 
@@ -313,6 +372,7 @@ loopkit keywords
 ```
 
 LoopKit scans free SEO data sources (Google Autocomplete, Reddit, GitHub) and returns:
+
 - Keyword score (0-100) — higher = better opportunity
 - Search volume estimate (high/medium/low)
 - Competition level (low/medium/high)
@@ -336,6 +396,7 @@ $ loopkit keywords
 ```
 
 You can also scan any category:
+
 ```bash
 loopkit keywords --category "ecommerce"
 ```
@@ -348,15 +409,16 @@ Detects recurring failure patterns from your local history and surfaces them wit
 
 **When it appears:** After 4+ weeks of data, if any of these patterns are detected:
 
-| Pattern | What it means |
-|---|---|
-| **Overplanner** | You plan 8+ tasks but consistently finish <30% |
-| **Snooze Loop** | You keep snoozing or leaving the same tasks open |
-| **Ship Avoider** | 3+ weeks with no ship + low score |
-| **ICP Drift** | Score declining + feedback says wrong problem |
-| **Scope Creep** | Adding tasks mid-week repeatedly |
+| Pattern          | What it means                                    |
+| ---------------- | ------------------------------------------------ |
+| **Overplanner**  | You plan 8+ tasks but consistently finish <30%   |
+| **Snooze Loop**  | You keep snoozing or leaving the same tasks open |
+| **Ship Avoider** | 3+ weeks with no ship + low score                |
+| **ICP Drift**    | Score declining + feedback says wrong problem    |
+| **Scope Creep**  | Adding tasks mid-week repeatedly                 |
 
 **Example:**
+
 ```bash
 $ loopkit loop
 
@@ -373,6 +435,7 @@ $ loopkit loop
 After you ship, see what anonymized founders in your category shipped this week.
 
 **Example:**
+
 ```bash
 $ loopkit ship
 
@@ -397,6 +460,7 @@ loopkit coach --on         # Re-enable
 ```
 
 **When coaching appears:**
+
 - After `loopkit loop` — one priority moment based on your current state
 - After `loopkit track` — when you're stuck with 0 tasks
 - During `loopkit ship` — if you're avoiding shipping
@@ -431,23 +495,25 @@ loopkit init my-app --template mobile
 
 **Available templates:**
 
-| Template | Best For |
-|---|---|
-| `saas` | Subscription B2B/B2C software |
-| `api` | Developer-facing services |
-| `mobile` | iOS/Android apps |
-| `cli` | Terminal tools |
-| `newsletter` | Curated content products |
-| `agency` | Client service businesses |
-| `open-source` | Public libraries/frameworks |
-| `marketplace` | Two-sided platforms |
-| `ai-wrapper` | LLM-powered interfaces |
+| Template      | Best For                      |
+| ------------- | ----------------------------- |
+| `saas`        | Subscription B2B/B2C software |
+| `api`         | Developer-facing services     |
+| `mobile`      | iOS/Android apps              |
+| `cli`         | Terminal tools                |
+| `newsletter`  | Curated content products      |
+| `agency`      | Client service businesses     |
+| `open-source` | Public libraries/frameworks   |
+| `marketplace` | Two-sided platforms           |
+| `ai-wrapper`  | LLM-powered interfaces        |
 
 Templates pre-fill:
+
 - **ICP hint** in the `init` prompt placeholder
 - **Tasks.md scaffold** with 8 category-appropriate tasks in your backlog
 
 You can also select interactively:
+
 ```bash
 loopkit init my-project
 # → Use a project template? Yes
@@ -467,11 +533,13 @@ loopkit telemetry delete # Delete all server-side data
 ```
 
 **What's collected (when opted in):**
+
 - Anonymized ICP, problem, and MVP categories from your brief
 - Aggregate usage patterns (which commands you run, not what you type)
 - Shipping scores and streak lengths
 
 **What's NEVER collected:**
+
 - Project names, task content, or brief text
 - API keys or personal identifiers
 - Raw feedback responses
@@ -482,11 +550,11 @@ All raw data stays in `.loopkit/` on your machine. Server-side data is aggregate
 
 ## Pricing
 
-| Plan | Cost | AI | Best For |
-|------|------|-----|----------|
-| **Free** | $0 | 10 calls/day | Trying LoopKit, side projects |
-| **Solo** | $19/mo | 100 calls/day | Serious solo founders |
-| **Pro** | $39/mo | Unlimited + BYOK | Power users, multiple projects |
+| Plan     | Cost   | AI               | Best For                       |
+| -------- | ------ | ---------------- | ------------------------------ |
+| **Free** | $0     | 10 calls/day     | Trying LoopKit, side projects  |
+| **Solo** | $19/mo | 100 calls/day    | Serious solo founders          |
+| **Pro**  | $39/mo | Unlimited + BYOK | Power users, multiple projects |
 
 **Free tier includes:** All commands, local storage, basic AI, dashboard read-only.
 
@@ -523,6 +591,7 @@ A: Override it. The AI is a partner, not a boss. But if you find yourself overri
 LoopKit is not a todo app. It's not a project manager. It's a **shipping system**.
 
 The difference:
+
 - A todo app helps you organize work.
 - A shipping system forces you to finish work, learn from it, and do better next week.
 
@@ -541,4 +610,4 @@ LoopKit keeps you honest about that.
 
 ---
 
-*Last updated: April 2026 · v0.1.0 (IE-7 through IE-17 shipped · Pattern Interrupt + Peer Inspiration + Keywords + Timing + Radar + Trending + AI Coach all complete · P0 launch blockers resolved)*
+_Last updated: April 2026 · v0.1.0 (IE-7 through IE-17 shipped · Pattern Interrupt + Peer Inspiration + Keywords + Timing + Radar + Trending + AI Coach all complete · P0 launch blockers resolved)_

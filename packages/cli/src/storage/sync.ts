@@ -47,7 +47,7 @@ async function postSync(path: string, body: unknown): Promise<void> {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(body),
     });
@@ -60,12 +60,54 @@ async function postSync(path: string, body: unknown): Promise<void> {
   }
 }
 
-export async function pushLoopLogToConvex(payload: LoopLogSyncPayload): Promise<void> {
+export async function pushLoopLogToConvex(
+  payload: LoopLogSyncPayload,
+): Promise<void> {
   await postSync("/api/sync/loop", payload);
 }
 
-export async function pushShipLogToConvex(payload: ShipLogSyncPayload): Promise<void> {
+export async function pushShipLogToConvex(
+  payload: ShipLogSyncPayload,
+): Promise<void> {
   await postSync("/api/sync/ship", payload);
+}
+
+interface RadarSyncPayload {
+  category: string;
+  launches: {
+    name: string;
+    url?: string;
+    date: string;
+    platform: string;
+    relevance: number;
+    description?: string;
+    tagline?: string;
+  }[];
+  scannedAt: string;
+}
+
+export async function pushRadarToConvex(
+  payload: RadarSyncPayload,
+): Promise<void> {
+  await postSync("/api/sync/radar", payload);
+}
+
+interface TimingSyncPayload {
+  category: string;
+  fundingTrend: string;
+  fundingCount: number;
+  devTrend: string;
+  devGrowth: number;
+  hiringTrend: string;
+  hiringCount: number;
+  compositeScore: number;
+  signal: string;
+}
+
+export async function pushTimingToConvex(
+  payload: TimingSyncPayload,
+): Promise<void> {
+  await postSync("/api/sync/timing", payload);
 }
 
 export function getConvexProjectId(slug: string): string | undefined {

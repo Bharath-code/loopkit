@@ -12,6 +12,7 @@ import type * as analytics from "../analytics.js";
 import type * as auth from "../auth.js";
 import type * as authHelpers from "../authHelpers.js";
 import type * as cliAuth from "../cliAuth.js";
+import type * as competitorRadar from "../competitorRadar.js";
 import type * as http from "../http.js";
 import type * as keywords from "../keywords.js";
 import type * as loopLogs from "../loopLogs.js";
@@ -36,6 +37,7 @@ declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   authHelpers: typeof authHelpers;
   cliAuth: typeof cliAuth;
+  competitorRadar: typeof competitorRadar;
   http: typeof http;
   keywords: typeof keywords;
   loopLogs: typeof loopLogs;
