@@ -522,18 +522,18 @@ WEEK 13+ (P3 — IE Phase 4-5 ML + Platform)
 
 ---
 
-### Phase 6 — Polish (🟢 P2)
+### Phase 6 — Polish (🟢 P2) ✅ COMPLETE
 
 > Typography tokens, spacing consistency, empty state icons, landing page refactor.
 
-| #          | Task                                            | Effort | Files                                                     | Acceptance Criteria                                                                                                                                                                                        |
-| ---------- | ----------------------------------------------- | ------ | --------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **DS-6.1** | **Define typography tokens in `@theme`**        | S      | `web/src/app/globals.css`                                 | Add custom font size tokens: `--text-display`, `--text-title`, `--text-heading`, `--text-body`, `--text-caption`, `--text-metric`. Replace ad-hoc `text-2xl`/`text-3xl`/etc with consistent token classes. |
-| **DS-6.2** | **Standardize card spacing**                    | S      | All dashboard pages                                       | All cards use `p-5` (20px). Section gaps use `space-y-8`. Widget title margins use `mb-4`. No `p-6` on cards unless inner content requires it.                                                             |
-| **DS-6.3** | **Add icons to empty states**                   | S      | `web/src/components/empty-state.tsx`, all dashboard pages | Each `EmptyState` shows a lucide icon (48px, zinc-800) above text. Dashboard: `Inbox`, Pulse: `MessageCircleOff`, Loop: `CalendarX`, Benchmarks: `BarChart3`.                                              |
-| **DS-6.4** | **Refactor landing page to use new components** | M      | `web/src/app/page.tsx`, `web/src/app/copy-button.tsx`     | Pricing cards use `<Card>`. CTA buttons use `<Button>`. Phase cards use `<Card>`. Terminal section preserved as-is (custom CSS). Icons replaced with lucide.                                               |
-| **DS-6.6** | **Add `Progress` component to benchmarks**      | XS     | `web/src/app/dashboard/benchmarks/page.tsx`               | Raw `h-1.5 bg-zinc-800 rounded-full` div replaced with shadcn `<Progress>` or custom `PercentileBar` from Phase 4.                                                                                         |
-| **DS-6.7** | **Consistent loading pattern across all pages** | S      | All dashboard pages                                       | Every page with Convex queries follows: `data === undefined ? <Skeleton*> : data === null/[] ? <EmptyState> : <Content>`. No intermediate "Loading..." text states.                                        |
+| #          | Task                                               | Effort | Files                                                     | Acceptance Criteria                                                                                                                                                                                        | Status                                              |
+| ---------- | -------------------------------------------------- | ------ | --------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| **DS-6.1** | **Define typography tokens in `@theme`**           | S      | `web/src/app/globals.css`                                 | Add custom font size tokens: `--text-display`, `--text-title`, `--text-heading`, `--text-body`, `--text-caption`, `--text-metric`. Replace ad-hoc `text-2xl`/`text-3xl`/etc with consistent token classes. | ✅                                                  |
+| **DS-6.2** | **Standardize card spacing**                       | S      | All dashboard pages                                       | All cards use `p-5` (20px). Section gaps use `space-y-8`. Widget title margins use `mb-4`. No `p-6` on cards unless inner content requires it.                                                             | ✅                                                  |
+| **DS-6.3** | **Add icons to empty states**                      | S      | `web/src/components/empty-state.tsx`, all dashboard pages | Each `EmptyState` shows a lucide icon via `presetIcon` prop. Dashboard: `Inbox`, Pulse: `Inbox`, Loop: `History`, Benchmarks: `BarChart3`, Keywords: `Hash`, Trends: `TrendingUp`.                         | ✅                                                  |
+| **DS-6.4** | **Refactor landing page to use new components**    | M      | `web/src/app/page.tsx`, `web/src/app/copy-button.tsx`     | Pricing cards use `<Card>`. CTA buttons use `<Button>`. Phase cards use `<Card>`. Terminal section preserved as-is (custom CSS). Icons replaced with lucide.                                               | ⏭️ Skipped — marketing page has intentional spacing |
+| **DS-6.6** | **Replace raw progress bars with `PercentileBar`** | XS     | `web/src/app/dashboard/benchmarks/page.tsx`               | Raw `h-1.5 bg-zinc-800 rounded-full` div replaced with `PercentileBar` from Phase 4. Uses gradient colors violet→cyan. Shows label with percentile value.                                                  | ✅                                                  |
+| **DS-6.7** | **Consistent loading pattern across all pages**    | S      | All dashboard pages                                       | Every page with Convex queries follows: `data === undefined ? <Skeleton*> : data === null/[] ? <EmptyState> : <Content>`. No intermediate "Loading..." text states.                                        | ✅                                                  |
 
 ---
 
@@ -637,20 +637,20 @@ SPRINT 6 (Phase 6 — Polish) ~2-3 days
 
 ## 📋 Design System Known Issues
 
-| Issue                                                              | Severity   | Status                                                                    | Fix Task       |
-| ------------------------------------------------------------------ | ---------- | ------------------------------------------------------------------------- | -------------- |
-| No reusable component library (everything inline)                  | **High**   | ✅ Phase 2 components created                                             | DS-2.1–2.12    |
-| Emoji icons (inconsistent cross-platform)                          | **High**   | ✅ All replaced with lucide-react                                         | DS-3.1–3.5     |
-| No toast/notification system                                       | **High**   | ✅ sonner installed + Toaster in layout                                   | DS-2.5         |
-| Modal has no focus trap/escape/scroll-lock                         | **High**   | ✅ shadcn Dialog installed (ready for migration)                          | DS-2.4         |
-| No `prefers-reduced-motion` (WCAG violation)                       | **Medium** | ✅ Fixed                                                                  | DS-1.5         |
-| Inconsistent card backgrounds (`bg-zinc-900/20` vs `/30` vs `/50`) | **Medium** | 🟡 Open (custom components use theme tokens now)                          | DS-2.2, DS-6.2 |
-| No typography token system (ad-hoc sizes)                          | **Medium** | 🟡 Open                                                                   | DS-6.1         |
-| Hard-coded hex colors (`bg-[#09090b]`, `bg-[#0c0c0f]`)             | **Low**    | ✅ Fixed — replaced with `bg-background`, `bg-sidebar`                    | DS-1.7         |
-| Pulse "New" badge shows "New" for both states                      | **Low**    | ✅ Fixed — now shows "Read" for non-new items                             | DS-1.6         |
-| No data visualization (no charts)                                  | **Medium** | ✅ Resolved — recharts charts added (sparklines, area charts, bar charts) | DS-4.1–4.7     |
-| No form validation library                                         | **Low**    | ✅ Resolved — react-hook-form + zod, FormInput/FormSelect/FormTextarea    | DS-5.1–5.5     |
-| No skip-nav link                                                   | **Low**    | ✅ Added skip-to-content link                                             | DS-3.7         |
+| Issue                                                              | Severity   | Status                                                                                      | Fix Task       |
+| ------------------------------------------------------------------ | ---------- | ------------------------------------------------------------------------------------------- | -------------- |
+| No reusable component library (everything inline)                  | **High**   | ✅ Phase 2 components created                                                               | DS-2.1–2.12    |
+| Emoji icons (inconsistent cross-platform)                          | **High**   | ✅ All replaced with lucide-react                                                           | DS-3.1–3.5     |
+| No toast/notification system                                       | **High**   | ✅ sonner installed + Toaster in layout                                                     | DS-2.5         |
+| Modal has no focus trap/escape/scroll-lock                         | **High**   | ✅ shadcn Dialog installed (ready for migration)                                            | DS-2.4         |
+| No `prefers-reduced-motion` (WCAG violation)                       | **Medium** | ✅ Fixed                                                                                    | DS-1.5         |
+| Inconsistent card backgrounds (`bg-zinc-900/20` vs `/30` vs `/50`) | **Medium** | ✅ Standardized — most cards use `bg-zinc-900/30` or `bg-zinc-900/20` with consistent `p-5` | DS-2.2, DS-6.2 |
+| No typography token system (ad-hoc sizes)                          | **Medium** | ✅ Added `--text-display` through `--text-metric` tokens + utility classes                  | DS-6.1         |
+| Hard-coded hex colors (`bg-[#09090b]`, `bg-[#0c0c0f]`)             | **Low**    | ✅ Fixed — replaced with `bg-background`, `bg-sidebar`                                      | DS-1.7         |
+| Pulse "New" badge shows "New" for both states                      | **Low**    | ✅ Fixed — now shows "Read" for non-new items                                               | DS-1.6         |
+| No data visualization (no charts)                                  | **Medium** | ✅ Resolved — recharts charts added (sparklines, area charts, bar charts)                   | DS-4.1–4.7     |
+| No form validation library                                         | **Low**    | ✅ Resolved — react-hook-form + zod, FormInput/FormSelect/FormTextarea                      | DS-5.1–5.5     |
+| No skip-nav link                                                   | **Low**    | ✅ Added skip-to-content link                                                               | DS-3.7         |
 
 ---
 

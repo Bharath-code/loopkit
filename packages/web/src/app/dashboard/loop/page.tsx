@@ -4,6 +4,7 @@ import { useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { Id } from "../../../../convex/_generated/dataModel";
 import { MetricChart } from "@/components/charts";
+import { EmptyState } from "@/components/empty-state";
 
 export default function LoopHistoryPage() {
   const projects = useQuery(api.projects.list);
@@ -34,9 +35,7 @@ export default function LoopHistoryPage() {
     <div className="space-y-8 fade-up">
       <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-2">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white mb-2">
-            Loop History
-          </h1>
+          <h1 className="text-title text-white mb-2">Loop History</h1>
           <p className="text-zinc-400 text-sm">
             Your weekly synthesis and shipping velocity.
           </p>
@@ -62,17 +61,15 @@ export default function LoopHistoryPage() {
       </header>
 
       {!activeProject && (
-        <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/20 text-center">
-          <p className="text-zinc-400 text-sm">
-            No project connected. Run{" "}
-            <code className="text-violet-400">loopkit init</code> to get
-            started.
-          </p>
-        </div>
+        <EmptyState
+          presetIcon="loop"
+          title="No project connected"
+          description="Run loopkit init to get started."
+        />
       )}
 
       {chartData.length >= 2 && (
-        <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/20">
+        <div className="p-5 rounded-2xl border border-zinc-800 bg-zinc-900/20">
           <h2 className="text-base font-semibold text-white mb-4">
             Shipping Score Trend
           </h2>
@@ -93,13 +90,11 @@ export default function LoopHistoryPage() {
 
         <div className="space-y-12">
           {!loops || loops.length === 0 ? (
-            <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/20 text-center">
-              <p className="text-zinc-500 text-sm">
-                No loop history yet. Run{" "}
-                <code className="text-violet-400">loopkit loop</code> on Sunday
-                to create your first weekly synthesis.
-              </p>
-            </div>
+            <EmptyState
+              presetIcon="loop"
+              title="No loop history yet"
+              description="Run loopkit loop on Sunday to create your first weekly synthesis."
+            />
           ) : (
             loops.map((loop) => (
               <div
@@ -114,7 +109,7 @@ export default function LoopHistoryPage() {
                   <div className="text-xs text-zinc-500">{loop.date}</div>
                 </div>
 
-                <div className="flex-1 p-6 rounded-2xl border border-zinc-800 bg-zinc-900/20 hover:bg-zinc-900/40 transition-colors">
+                <div className="flex-1 p-5 rounded-2xl border border-zinc-800 bg-zinc-900/20 hover:bg-zinc-900/40 transition-colors">
                   <div className="flex flex-wrap gap-4 mb-6 pb-6 border-b border-zinc-800">
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-zinc-500 uppercase tracking-wider">

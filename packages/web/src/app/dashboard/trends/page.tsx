@@ -4,6 +4,7 @@ import { useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { HorizontalBarChart } from "@/components/charts";
 import { TrendIcon } from "@/components/trend-icon";
+import { EmptyState } from "@/components/empty-state";
 
 interface TrendItem {
   category: string;
@@ -68,9 +69,7 @@ export default function TrendsPage() {
   return (
     <div className="space-y-8 fade-up">
       <header>
-        <h1 className="text-2xl font-bold tracking-tight text-white mb-2">
-          Trending Validations
-        </h1>
+        <h1 className="text-title text-white mb-2">Trending Validations</h1>
         <p className="text-zinc-400 text-sm">
           What ICPs and problems LoopKit founders are pursuing right now.
           Proprietary data no one else has.
@@ -78,22 +77,22 @@ export default function TrendsPage() {
       </header>
 
       {!trending || trending.totalFounders === 0 ? (
-        <div className="p-8 rounded-2xl border border-zinc-800 bg-zinc-900/20 text-center">
-          <p className="text-zinc-400 text-sm mb-2">Not enough data yet.</p>
-          <p className="text-zinc-500 text-xs mb-4">
-            Trending validations appear once founders opt into telemetry and
-            complete <code className="text-violet-400">loopkit init</code>.
-          </p>
-          <div className="flex items-center justify-center gap-3 text-xs text-zinc-600">
-            <span>
-              1. Run <code className="text-zinc-500">loopkit init</code>
-            </span>
-            <span>·</span>
-            <span>2. Opt into telemetry</span>
-            <span>·</span>
-            <span>3. See trends here</span>
-          </div>
-        </div>
+        <EmptyState
+          presetIcon="trending"
+          title="Not enough data yet"
+          description="Trending validations appear once founders opt into telemetry and complete loopkit init."
+          action={
+            <div className="flex items-center justify-center gap-3 text-xs text-zinc-500 mt-2">
+              <span>
+                1. Run <code className="text-zinc-400">loopkit init</code>
+              </span>
+              <span>·</span>
+              <span>2. Opt into telemetry</span>
+              <span>·</span>
+              <span>3. See trends here</span>
+            </div>
+          }
+        />
       ) : (
         <>
           <div className="flex items-center gap-4 mb-6">

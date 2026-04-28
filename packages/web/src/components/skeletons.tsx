@@ -31,7 +31,7 @@ export function SkeletonCard({
   titleWidth?: string;
 }) {
   return (
-    <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/20">
+    <div className="p-5 rounded-2xl border border-zinc-800 bg-zinc-900/20">
       <Skeleton className={`h-5 ${titleWidth} mb-4`} />
       <div className="space-y-3">
         {Array.from({ length: lines }).map((_, i) => (
@@ -49,7 +49,7 @@ export function SkeletonCard({
 
 export function SkeletonActivity() {
   return (
-    <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/20">
+    <div className="p-5 rounded-2xl border border-zinc-800 bg-zinc-900/20">
       <Skeleton className="h-5 w-32 mb-6" />
       <div className="space-y-4">
         <div className="flex gap-4">
@@ -66,7 +66,7 @@ export function SkeletonActivity() {
 
 export function SkeletonLoopSynthesis() {
   return (
-    <div className="p-6 rounded-2xl border border-violet-500/20 bg-sidebar relative overflow-hidden glow-violet">
+    <div className="p-5 rounded-2xl border border-violet-500/20 bg-sidebar relative overflow-hidden glow-violet">
       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-violet-600 to-cyan-500" />
       <div className="flex items-center justify-between mb-6">
         <Skeleton className="h-5 w-36" />
@@ -84,7 +84,7 @@ export function SkeletonLoopSynthesis() {
 
 export function SkeletonArchetype() {
   return (
-    <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/20">
+    <div className="p-5 rounded-2xl border border-zinc-800 bg-zinc-900/20">
       <Skeleton className="h-5 w-40 mb-4" />
       <div className="flex items-center gap-3 mb-4">
         <Skeleton className="w-10 h-10 rounded-full" />
@@ -104,7 +104,7 @@ export function SkeletonArchetype() {
 
 export function SkeletonMarketTiming() {
   return (
-    <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/20">
+    <div className="p-5 rounded-2xl border border-zinc-800 bg-zinc-900/20">
       <div className="flex items-center justify-between mb-4">
         <Skeleton className="h-5 w-32" />
         <Skeleton className="h-3 w-24" />

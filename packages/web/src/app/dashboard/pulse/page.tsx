@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { Id } from "../../../../convex/_generated/dataModel";
+import { EmptyState } from "@/components/empty-state";
 
 export default function PulseInboxPage() {
   const [activeTab, setActiveTab] = useState<
@@ -78,9 +79,7 @@ export default function PulseInboxPage() {
   return (
     <div className="space-y-8 fade-up">
       <header>
-        <h1 className="text-2xl font-bold tracking-tight text-white mb-2">
-          Pulse Inbox
-        </h1>
+        <h1 className="text-title text-white mb-2">Pulse Inbox</h1>
         <p className="text-zinc-400 text-sm">
           Async feedback collected and clustered automatically. Updates in
           real-time.
@@ -88,13 +87,11 @@ export default function PulseInboxPage() {
       </header>
 
       {!activeProject && (
-        <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/20 text-center">
-          <p className="text-zinc-400 text-sm">
-            No project connected. Use{" "}
-            <code className="text-violet-400">loopkit pulse --share</code> to
-            create a feedback form.
-          </p>
-        </div>
+        <EmptyState
+          presetIcon="inbox"
+          title="No project connected"
+          description="Use loopkit pulse --share to create a feedback form."
+        />
       )}
 
       {/* Tabs */}
@@ -124,11 +121,11 @@ export default function PulseInboxPage() {
       {/* Content Area */}
       <div className="space-y-4">
         {!responses || responses.length === 0 ? (
-          <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/20 text-center">
-            <p className="text-zinc-500 text-sm">
-              No responses yet. Share your feedback form to start collecting.
-            </p>
-          </div>
+          <EmptyState
+            presetIcon="inbox"
+            title="No responses yet"
+            description="Share your feedback form to start collecting responses."
+          />
         ) : (
           responses.map((response) => {
             const isNew = newIds.has(response._id);

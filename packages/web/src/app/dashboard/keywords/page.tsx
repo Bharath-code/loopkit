@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
+import { EmptyState } from "@/components/empty-state";
 
 type SortKey = "score" | "keyword" | "volume" | "competition";
 type SortDir = "asc" | "desc";
@@ -63,7 +64,7 @@ function exportCSV(keywords: KeywordRow[], category: string) {
         k.competition,
         `"${k.sources.join("; ")}"`,
         `"${k.suggestions.join("; ")}"`,
-      ].join(",")
+      ].join(","),
     )
     .join("\n");
   const blob = new Blob([header + rows], { type: "text/csv" });
@@ -79,13 +80,17 @@ export default function KeywordsPage() {
   const [sortKey, setSortKey] = useState<SortKey>("score");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [volumeFilter, setVolumeFilter] = useState<VolumeFilter>("all");
-  const [competitionFilter, setCompetitionFilter] = useState<CompetitionFilter>("all");
+  const [competitionFilter, setCompetitionFilter] =
+    useState<CompetitionFilter>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [category, setCategory] = useState("general");
 
   const projects = useQuery(api.projects.list);
   const activeProject = projects?.[0];
-  const data = useQuery(api.keywords.getKeywords, activeProject ? { category: activeProject.name.toLowerCase() } : "skip");
+  const data = useQuery(
+    api.keywords.getKeywords,
+    activeProject ? { category: activeProject.name.toLowerCase() } : "skip",
+  );
 
   const filtered = useMemo(() => {
     if (!data) return [];
@@ -96,7 +101,7 @@ export default function KeywordsPage() {
       rows = rows.filter(
         (r) =>
           r.keyword.toLowerCase().includes(q) ||
-          r.suggestions.some((s) => s.toLowerCase().includes(q))
+          r.suggestions.some((s) => s.toLowerCase().includes(q)),
       );
     }
 
@@ -119,12 +124,16 @@ export default function KeywordsPage() {
           break;
         case "volume": {
           const order = { high: 3, medium: 2, low: 1 };
-          cmp = (order[a.volume as keyof typeof order] || 0) - (order[b.volume as keyof typeof order] || 0);
+          cmp =
+            (order[a.volume as keyof typeof order] || 0) -
+            (order[b.volume as keyof typeof order] || 0);
           break;
         }
         case "competition": {
           const order = { low: 1, medium: 2, high: 3 };
-          cmp = (order[a.competition as keyof typeof order] || 0) - (order[b.competition as keyof typeof order] || 0);
+          cmp =
+            (order[a.competition as keyof typeof order] || 0) -
+            (order[b.competition as keyof typeof order] || 0);
           break;
         }
       }
@@ -152,9 +161,10 @@ export default function KeywordsPage() {
     <div className="space-y-6 fade-up">
       <header className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white mb-2">Keyword Opportunities</h1>
+          <h1 className="text-title text-white mb-2">Keyword Opportunities</h1>
           <p className="text-zinc-400 text-sm">
-            Content ideas for your niche. Scored by search interest vs competition.
+            Content ideas for your niche. Scored by search interest vs
+            competition.
           </p>
         </div>
         {data && data.keywords.length > 0 && (
@@ -168,29 +178,31 @@ export default function KeywordsPage() {
       </header>
 
       {!data ? (
-        <div className="p-8 rounded-2xl border border-zinc-800 bg-zinc-900/20 text-center animate-pulse">
-          <div className="h-4 bg-zinc-800 rounded w-48 mx-auto mb-3"></div>
-          <div className="h-3 bg-zinc-800 rounded w-64 mx-auto"></div>
-        </div>
+        <EmptyState
+          presetIcon="keywords"
+          title="Loading keywords"
+          description="Scanning for opportunities..."
+          className="animate-pulse"
+        />
       ) : data.keywords.length === 0 ? (
-        <div className="p-8 rounded-2xl border border-zinc-800 bg-zinc-900/20 text-center">
-          <p className="text-zinc-400 text-sm mb-2">No keyword data yet.</p>
-          <p className="text-zinc-500 text-xs">
-            Run <code className="text-violet-400">loopkit keywords</code> in your CLI to scan for opportunities.
-          </p>
-        </div>
+        <EmptyState
+          presetIcon="keywords"
+          title="No keyword data yet"
+          description="Run loopkit keywords in your CLI to scan for opportunities."
+        />
       ) : filtered.length === 0 ? (
-        <div className="p-8 rounded-2xl border border-zinc-800 bg-zinc-900/20 text-center">
-          <p className="text-zinc-400 text-sm mb-2">No keywords match your filters.</p>
-          <p className="text-zinc-500 text-xs">
-            Try adjusting your search or filter criteria.
-          </p>
-        </div>
+        <EmptyState
+          presetIcon="keywords"
+          title="No keywords match your filters"
+          description="Try adjusting your search or filter criteria."
+        />
       ) : (
         <>
           <div className="flex items-center gap-4 mb-4">
             <div className="px-3 py-1.5 rounded-lg bg-violet-500/10 border border-violet-500/20">
-              <span className="text-violet-400 text-sm font-medium">{data.totalFound} keywords</span>
+              <span className="text-violet-400 text-sm font-medium">
+                {data.totalFound} keywords
+              </span>
               <span className="text-zinc-500 text-xs ml-1">found</span>
             </div>
             {data.lastScanned && (
@@ -220,7 +232,9 @@ export default function KeywordsPage() {
             </select>
             <select
               value={competitionFilter}
-              onChange={(e) => setCompetitionFilter(e.target.value as CompetitionFilter)}
+              onChange={(e) =>
+                setCompetitionFilter(e.target.value as CompetitionFilter)
+              }
               className="px-3 py-2 rounded-lg bg-zinc-900/50 border border-zinc-800 text-sm text-zinc-300 focus:outline-none focus:border-violet-500/50 cursor-pointer"
             >
               <option value="all">All Competition</option>
@@ -272,9 +286,13 @@ export default function KeywordsPage() {
                     key={row.keyword}
                     className="border-b border-zinc-800/50 hover:bg-zinc-900/30 transition-colors"
                   >
-                    <td className="px-4 py-3 text-xs text-zinc-500 font-mono">{i + 1}</td>
+                    <td className="px-4 py-3 text-xs text-zinc-500 font-mono">
+                      {i + 1}
+                    </td>
                     <td className="px-4 py-3">
-                      <span className="text-white font-medium">{row.keyword}</span>
+                      <span className="text-white font-medium">
+                        {row.keyword}
+                      </span>
                       {row.suggestions.length > 0 && (
                         <p className="text-xs text-zinc-500 mt-0.5 truncate max-w-xs">
                           {row.suggestions.slice(0, 2).join(", ")}
@@ -289,12 +307,16 @@ export default function KeywordsPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${volumeBadge(row.volume)}`}>
+                      <span
+                        className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${volumeBadge(row.volume)}`}
+                      >
                         {row.volume}
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${competitionBadge(row.competition)}`}>
+                      <span
+                        className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${competitionBadge(row.competition)}`}
+                      >
                         {row.competition}
                       </span>
                     </td>

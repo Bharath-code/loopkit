@@ -5,6 +5,9 @@ import { useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { Id } from "../../../../convex/_generated/dataModel";
 import { TrendIcon } from "@/components/trend-icon";
+import { EmptyState } from "@/components/empty-state";
+import { PercentileBar } from "@/components/charts";
+import { SkeletonMetric, SkeletonCard } from "@/components/skeletons";
 import {
   Trophy,
   Rocket,
@@ -82,17 +85,17 @@ export default function BenchmarksPage() {
     return (
       <div className="space-y-8 fade-up">
         <header>
-          <h1 className="text-2xl font-bold tracking-tight text-white mb-2">
-            Benchmarks
-          </h1>
+          <h1 className="text-title text-white mb-2">Benchmarks</h1>
           <p className="text-zinc-400 text-sm">
             See how your shipping habits compare.
           </p>
         </header>
-        <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/20 text-center">
-          <p className="text-zinc-500 text-sm">
-            {benchmarks?.message || "Loading your benchmarks…"}
-          </p>
+        <SkeletonMetric />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <SkeletonCard lines={3} titleWidth="w-32" />
+          <SkeletonCard lines={3} titleWidth="w-32" />
+          <SkeletonCard lines={3} titleWidth="w-32" />
+          <SkeletonCard lines={3} titleWidth="w-32" />
         </div>
       </div>
     );
@@ -148,9 +151,7 @@ export default function BenchmarksPage() {
     <div className="space-y-8 fade-up">
       <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white mb-2">
-            Benchmarks
-          </h1>
+          <h1 className="text-title text-white mb-2">Benchmarks</h1>
           <p className="text-zinc-400 text-sm">
             {cohortSize >= 20
               ? `Compared against ${cohortSize} anonymized founder-weeks.`
@@ -172,13 +173,11 @@ export default function BenchmarksPage() {
       </header>
 
       {!activeProject && (
-        <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/20 text-center">
-          <p className="text-zinc-400 text-sm">
-            No project connected. Run{" "}
-            <code className="text-violet-400">loopkit init</code> to get
-            started.
-          </p>
-        </div>
+        <EmptyState
+          presetIcon="loop"
+          title="No project connected"
+          description="Run loopkit init to get started."
+        />
       )}
 
       {/* Overall Rank */}
@@ -186,7 +185,7 @@ export default function BenchmarksPage() {
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm text-zinc-400">Overall Shipping Percentile</p>
-            <p className="text-3xl font-bold text-white mt-1">
+            <p className="text-metric text-white mt-1">
               {overallPercentile}
               <span className="text-lg text-zinc-500">th</span>
             </p>
@@ -211,7 +210,7 @@ export default function BenchmarksPage() {
         {metrics.map((metric) => (
           <div
             key={metric.label}
-            className="p-5 rounded-2xl border border-zinc-800 bg-zinc-900/20 hover:bg-zinc-900/40 transition-colors"
+            className="p-5 rounded-2xl border border-zinc-800 bg-zinc-900/20 hover:bg-zinc-900/40 transition-colors metric-card"
           >
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
@@ -226,25 +225,22 @@ export default function BenchmarksPage() {
             </div>
 
             <div className="flex items-end gap-2 mb-2">
-              <span className="text-3xl font-bold text-white">
-                {metric.value}
-              </span>
+              <span className="text-metric text-white">{metric.value}</span>
               <span className="text-sm text-zinc-500 mb-1">{metric.unit}</span>
               <TrendIcon trend={metric.trend} />
             </div>
 
             <p className="text-xs text-zinc-500">{metric.description}</p>
 
-            {/* Percentile bar */}
-            <div className="mt-3 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-violet-600 to-cyan-500 rounded-full transition-all duration-500"
-                style={{ width: `${metric.percentile}%` }}
-              />
-            </div>
-            <p className="text-xs text-zinc-600 mt-1">
-              {metric.percentile}th percentile
-            </p>
+            <PercentileBar
+              value={metric.percentile}
+              max={100}
+              colorFrom="#8b5cf6"
+              colorTo="#06b6d4"
+              height={6}
+              label={`${metric.percentile}th percentile`}
+              className="mt-3"
+            />
           </div>
         ))}
       </div>
@@ -257,7 +253,7 @@ export default function BenchmarksPage() {
           aria-modal="true"
           aria-label="Share your stats"
         >
-          <div className="w-full max-w-sm rounded-2xl border border-zinc-800 bg-sidebar p-6 shadow-2xl">
+          <div className="w-full max-w-sm rounded-2xl border border-zinc-800 bg-sidebar p-5 shadow-2xl">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-bold text-white">Share Your Stats</h3>
               <button

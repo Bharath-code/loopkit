@@ -76,7 +76,7 @@ export default function DashboardOverviewPage() {
     <div className="space-y-8 fade-up">
       <header className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white mb-2 flex items-center gap-3">
+          <h1 className="text-title text-white mb-2 flex items-center gap-3">
             Project Overview
             {isFreeTier && (
               <span className="px-2 py-0.5 rounded text-xs bg-zinc-800 text-zinc-400 font-medium border border-zinc-700">
@@ -99,7 +99,7 @@ export default function DashboardOverviewPage() {
       </header>
 
       {!activeProject && (
-        <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/20 text-center">
+        <div className="p-5 rounded-2xl border border-zinc-800 bg-zinc-900/20 text-center">
           <p className="text-zinc-400 text-sm mb-4">
             No projects yet. Run{" "}
             <code className="text-violet-400">loopkit init</code> in your CLI to
@@ -129,9 +129,7 @@ export default function DashboardOverviewPage() {
                 />
               )}
             </div>
-            <div className="text-3xl font-bold text-white">
-              {tasksCompleted}
-            </div>
+            <div className="text-metric text-white">{tasksCompleted}</div>
             <div className="mt-2 text-xs text-zinc-500">
               {tasksTotal > 0
                 ? `${Math.round((tasksCompleted / tasksTotal) * 100)}% of weekly plan`
@@ -162,9 +160,9 @@ export default function DashboardOverviewPage() {
                 />
               )}
             </div>
-            <div className="text-3xl font-bold text-white">
+            <div className="text-metric text-white">
               {shippingScore}
-              <span className="text-sm text-zinc-500">/100</span>
+              <span className="text-sm text-zinc-500 font-normal">/100</span>
             </div>
             <div className="mt-2 text-xs text-zinc-500">
               Based on completed vs planned tasks
@@ -187,9 +185,7 @@ export default function DashboardOverviewPage() {
                 </span>
               </div>
             </div>
-            <div className="text-3xl font-bold text-white">
-              {pulseCount ?? 0}
-            </div>
+            <div className="text-metric text-white">{pulseCount ?? 0}</div>
             <div className="mt-2 text-xs text-amber-400 flex items-center gap-1">
               <span>
                 {pulseCount && pulseCount > 0
@@ -206,7 +202,7 @@ export default function DashboardOverviewPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Recent Activity */}
         {latestLoop !== undefined ? (
-          <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/20">
+          <div className="p-5 rounded-2xl border border-zinc-800 bg-zinc-900/20">
             <h2 className="text-base font-semibold text-white mb-6">
               Recent Activity
             </h2>
@@ -262,7 +258,7 @@ export default function DashboardOverviewPage() {
         {/* Founder Archetype */}
         {archetype !== undefined ? (
           archetype ? (
-            <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/20">
+            <div className="p-5 rounded-2xl border border-zinc-800 bg-zinc-900/20">
               <h2 className="text-base font-semibold text-white mb-4">
                 Founder Archetype
               </h2>
@@ -302,7 +298,7 @@ export default function DashboardOverviewPage() {
 
         {/* Weekly Loop Synthesis Highlight */}
         {latestLoop !== undefined ? (
-          <div className="p-6 rounded-2xl border border-violet-500/20 bg-sidebar relative overflow-hidden glow-violet">
+          <div className="p-5 rounded-2xl border border-violet-500/20 bg-sidebar relative overflow-hidden glow-violet">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-violet-600 to-cyan-500"></div>
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-base font-semibold text-white">
@@ -352,7 +348,7 @@ export default function DashboardOverviewPage() {
         {/* Trending Validations (IE-8) */}
         {trending !== undefined ? (
           trending?.totalFounders > 0 ? (
-            <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/20">
+            <div className="p-5 rounded-2xl border border-zinc-800 bg-zinc-900/20">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-base font-semibold text-white">
                   Trending Validations
@@ -387,7 +383,7 @@ export default function DashboardOverviewPage() {
               </p>
             </div>
           ) : (
-            <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/20">
+            <div className="p-5 rounded-2xl border border-zinc-800 bg-zinc-900/20">
               <h2 className="text-base font-semibold text-white mb-2">
                 Trending Validations
               </h2>
@@ -453,7 +449,7 @@ function PatternInterruptWidget({
   };
 
   return (
-    <div className="p-6 rounded-2xl border border-amber-500/20 bg-zinc-900/20">
+    <div className="p-5 rounded-2xl border border-amber-500/20 bg-zinc-900/20">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-base font-semibold text-white">
           <Zap
@@ -513,7 +509,7 @@ function PeerInspirationWidget({
 
   if (peers.length === 0) {
     return (
-      <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/20">
+      <div className="p-5 rounded-2xl border border-zinc-800 bg-zinc-900/20">
         <h2 className="text-base font-semibold text-white mb-2">
           <Rocket
             className="h-4 w-4 inline-block mr-1.5 text-zinc-400"
@@ -532,7 +528,7 @@ function PeerInspirationWidget({
   }
 
   return (
-    <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/20">
+    <div className="p-5 rounded-2xl border border-zinc-800 bg-zinc-900/20">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-base font-semibold text-white">
           <Rocket
@@ -686,7 +682,7 @@ function CoachingWidget({
   };
 
   return (
-    <div className={`p-6 rounded-2xl border ${priorityColor[top.priority]}`}>
+    <div className={`p-5 rounded-2xl border ${priorityColor[top.priority]}`}>
       <div className="flex items-center justify-between mb-4">
         <h2 className={`text-base font-semibold ${titleColor[top.priority]}`}>
           {top.priority === "critical" ? (
@@ -777,7 +773,7 @@ function MarketTimingWidget({
   }
 
   return (
-    <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/20">
+    <div className="p-5 rounded-2xl border border-zinc-800 bg-zinc-900/20">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-base font-semibold text-white">Market Timing</h2>
         <a
