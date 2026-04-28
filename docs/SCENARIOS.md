@@ -1,6 +1,6 @@
 # LoopKit Interaction Scenarios
 
-> *"The difference between good products and great products is how they behave in the edge cases."*
+> _"The difference between good products and great products is how they behave in the edge cases."_
 
 This document catalogs every possible way a user can interact with LoopKit — happy paths, edge cases, error states, and recovery flows. Use this for QA, support, and onboarding design.
 
@@ -24,11 +24,13 @@ This document catalogs every possible way a user can interact with LoopKit — h
 ## `loopkit init` Scenarios
 
 ### SC-INIT-01: First-Time Happy Path
+
 **Persona:** Alex (First-Time Founder)
 **Trigger:** Runs `loopkit init` for the very first time
 **Pre-conditions:** No `.loopkit/` directory exists
 
 **Flow:**
+
 1. User runs `loopkit init`
 2. System detects no existing projects, creates `.loopkit/` directory
 3. Clack prompts appear one by one:
@@ -42,11 +44,12 @@ This document catalogs every possible way a user can interact with LoopKit — h
 6. Brief rendered in terminal with bet, riskiest assumption, validation plan
 7. Files saved: `.loopkit/projects/ai-dentist/brief.md` and `.loopkit/projects/ai-dentist/brief.json`
 8. `config.json` updated with `activeProject: "ai-dentist"`
-9. `tasks.md` scaffold created
+9. `tasks.md` scaffold created with AI-personalized tasks
 
 **Expected Outcome:** User has a validated brief and a clear plan for Week 1
 
 **Edge Cases:**
+
 - **SC-INIT-01a:** User presses Ctrl+C at question 3 → draft.json saved, resume offered on next run
 - **SC-INIT-01b:** AI service unavailable → answers saved without scores, `--analyze` suggested
 - **SC-INIT-01c:** User answers with < 5 words → soft warning shown, user can proceed anyway
@@ -55,11 +58,13 @@ This document catalogs every possible way a user can interact with LoopKit — h
 ---
 
 ### SC-INIT-02: Project Name Collision
+
 **Persona:** Marcus (Indie Hacker)
 **Trigger:** Runs `loopkit init saas` but project "saas" already exists
 **Pre-conditions:** `.loopkit/projects/saas/` exists
 
 **Flow:**
+
 1. User runs `loopkit init saas`
 2. System detects existing project
 3. Prompt: "Project 'saas' already exists. What would you like to do?"
@@ -72,17 +77,20 @@ This document catalogs every possible way a user can interact with LoopKit — h
 **Expected Outcome:** No data loss, user has clear options
 
 **Edge Cases:**
+
 - **SC-INIT-02a:** User chooses "Overwrite" → old brief.md backed up with timestamp? (No — we warn but respect choice)
 - **SC-INIT-02b:** 10 versions exist (saas-v1 through saas-v10) → suggest "saas-v11" automatically
 
 ---
 
 ### SC-INIT-03: No API Key, Free Tier
+
 **Persona:** Jordan (Side Project Shipper)
 **Trigger:** Runs `loopkit init` without ANTHROPIC_API_KEY and without `loopkit auth`
 **Pre-conditions:** No auth configured
 
 **Flow:**
+
 1. User runs `loopkit init`
 2. System detects no API key and no auth token
 3. Prompts continue normally (all 5 questions)
@@ -96,11 +104,13 @@ This document catalogs every possible way a user can interact with LoopKit — h
 ## `loopkit track` Scenarios
 
 ### SC-TRACK-01: Daily Check-In
+
 **Persona:** Sarah (Solo Founder)
 **Trigger:** Runs `loopkit track` on Wednesday afternoon
 **Pre-conditions:** `tasks.md` exists with 5 tasks (2 done, 3 open)
 
 **Flow:**
+
 1. User runs `loopkit track`
 2. System reads `tasks.md`
 3. Board displayed:
@@ -120,6 +130,7 @@ This document catalogs every possible way a user can interact with LoopKit — h
 **Expected Outcome:** Clear visibility into progress, stale items surfaced
 
 **Edge Cases:**
+
 - **SC-TRACK-01a:** No tasks.md exists → "No tasks found. Run `loopkit track --add` to create your first task."
 - **SC-TRACK-01b:** All tasks done → "All tasks complete! Shipping score: 100%. Time to ship?"
 - **SC-TRACK-01c:** 0 tasks done, 5 open → "Shipping score: 0%. Tip: Start with the smallest task to build momentum."
@@ -128,11 +139,13 @@ This document catalogs every possible way a user can interact with LoopKit — h
 ---
 
 ### SC-TRACK-02: Commit Auto-Close
+
 **Persona:** Marcus (Indie Hacker)
 **Trigger:** Commits with `git commit -m "[#2] Fix OAuth redirect"`
 **Pre-conditions:** Git hook installed, task #2 exists and is open
 
 **Flow:**
+
 1. User writes commit message with `[#2]`
 2. Git hook fires (commit-msg)
 3. Hook reads tasks.md, finds task #2
@@ -143,6 +156,7 @@ This document catalogs every possible way a user can interact with LoopKit — h
 **Expected Outcome:** Zero-friction task management
 
 **Edge Cases:**
+
 - **SC-TRACK-02a:** Task #2 already done → hook appends to closedVia (comma-separated SHAs), no error
 - **SC-TRACK-02b:** Task #999 doesn't exist → hook warns but doesn't block commit: "Warning: Task #999 not found in tasks.md"
 - **SC-TRACK-03c:** Multiple tasks: `[#2] [#4] Update both flows` → both tasks closed
@@ -151,15 +165,18 @@ This document catalogs every possible way a user can interact with LoopKit — h
 ---
 
 ### SC-TRACK-03: Adding Tasks
+
 **Persona:** Marcus (Indie Hacker)
 **Trigger:** Has an idea while coding, wants to capture it
 
 **Flow (inline):**
+
 1. User runs `loopkit track --add "Add dark mode toggle"`
 2. Task appended to tasks.md with next sequential ID and today's date
 3. Output: "✓ Task #6 added"
 
 **Flow (editor):**
+
 1. User runs `loopkit track --add` (no argument)
 2. $EDITOR opens with a blank file
 3. User types multi-line task description
@@ -169,6 +186,7 @@ This document catalogs every possible way a user can interact with LoopKit — h
 **Expected Outcome:** Ideas captured instantly without breaking flow
 
 **Edge Cases:**
+
 - **SC-TRACK-03a:** $EDITOR not set, nano not available → fallback to `vi`, then prompt for text
 - **SC-TRACK-03b:** User saves empty file → "No task text provided. Task not added."
 - **SC-TRACK-03c:** tasks.md has IDs [1,2,3,5] (missing #4) → next ID is 6 (doesn't reuse 4)
@@ -176,10 +194,12 @@ This document catalogs every possible way a user can interact with LoopKit — h
 ---
 
 ### SC-TRACK-04: Switching Projects
+
 **Persona:** Marcus (Indie Hacker)
 **Trigger:** Wants to check status of a different project
 
 **Flow:**
+
 1. User runs `loopkit track --project old-saas`
 2. System checks if project exists
 3. If yes: updates `config.activeProject` to "old-saas", shows that project's board
@@ -192,11 +212,13 @@ This document catalogs every possible way a user can interact with LoopKit — h
 ## `loopkit ship` Scenarios
 
 ### SC-SHIP-01: First Launch
+
 **Persona:** Sarah (Solo Founder)
 **Trigger:** Just deployed v1.0, ready to announce
 **Pre-conditions:** brief.json exists, tasks.md has completed tasks
 
 **Flow:**
+
 1. User runs `loopkit ship`
 2. System reads brief.json for context
 3. System reads tasks.md for completed tasks
@@ -218,6 +240,7 @@ This document catalogs every possible way a user can interact with LoopKit — h
 **Expected Outcome:** User launches on multiple platforms in < 15 minutes
 
 **Edge Cases:**
+
 - **SC-SHIP-01a:** No brief.json → fallback to 2 inline questions for context
 - **SC-SHIP-01b:** AI fails mid-generation → saves log with what user manually entered, shows error message
 - **SC-SHIP-01c:** Ship log already exists for today → prompt: "Ship log for today exists. Overwrite / Append / Skip?"
@@ -226,10 +249,12 @@ This document catalogs every possible way a user can interact with LoopKit — h
 ---
 
 ### SC-SHIP-02: Regenerate Draft
+
 **Persona:** Marcus (Indie Hacker)
 **Trigger:** Doesn't like the Twitter thread AI generated
 
 **Flow:**
+
 1. User sees Twitter draft, presses `[r]egenerate`
 2. System re-calls AI with same context but slightly varied prompt
 3. New Twitter thread generated
@@ -242,10 +267,12 @@ This document catalogs every possible way a user can interact with LoopKit — h
 ## `loopkit pulse` Scenarios
 
 ### SC-PULSE-01: First Feedback Collection
+
 **Persona:** Alex (First-Time Founder)
 **Trigger:** Wants to start collecting feedback after landing page launch
 
 **Flow:**
+
 1. User runs `loopkit pulse --share`
 2. System checks auth → verifies token
 3. Reads active project name and slug from config
@@ -258,6 +285,7 @@ This document catalogs every possible way a user can interact with LoopKit — h
 **Expected Outcome:** Feedback collection starts in < 2 minutes
 
 **Edge Cases:**
+
 - **SC-PULSE-01a:** Not authenticated → "Authentication required. Run `loopkit auth` first."
 - **SC-PULSE-01b:** No active project → "No active project. Run `loopkit init` first."
 - **SC-PULSE-01c:** API call fails → shows error with URL to check status manually
@@ -265,15 +293,18 @@ This document catalogs every possible way a user can interact with LoopKit — h
 ---
 
 ### SC-PULSE-02: AI Clustering
+
 **Persona:** Sarah (Solo Founder)
 **Trigger:** Has collected 12 responses, wants insights
 
 **Flow:**
+
 1. User runs `loopkit pulse`
 2. System reads 12 responses from `.loopkit/pulse/responses.json`
 3. Spinner: "Clustering feedback..."
 4. AI generates clusters (streaming: "3 fields parsed")
 5. Output:
+
    ```
    ● Fix now (3)
      Users confused by onboarding
@@ -288,15 +319,17 @@ This document catalogs every possible way a user can interact with LoopKit — h
 
    ● Noise (4)
      Unrelated praise and complaints
-   
+
    Confidence: 85% clearly clustered
    ```
+
 6. Prompt: "Tag 'Users confused by onboarding' to this week's sprint?"
 7. User confirms → task added to tasks.md
 
 **Expected Outcome:** 12 raw responses → 3 actionable insights in 10 seconds
 
 **Edge Cases:**
+
 - **SC-PULSE-02a:** AI clustering fails → shows raw responses with apology message
 - **SC-PULSE-02b:** All responses are outliers → "Low confidence (30%). Consider collecting more targeted feedback."
 - **SC-PULSE-02c:** User runs with `--raw` flag → skips AI, shows numbered list
@@ -304,10 +337,12 @@ This document catalogs every possible way a user can interact with LoopKit — h
 ---
 
 ### SC-PULSE-03: Adding Response Inline
+
 **Persona:** Marcus (Indie Hacker)
 **Trigger:** Gets a DM from a user with feedback
 
 **Flow:**
+
 1. User runs `loopkit pulse --add "User said the pricing page is confusing"`
 2. Response appended to `.loopkit/pulse/responses.json`
 3. Output: "Response added (6 total). Need 4 more for AI clustering."
@@ -319,11 +354,13 @@ This document catalogs every possible way a user can interact with LoopKit — h
 ## `loopkit loop` Scenarios
 
 ### SC-LOOP-01: Sunday Ritual (Normal Week)
+
 **Persona:** Jordan (Side Project Shipper)
 **Trigger:** Sunday 9 AM, weekly synthesis time
 **Pre-conditions:** 3 weeks of loop logs exist, tasks done this week
 
 **Flow:**
+
 1. User runs `loopkit loop`
 2. System aggregates data locally (< 1 second):
    - Tasks done: 4, Tasks total: 5, Shipping score: 80%
@@ -348,6 +385,7 @@ This document catalogs every possible way a user can interact with LoopKit — h
 **Expected Outcome:** Clear priority for next week, public accountability post ready
 
 **Edge Cases:**
+
 - **SC-LOOP-01a:** No tasks done this week → "Unstuck mode": AI offers 3 micro-tasks based on brief context
 - **SC-LOOP-01b:** Override rate > 50% for 4 weeks → "You've overridden the AI recommendation 6 of the last 8 weeks. The system works best when you trust it. Consider why you disagree so often."
 - **SC-LOOP-01c:** First week ever → asks 2 inline questions, no AI needed
@@ -356,10 +394,12 @@ This document catalogs every possible way a user can interact with LoopKit — h
 ---
 
 ### SC-LOOP-02: Override Decision
+
 **Persona:** Marcus (Indie Hacker)
 **Trigger:** Disagrees with AI recommendation
 
 **Flow:**
+
 1. AI recommends: "The One Thing: Fix onboarding"
 2. Marcus wants to work on API docs instead
 3. User selects "Change"
@@ -377,10 +417,12 @@ This document catalogs every possible way a user can interact with LoopKit — h
 ## `loopkit auth` Scenarios
 
 ### SC-AUTH-01: First Login
+
 **Persona:** Sarah (Solo Founder)
 **Trigger:** Wants to use AI features without managing an API key
 
 **Flow:**
+
 1. User runs `loopkit auth`
 2. Spinner: "Generating authentication session"
 3. Code generated (e.g., "A7B9C2")
@@ -393,6 +435,7 @@ This document catalogs every possible way a user can interact with LoopKit — h
 **Expected Outcome:** Seamless browser-to-CLI auth
 
 **Edge Cases:**
+
 - **SC-AUTH-01a:** User doesn't complete browser flow within 2 minutes → "Authentication timed out. Please try running loopkit auth again."
 - **SC-AUTH-01b:** Browser auth fails → error propagated to CLI
 - **SC-AUTH-01c:** Token expires (401 on next API call) → "Your session has expired. Please run `loopkit auth` to log in again."
@@ -402,27 +445,33 @@ This document catalogs every possible way a user can interact with LoopKit — h
 ## Cross-Command Scenarios
 
 ### SC-CROSS-01: Full Week Cycle
+
 **Persona:** Sarah (Solo Founder)
 **Trigger:** First week using LoopKit
 
 **Monday:**
-- `loopkit init my-saas` → brief created, tasks.md scaffolded
+
+- `loopkit init my-saas` → brief created, tasks.md scaffolded with AI-personalized tasks
 - Adds 5 tasks to "This Week"
 
 **Tuesday-Thursday:**
+
 - Codes, commits with `[#1]`, `[#2]` → tasks auto-close
 - `loopkit track` daily to check progress
 
 **Friday:**
+
 - Ships feature
 - `loopkit ship` → generates launch copy, posts to Twitter
 - Ship log saved
 
 **Saturday:**
+
 - Shares feedback form from `loopkit pulse --share`
 - Gets 5 responses in Discord
 
 **Sunday:**
+
 - `loopkit loop` → synthesis recommends next week's focus
 - Accepts recommendation
 - BIP post shared on Twitter
@@ -433,10 +482,12 @@ This document catalogs every possible way a user can interact with LoopKit — h
 ---
 
 ### SC-CROSS-02: Context Switching Between Projects
+
 **Persona:** Marcus (Indie Hacker)
 **Trigger:** Managing 2 active projects
 
 **Flow:**
+
 1. Monday: `loopkit track --project ai-image-gen` → works on Project A
 2. Wednesday: `loopkit ship` → ships Project A feature
 3. Thursday: `loopkit track --project chrome-extension` → switches to Project B
@@ -446,16 +497,19 @@ This document catalogs every possible way a user can interact with LoopKit — h
 **Expected Outcome:** Clear separation of project contexts
 
 **Edge Cases:**
+
 - **SC-CROSS-02a:** Forgets which project is active → `loopkit track` shows project name in header
 - **SC-CROSS-02b:** Tries to pulse share for wrong project → always uses active project, user must switch first
 
 ---
 
 ### SC-CROSS-03: Free Tier Journey
+
 **Persona:** Jordan (Side Project Shipper)
 **Trigger:** Using LoopKit on free tier
 
 **Flow:**
+
 1. `loopkit init` → works fine (no AI needed, or brief saved without scores)
 2. `loopkit track` → works fully (local only)
 3. `loopkit ship` → AI generates drafts, uses 1 of 10 daily AI calls
@@ -473,9 +527,11 @@ This document catalogs every possible way a user can interact with LoopKit — h
 ## Error Recovery Scenarios
 
 ### SC-ERROR-01: No Internet Connection
+
 **Trigger:** User runs `loopkit init` while offline
 
 **Flow:**
+
 1. User answers all 5 questions (local, works offline)
 2. AI analysis attempted → network error
 3. System: "AI analysis unavailable while offline. Your answers have been saved. Run `loopkit init --analyze my-project` when you're back online."
@@ -486,9 +542,11 @@ This document catalogs every possible way a user can interact with LoopKit — h
 ---
 
 ### SC-ERROR-02: Corrupted Config
+
 **Trigger:** `config.json` is manually edited and malformed
 
 **Flow:**
+
 1. Any command reads config
 2. JSON parse fails
 3. System: "Warning: Config file corrupted. Resetting to defaults. Your project data is safe."
@@ -500,9 +558,11 @@ This document catalogs every possible way a user can interact with LoopKit — h
 ---
 
 ### SC-ERROR-03: Deleted tasks.md
+
 **Trigger:** User accidentally deletes tasks.md
 
 **Flow:**
+
 1. User runs `loopkit track`
 2. System: "No tasks found. Run `loopkit track --add` to create your first task."
 3. User can recreate tasks, but historical data is lost
@@ -512,9 +572,11 @@ This document catalogs every possible way a user can interact with LoopKit — h
 ---
 
 ### SC-ERROR-04: Git Hook Corruption
+
 **Trigger:** User's commit-msg hook is corrupted by another tool
 
 **Flow:**
+
 1. LoopKit's hook is append-only (never overwrites)
 2. If another tool overwrites the hook, LoopKit's pattern detection won't work
 3. User runs `loopkit track` → detects hook missing, offers to reinstall
@@ -527,10 +589,12 @@ This document catalogs every possible way a user can interact with LoopKit — h
 ## Onboarding Scenarios
 
 ### SC-ONBOARD-01: Complete Newbie
+
 **Persona:** Alex (First-Time Founder)
 **Trigger:** Just installed LoopKit, never used it
 
 **Flow:**
+
 1. `npm install -g loopkit`
 2. `loopkit --help` → sees 5 commands, intrigued
 3. `loopkit init` → guided through first brief
@@ -545,10 +609,12 @@ This document catalogs every possible way a user can interact with LoopKit — h
 ---
 
 ### SC-ONBOARD-02: Skeptical Power User
+
 **Persona:** Marcus (Indie Hacker)
 **Trigger:** Heard about LoopKit, thinks it's "just another tool"
 
 **Flow:**
+
 1. Sees tweet about LoopKit
 2. Installs skeptically
 3. `loopkit init` → answers questions quickly, expects generic advice
@@ -561,4 +627,4 @@ This document catalogs every possible way a user can interact with LoopKit — h
 
 ---
 
-*Last updated: April 2026*
+_Last updated: April 2026_

@@ -20,18 +20,18 @@ Solo founders are strong builders but weak shippers. The loop — define → dev
 
 ## The Loop
 
-| Command | Phase | What It Does |
-|---|---|---|
-| `loopkit init` | Define | Turn a fuzzy idea into a scored, falsifiable brief |
-| `loopkit track` | Develop | Tasks in markdown. Commits close them automatically |
-| `loopkit ship` | Deliver | AI writes your HN post, Twitter thread, and IH update |
-| `loopkit pulse` | Feedback | Async feedback, AI-clustered, no meetings required |
-| `loopkit loop` | Iterate | Sunday ritual — one decision, one post, loop closed |
-| `loopkit radar` | Intelligence | Scan PH & HN for competitor launches in your category |
-| `loopkit keywords` | Intelligence | Find low-competition keywords for content strategy |
-| `loopkit timing` | Intelligence | Market timing signal — is your space heating up? |
-| `loopkit coach` | Intelligence | AI coaching based on your shipping patterns |
-| `loopkit init --template <id>` | Define | Pre-fill tasks with 9 project templates |
+| Command                        | Phase        | What It Does                                             |
+| ------------------------------ | ------------ | -------------------------------------------------------- |
+| `loopkit init`                 | Define       | Turn a fuzzy idea into a scored, falsifiable brief       |
+| `loopkit track`                | Develop      | Tasks in markdown. Commits close them automatically      |
+| `loopkit ship`                 | Deliver      | AI writes your HN post, Twitter thread, and IH update    |
+| `loopkit pulse`                | Feedback     | Async feedback, AI-clustered, no meetings required       |
+| `loopkit loop`                 | Iterate      | Sunday ritual — one decision, one post, loop closed      |
+| `loopkit radar`                | Intelligence | Scan PH & HN for competitor launches in your category    |
+| `loopkit keywords`             | Intelligence | Find low-competition keywords for content strategy       |
+| `loopkit timing`               | Intelligence | Market timing signal — is your space heating up?         |
+| `loopkit coach`                | Intelligence | AI coaching based on your shipping patterns              |
+| `loopkit init --template <id>` | Define       | Pre-fill & AI-personalize tasks with 9 project templates |
 
 ## Quick Start
 
@@ -56,13 +56,13 @@ loopkit loop
 
 ## Documentation
 
-| Resource | Description |
-|----------|-------------|
-| [Quick Start](docs/QUICK_START.md) | Get from zero to shipping in 15 minutes |
-| [User Guide](docs/USER_GUIDE.md) | Full philosophy, tips, and how to get the most out of LoopKit |
+| Resource                             | Description                                                      |
+| ------------------------------------ | ---------------------------------------------------------------- |
+| [Quick Start](docs/QUICK_START.md)   | Get from zero to shipping in 15 minutes                          |
+| [User Guide](docs/USER_GUIDE.md)     | Full philosophy, tips, and how to get the most out of LoopKit    |
 | [User Stories](docs/USER_STORIES.md) | Every feature mapped to real user needs with acceptance criteria |
-| [Scenarios](docs/SCENARIOS.md) | Happy paths, edge cases, and error recovery flows |
-| [Personas](docs/PERSONAS.md) | Who LoopKit is built for and how they use it |
+| [Scenarios](docs/SCENARIOS.md)       | Happy paths, edge cases, and error recovery flows                |
+| [Personas](docs/PERSONAS.md)         | Who LoopKit is built for and how they use it                     |
 
 ## How It Works
 
@@ -111,11 +111,11 @@ Five questions. AI scoring. A brief that stings when it should.
 
 ## Pricing
 
-| Tier | Price | Includes |
-|---|---|---|
-| Free | $0/forever | 1 project, full CLI, git sync |
-| Solo | $19/month | 5 projects, AI proxy access, Pulse hosted form |
-| Pro | $39/month | Unlimited, web dashboard, Pulse widget, BYOK API key |
+| Tier | Price      | Includes                                             |
+| ---- | ---------- | ---------------------------------------------------- |
+| Free | $0/forever | 1 project, full CLI, git sync                        |
+| Solo | $19/month  | 5 projects, AI proxy access, Pulse hosted form       |
+| Pro  | $39/month  | Unlimited, web dashboard, Pulse widget, BYOK API key |
 
 ## Local First, Cloud-Enhanced
 
@@ -159,4 +159,4 @@ When you authenticate with `loopkit auth`, your loop logs and ship logs optional
 
 Built by a solo founder, for solo founders.
 
-*The best time to ship was yesterday. The second best time is now.*
+_The best time to ship was yesterday. The second best time is now._

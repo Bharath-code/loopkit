@@ -1,7 +1,18 @@
 import * as p from "@clack/prompts";
-import { slugify, BriefSchema, type InitAnswers, formatDate } from "@loopkit/shared";
+import {
+  slugify,
+  BriefSchema,
+  ScaffoldSchema,
+  type InitAnswers,
+  formatDate,
+} from "@loopkit/shared";
 import { generateStructured } from "../ai/client.js";
-import { INIT_SYSTEM_PROMPT, buildInitPrompt } from "../ai/prompts/init.js";
+import {
+  INIT_SYSTEM_PROMPT,
+  buildInitPrompt,
+  SCAFFOLD_SYSTEM_PROMPT,
+  buildScaffoldPrompt,
+} from "../ai/prompts/init.js";
 import {
   ensureLoopkitDir,
   projectExists,
@@ -11,14 +22,30 @@ import {
   saveBrief,
   readConfig,
 } from "../storage/local.js";
-import { colors, scoreBar, box, header, nextStep, info, shortcutsHint } from "../ui/theme.js";
-import { recordBriefCategories, getLocalTrendingData, isTelemetryEnabled } from "../analytics/telemetry.js";
-import { categorizeICP, categorizeProblem, categorizeMVP } from "../analytics/competitorRadar.js";
+import {
+  colors,
+  scoreBar,
+  box,
+  header,
+  nextStep,
+  info,
+  shortcutsHint,
+} from "../ui/theme.js";
+import {
+  recordBriefCategories,
+  getLocalTrendingData,
+  isTelemetryEnabled,
+} from "../analytics/telemetry.js";
+import {
+  categorizeICP,
+  categorizeProblem,
+  categorizeMVP,
+} from "../analytics/competitorRadar.js";
 import { getTemplate, getTemplateList } from "../templates/index.js";
 
 export async function initCommand(
   resumeName?: string,
-  options?: { analyze?: string; template?: string }
+  options?: { analyze?: string; template?: string },
 ): Promise<void> {
   // Handle --analyze flag
   if (options?.analyze) {
@@ -30,13 +57,21 @@ export async function initCommand(
 
   p.intro(colors.primary.bold("LoopKit — Define your product"));
   console.log(shortcutsHint());
-  console.log(colors.muted("This takes 4 minutes. Be honest, not optimistic.\n"));
+  console.log(
+    colors.muted("This takes 4 minutes. Be honest, not optimistic.\n"),
+  );
 
   // ─── Template selection ───────────────────────────────────────
-  let selectedTemplate = options?.template ? getTemplate(options.template) : undefined;
+  let selectedTemplate = options?.template
+    ? getTemplate(options.template)
+    : undefined;
 
   if (options?.template && !selectedTemplate) {
-    console.log(colors.warning(`Template "${options.template}" not found. Available templates:`));
+    console.log(
+      colors.warning(
+        `Template "${options.template}" not found. Available templates:`,
+      ),
+    );
     for (const t of getTemplateList()) {
       console.log(colors.dim(`  • ${t.id}: ${t.name} — ${t.description}`));
     }
@@ -88,7 +123,7 @@ export async function initCommand(
         answers = draft.partialAnswers;
         startQuestion = draft.lastQuestion;
         console.log(
-          colors.muted(`  Resuming from question ${startQuestion + 1}/5\n`)
+          colors.muted(`  Resuming from question ${startQuestion + 1}/5\n`),
         );
       }
     } else if (projectExists(slug)) {
@@ -128,7 +163,8 @@ export async function initCommand(
         : "e.g. Freelancers lose deals because proposals look amateur",
       validate: (value: string) => {
         if (value.length < 5) return undefined; // Allow short, will soft-warn
-        const solutionPatterns = /^(i want to build|a tool that|an app that|a platform)/i;
+        const solutionPatterns =
+          /^(i want to build|a tool that|an app that|a platform)/i;
         if (solutionPatterns.test(value.trim())) {
           return "That sounds like a solution. What's the pain the user feels before your product exists?";
         }
@@ -139,7 +175,9 @@ export async function initCommand(
       key: "icp" as const,
       message:
         "Who has this problem the worst? Be specific — role, context, how often they hit this pain.",
-      placeholder: selectedTemplate?.icpHint || "e.g. Senior freelancers, $3K+ projects, 2-5 proposals/month",
+      placeholder:
+        selectedTemplate?.icpHint ||
+        "e.g. Senior freelancers, $3K+ projects, 2-5 proposals/month",
     },
     {
       key: "whyUnsolved" as const,
@@ -172,10 +210,11 @@ export async function initCommand(
     if (p.isCancel(value)) {
       // Save draft on Ctrl+C
       if (answers.name || slug) {
-        const currentSlug = slug || slugify((answers.name as string) || "untitled");
+        const currentSlug =
+          slug || slugify((answers.name as string) || "untitled");
         saveDraft(currentSlug, answers, i);
         console.log(
-          `\n${colors.muted(`Session paused. Run`)} ${colors.primary(`loopkit init ${currentSlug}`)} ${colors.muted("to resume.")}`
+          `\n${colors.muted(`Session paused. Run`)} ${colors.primary(`loopkit init ${currentSlug}`)} ${colors.muted("to resume.")}`,
         );
       }
       process.exit(0);
@@ -245,20 +284,61 @@ export async function initCommand(
     // Render
     renderBrief(finalAnswers, brief, slug);
 
-    // Create tasks.md scaffold from template (F5)
+    // Create tasks.md scaffold from template (F5 / F5-AI)
     if (selectedTemplate) {
-      const { createTasksScaffold, writeTasksFile, readTasksFile } = await import("../storage/local.js");
+      const { createTasksScaffold, writeTasksFile, readTasksFile } =
+        await import("../storage/local.js");
       createTasksScaffold(slug, finalAnswers.name);
       const existing = readTasksFile(slug) || "";
-      const scaffoldTasks = selectedTemplate.taskScaffold
+
+      // F5-AI: Personalize scaffold via AI, fallback to hardcoded
+      let taskList = selectedTemplate.taskScaffold;
+      try {
+        const scaffold = await generateStructured({
+          command: "init",
+          system: SCAFFOLD_SYSTEM_PROMPT,
+          prompt: buildScaffoldPrompt(
+            finalAnswers,
+            selectedTemplate.name,
+            selectedTemplate.taskScaffold,
+          ),
+          schema: ScaffoldSchema,
+          tier: "fast",
+          temperature: 0.3,
+        });
+
+        // Deduplicate by normalized string
+        const seen = new Set<string>();
+        const deduped = scaffold.tasks.filter((t) => {
+          const norm = t
+            .toLowerCase()
+            .replace(/[^a-z0-9]/g, "")
+            .slice(0, 40);
+          if (seen.has(norm)) return false;
+          seen.add(norm);
+          return true;
+        });
+
+        if (deduped.length >= 5) {
+          taskList = deduped;
+        }
+      } catch {
+        // AI failed — use hardcoded scaffold (silent fallback)
+      }
+
+      const scaffoldTasks = taskList
         .map((t) => `- [ ] ${t} — created:${formatDate(new Date())}`)
         .join("\n");
       const updated = existing.replace(
         "## Backlog\n",
-        `## Backlog\n${scaffoldTasks}\n`
+        `## Backlog\n${scaffoldTasks}\n`,
       );
       writeTasksFile(slug, updated);
-      console.log(info(`Template "${selectedTemplate.name}" applied — ${selectedTemplate.taskScaffold.length} tasks added to backlog.`));
+      console.log(
+        info(
+          `Template "${selectedTemplate.name}" applied — ${taskList.length} tasks added to backlog.`,
+        ),
+      );
     }
 
     // Show trend hint (IE-8.4)
@@ -272,8 +352,8 @@ export async function initCommand(
 
     console.log(
       colors.warning(
-        `\n  Saved answers without scoring. Run ${colors.primary(`loopkit init --analyze ${slug}`)} when online.\n`
-      )
+        `\n  Saved answers without scoring. Run ${colors.primary(`loopkit init --analyze ${slug}`)} when online.\n`,
+      ),
     );
 
     const config = readConfig();
@@ -302,7 +382,7 @@ function renderBrief(
     validateAction: string;
     mvpPlainEnglish: string;
   },
-  slug: string
+  slug: string,
 ): void {
   console.log(
     box(
@@ -328,13 +408,11 @@ function renderBrief(
         `${colors.white.bold("MVP IN PLAIN ENGLISH")}`,
         brief.mvpPlainEnglish,
       ].join("\n"),
-      answers.name
-    )
+      answers.name,
+    ),
   );
 
-  console.log(
-    `\n${info(`Saved → .loopkit/projects/${slug}/brief.md`)}`
-  );
+  console.log(`\n${info(`Saved → .loopkit/projects/${slug}/brief.md`)}`);
 }
 
 // ─── Analyze Existing ───────────────────────────────────────────
@@ -345,12 +423,18 @@ async function analyzeExisting(name: string): Promise<void> {
   const data = readBriefJson(slug);
 
   if (!data) {
-    console.log(colors.danger(`No brief found for "${name}". Run loopkit init first.`));
+    console.log(
+      colors.danger(`No brief found for "${name}". Run loopkit init first.`),
+    );
     process.exit(1);
   }
 
   if (data.brief) {
-    console.log(colors.warning(`"${name}" already has AI analysis. Run loopkit init to overwrite.`));
+    console.log(
+      colors.warning(
+        `"${name}" already has AI analysis. Run loopkit init to overwrite.`,
+      ),
+    );
     return;
   }
 
@@ -388,7 +472,15 @@ function renderTrendHint(answers: InitAnswers): void {
   if (similarCount >= 1) {
     console.log("");
     console.log(colors.primary.bold("  Trending Validation"));
-    console.log(colors.dim(`  ${similarCount} other founder${similarCount > 1 ? "s" : ""} ${similarCount > 1 ? "are" : "is"} exploring similar ICP spaces this month.`));
-    console.log(colors.dim("  Run `loopkit radar` to see recent launches in your category."));
+    console.log(
+      colors.dim(
+        `  ${similarCount} other founder${similarCount > 1 ? "s" : ""} ${similarCount > 1 ? "are" : "is"} exploring similar ICP spaces this month.`,
+      ),
+    );
+    console.log(
+      colors.dim(
+        "  Run `loopkit radar` to see recent launches in your category.",
+      ),
+    );
   }
 }

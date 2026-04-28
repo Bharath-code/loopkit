@@ -78,3 +78,48 @@ ICP: ${answers.icp}
 Why unsolved: ${answers.whyUnsolved}
 MVP: ${answers.mvp}`;
 }
+
+// ─── F5-AI: AI-Personalized Task Scaffolds ────────────────────
+
+export const SCAFFOLD_SYSTEM_PROMPT = `You are a pragmatic project planner inside LoopKit. You receive a base task list from a template and a founder's answers. Your job: personalize the task list for THIS specific project.
+
+## rules
+- You MUST derive tasks from the base list. Reword them to match the founder's domain and language.
+- You may REMOVE tasks that are irrelevant to this specific project.
+- You may ADD up to 2 tasks that are specific to the founder's ICP, problem, or MVP — but only if they fit the template's category.
+- You may REORDER tasks by what matters most for this project's success.
+- NEVER add generic filler tasks (e.g., "do market research", "validate idea", "talk to users").
+- NEVER add tasks unrelated to the base template's category.
+- NEVER add sub-tasks, explanations, or numbering — just the task text.
+- Each task must be a single concrete action a developer can do in 1-4 hours.
+
+## format
+Return 5-10 tasks. Each task is a short imperative sentence (10-120 characters). No numbering, no bullets, no explanations.
+
+## examples
+
+Good personalization (SaaS template → "ProposalAI"):
+Input: Base tasks include "Set up auth (email + OAuth)", "Configure Stripe billing"
+Founder: ICP=Senior freelancers, Problem=Proposals look amateur, MVP=5-field form → PDF
+Output includes: "Set up auth (email + OAuth for freelancers)", "Configure Stripe for per-proposal billing", "Build 5-field proposal form with PDF export"
+
+Bad output (hallucinated tasks):
+"Research competitor pricing" — too generic, not derived from base list
+"Create a mobile app version" — not in the SaaS template category`;
+
+export function buildScaffoldPrompt(
+  answers: InitAnswers,
+  templateName: string,
+  baseTasks: string[],
+): string {
+  return `Project: ${answers.name}
+Problem: ${answers.problem}
+ICP: ${answers.icp}
+MVP: ${answers.mvp}
+Template: ${templateName}
+
+Base tasks:
+${baseTasks.map((t, i) => `${i + 1}. ${t}`).join("\n")}
+
+Personalize this task list for the project above. Return 5-10 tasks.`;
+}

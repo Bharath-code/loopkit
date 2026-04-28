@@ -28,6 +28,12 @@ export const BriefSchema = z.object({
 
 export type Brief = z.infer<typeof BriefSchema>;
 
+export const ScaffoldSchema = z.object({
+  tasks: z.array(z.string().min(10).max(120)).min(5).max(10),
+});
+
+export type Scaffold = z.infer<typeof ScaffoldSchema>;
+
 // ─── loopkit track ──────────────────────────────────────────────
 
 export const TaskStatus = z.enum(["open", "done", "snoozed", "cut"]);

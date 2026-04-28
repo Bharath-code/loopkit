@@ -484,9 +484,9 @@ loopkit coach --on         # Re-enable
 
 Coaching respects your attention: max 1 moment per command, never the same moment twice in a row, and critical moments are never silenced.
 
-### Project Templates (F5)
+### Project Templates & AI Scaffolds (F5 / F5-AI)
 
-Skip the blank page. Start with a pre-scaffolded task list matched to your project type.
+Skip the blank page. Start with a pre-scaffolded task list matched to your project type — then let AI personalize it to your specific idea.
 
 ```bash
 loopkit init my-saas --template saas
@@ -510,7 +510,9 @@ loopkit init my-app --template mobile
 Templates pre-fill:
 
 - **ICP hint** in the `init` prompt placeholder
-- **Tasks.md scaffold** with 8 category-appropriate tasks in your backlog
+- **Tasks.md scaffold** with 5-10 AI-personalized tasks in your backlog
+
+When you select a template, AI reads your answers (problem, ICP, MVP) and personalizes the task list — rewording tasks to match your domain, removing irrelevant ones, and adding up to 2 project-specific tasks. If AI is unavailable, the hardcoded template tasks are used as a fallback.
 
 You can also select interactively:
 
