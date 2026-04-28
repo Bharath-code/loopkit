@@ -9,6 +9,11 @@ import {
   type Task,
   type ShipLog,
   type LoopLog,
+  type RevenueEntry,
+  type RevenueHistory,
+  type StandupLog,
+  RevenueHistorySchema,
+  StandupLogSchema,
   ConfigSchema,
   slugify,
   formatDate,
@@ -447,7 +452,7 @@ export function readLastNLoopLogs(n: number, slug?: string): Array<{ weekNumber:
 export function getConsecutiveWeeksStreak(currentWeekNum: number): number {
   let streak = 0;
   let checkWeek = currentWeekNum - 1;
-  
+
   while (checkWeek > 0) {
     if (loopLogExists(checkWeek)) {
       streak++;
@@ -456,6 +461,114 @@ export function getConsecutiveWeeksStreak(currentWeekNum: number): number {
       break;
     }
   }
-  
+
+  return streak;
+}
+
+// ─── GF-4: Revenue Storage ───────────────────────────────────────
+
+export function getRevenuePath(): string {
+  return path.join(getRoot(), "revenue.json");
+}
+
+/**
+ * Append a new revenue entry to .loopkit/revenue.json.
+ * Creates the file if it doesn't exist.
+ */
+export function appendRevenueEntry(entry: RevenueEntry): void {
+  ensureLoopkitDir();
+  const history = readRevenueHistory();
+  history.push(entry);
+  fs.writeFileSync(getRevenuePath(), JSON.stringify(history, null, 2));
+}
+
+/**
+ * Read the full revenue history from .loopkit/revenue.json.
+ * Returns [] if the file doesn't exist or is corrupted.
+ */
+export function readRevenueHistory(): RevenueHistory {
+  const filePath = getRevenuePath();
+  if (!fs.existsSync(filePath)) return [];
+  try {
+    const raw = JSON.parse(fs.readFileSync(filePath, "utf-8"));
+    // Validate with Zod — returns [] on schema mismatch
+    const result = RevenueHistorySchema.safeParse(raw);
+    return result.success ? result.data : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Get the MRR from the most recent revenue entry.
+ * Returns null if no entries exist.
+ */
+export function getLatestMRR(): number | null {
+  const history = readRevenueHistory();
+  if (history.length === 0) return null;
+  return history[history.length - 1].mrr;
+}
+
+// ─── GF-3: Standup Storage ───────────────────────────────────────
+
+export function getStandupDir(): string {
+  return path.join(getRoot(), "standups");
+}
+
+export function getStandupPath(date: string): string {
+  return path.join(getStandupDir(), `${date}.json`);
+}
+
+/**
+ * Save a daily standup log to .loopkit/standups/YYYY-MM-DD.json.
+ * Never overwrites an existing standup for the same date.
+ */
+export function saveStandup(log: StandupLog): void {
+  const dir = getStandupDir();
+  ensureDir(dir);
+  const filePath = getStandupPath(log.date);
+  // Validate before writing
+  const validated = StandupLogSchema.parse(log);
+  fs.writeFileSync(filePath, JSON.stringify(validated, null, 2));
+}
+
+/**
+ * Read a standup log for a given date.
+ * Returns null if no standup exists for that date.
+ */
+export function readStandup(date: string): StandupLog | null {
+  const filePath = getStandupPath(date);
+  if (!fs.existsSync(filePath)) return null;
+  try {
+    const raw = JSON.parse(fs.readFileSync(filePath, "utf-8"));
+    const result = StandupLogSchema.safeParse(raw);
+    return result.success ? result.data : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Calculate the standup streak — consecutive days (ending today)
+ * that have a standup log.
+ */
+export function getStandupStreak(): number {
+  const dir = getStandupDir();
+  if (!fs.existsSync(dir)) return 0;
+
+  let streak = 0;
+  const today = new Date();
+
+  for (let i = 0; i < 365; i++) {
+    const checkDate = new Date(today);
+    checkDate.setDate(today.getDate() - i);
+    const dateStr = checkDate.toISOString().split("T")[0];
+    if (fs.existsSync(getStandupPath(dateStr))) {
+      streak++;
+    } else {
+      break; // streak is broken
+    }
+  }
+
   return streak;
 }

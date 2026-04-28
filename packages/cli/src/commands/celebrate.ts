@@ -7,7 +7,11 @@ import {
   readShipLog,
   getConsecutiveWeeksStreak,
   listProjects,
+  getLatestMRR,
+  readRevenueHistory,
 } from "../storage/local.js";
+import { computeLoopKitScore } from "../analytics/score.js";
+import { buildProofCard, buildTweetLine, copyToClipboard } from "../ui/proof-card.js";
 import { colors, header, box, pass, info } from "../ui/theme.js";
 
 // ─── ASCII Confetti ─────────────────────────────────────────────
@@ -161,6 +165,13 @@ export async function celebrateCommand(
   // ─── Confetti burst ───────────────────────────────────────────
   console.log(renderConfetti(4, 48));
 
+  // ─── LoopKit Score™ (GF-1) ────────────────────────────────────
+  const scoreBreakdown = computeLoopKitScore();
+  const loopkitScore = scoreBreakdown?.score ?? null;
+
+  // ─── Revenue (GF-4) ───────────────────────────────────────────
+  const latestMRR = getLatestMRR();
+
   // ─── Celebration card ─────────────────────────────────────────
   const cardLines = [
     colors.success.bold(`${rank.emoji} YOU SHIPPED! ${rank.emoji}`),
@@ -174,6 +185,8 @@ export async function celebrateCommand(
     `  ${colors.secondary("Completion:")} ${score.completionRate}%`,
     `  ${colors.warning("Streak:")} ${score.currentStreak} week${score.currentStreak !== 1 ? "s" : ""} ${score.currentStreak >= 3 ? "🔥" : ""}`,
     `  ${colors.primary("Total shipped:")} ${score.totalShipped} tasks`,
+    ...(loopkitScore !== null ? [`  ${colors.secondary("LoopKit Score:")} ${colors.secondary.bold(`${loopkitScore}/100`)}`] : []),
+    ...(latestMRR !== null && latestMRR > 0 ? [`  ${colors.success("MRR:")} ${colors.success.bold(`$${latestMRR}`)}`] : []),
   ];
 
   console.log(box(cardLines.join("\n"), "Ship Card"));
@@ -203,24 +216,33 @@ export async function celebrateCommand(
     );
   }
 
-  // ─── Shareable text ───────────────────────────────────────────
-  const shareText = buildShareText(productName, score, weekNum);
+  // ─── Shareable Proof Card (GF-2) ────────────────────────────────
+  const proofCardData = {
+    productName,
+    weekNum,
+    shippingScore: score.shippingScore,
+    tasksCompleted: score.tasksDone,
+    tasksTotal: score.tasksTotal,
+    streak: score.currentStreak,
+    feedbackResponses: 0,
+    loopkitScore,
+    oneThing: "Keep shipping",
+    mrr: latestMRR,
+    currency: "USD",
+  };
+
+  const shareText = buildProofCard(proofCardData);
+  const tweetLine = buildTweetLine(proofCardData);
 
   console.log(header("Share"));
   console.log(colors.dim("  Copy this to share your progress:"));
   console.log(box(shareText));
+  console.log(colors.dim(`  Tweet: ${tweetLine}`));
 
   // Auto-copy to clipboard on macOS
-  try {
-    const { spawnSync } = await import("node:child_process");
-    if (process.platform === "darwin") {
-      const result = spawnSync("pbcopy", [], { input: shareText, encoding: "utf-8" });
-      if (!result.error) {
-        console.log(pass("Copied to clipboard — paste and share!"));
-      }
-    }
-  } catch {
-    // Silent — clipboard is a convenience, not required
+  const copied = await copyToClipboard(tweetLine);
+  if (copied) {
+    console.log(pass("Tweet line copied to clipboard — paste and share!"));
   }
 
   // ─── What's next ──────────────────────────────────────────────

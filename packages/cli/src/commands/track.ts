@@ -15,17 +15,22 @@ import {
   projectExists,
   readLastNLoopLogs,
   readLoopLog,
+  saveStandup,
+  readStandup,
+  getStandupStreak,
 } from "../storage/local.js";
 import { computeBenchmarks, renderBenchmarks } from "../analytics/benchmarks.js";
 import { getSnoozeWarning } from "../analytics/oracle.js";
 import { getPriorityMoment, recordMomentShown } from "../analytics/coach.js";
-import { colors, header, pass, warn, info, nextStep, shortcutsHint, emptyState, coachingCard } from "../ui/theme.js";
+import { computeLoopKitScore } from "../analytics/score.js";
+import { colors, header, pass, warn, info, nextStep, shortcutsHint, emptyState, coachingCard, standupCard } from "../ui/theme.js";
 
 export async function trackCommand(options?: {
   add?: string;
   week?: boolean;
   repair?: boolean;
   project?: string;
+  stand?: boolean;
 }): Promise<void> {
   const config = readConfig();
 
@@ -64,6 +69,12 @@ export async function trackCommand(options?: {
   // ─── --repair: Fix formatting ─────────────────────────────────
   if (options?.repair) {
     repairTasks(slug);
+    return;
+  }
+
+  // ─── --stand: Daily Standup (GF-3) ───────────────────────────
+  if (options?.stand) {
+    await runStandupFlow(slug);
     return;
   }
 
@@ -171,6 +182,14 @@ export async function trackCommand(options?: {
     `\n  ${colors.white.bold("Shipping")} ${renderProgressBar(shippingScore)} ${colors.white.bold(`${shippingScore}%`)}${deltaStr}`
   );
 
+  // ─── LoopKit Score™ (GF-1) ─────────────────────────────────
+  const scoreBreakdown = computeLoopKitScore();
+  if (scoreBreakdown) {
+    const { renderLoopKitScore, readLoopKitScoreFromLog } = await import("../analytics/score.js");
+    const prevWeekScore = prevLog ? readLoopKitScoreFromLog(prevLog.weekNumber) : null;
+    console.log(renderLoopKitScore(scoreBreakdown, prevWeekScore));
+  }
+
   // ─── AI Coach v1 (IE-10) — stuck state ────────────────────────
   if (config.coaching?.enabled !== false && done.length === 0 && visibleOpen.length === 0) {
     const coachMoment = getPriorityMoment(slug);
@@ -215,6 +234,89 @@ export async function trackCommand(options?: {
   }
 
   console.log(nextStep("ship"));
+}
+
+// ─── GF-3: Daily Standup Flow ────────────────────────────────────────
+
+async function runStandupFlow(slug: string): Promise<void> {
+  p.intro(colors.primary.bold("LoopKit — Daily Standup"));
+
+  const today = formatDate();
+
+  // ── Guard: already checked in today ────────────────────────────
+  const existing = readStandup(today);
+  if (existing) {
+    console.log(pass(`Already checked in today (${today}).`));
+    console.log(colors.muted(`  Today's #1: "${existing.taskToday}"`));
+    p.outro(colors.muted("Come back tomorrow. You're building a habit."));
+    return;
+  }
+
+  // ── Parse open tasks ──────────────────────────────────────
+  const content = readTasksFile(slug);
+  const openTasks: string[] = [];
+
+  if (content) {
+    const lines = content.split("\n");
+    let inWeek = false;
+    for (const line of lines) {
+      if (/##\s*this\s*week/i.test(line)) { inWeek = true; continue; }
+      if (/##\s*backlog/i.test(line)) { inWeek = false; continue; }
+      if (inWeek && /^-\s*\[ \]/.test(line)) {
+        const title = line.replace(/^-\s*\[ \]\s*(?:#\d+\s)?/, "").replace(/\s*—.*$/, "").trim();
+        if (title) openTasks.push(title);
+      }
+    }
+  }
+
+  // ── Show context ────────────────────────────────────────
+  if (openTasks.length > 0) {
+    console.log(colors.muted(`\n  ${openTasks.length} open task${openTasks.length !== 1 ? "s" : ""} this week:`));
+    openTasks.slice(0, 5).forEach((t) => console.log(`    ${colors.muted("○")} ${t}`));
+    if (openTasks.length > 5) {
+      console.log(colors.dim(`    … and ${openTasks.length - 5} more`));
+    }
+    console.log("");
+  } else {
+    console.log(info("No open tasks yet. Add some with `loopkit track --add “task”`"));
+  }
+
+  // ── The one question that matters ────────────────────────────
+  const taskToday = await p.text({
+    message: "What’s your #1 task today?",
+    placeholder: openTasks[0] ?? "The single most important thing to do today",
+    validate: (val) => {
+      if (!val.trim()) return "Please enter something — even a rough plan counts.";
+    },
+  });
+
+  if (p.isCancel(taskToday)) {
+    p.outro(colors.muted("Standup cancelled. Come back when ready."));
+    return;
+  }
+
+  // ── Compute streak & score ─────────────────────────────────
+  const standupStreak = getStandupStreak() + 1; // +1 for today's
+  const scoreBreakdown = computeLoopKitScore();
+
+  // ── Save ──────────────────────────────────────────────────
+  saveStandup({
+    date: today,
+    taskToday: taskToday as string,
+    openTasks,
+    loopkitScore: scoreBreakdown?.score ?? undefined,
+    standupStreak,
+  });
+
+  // ── Show the standup card ─────────────────────────────────
+  console.log(standupCard({
+    taskToday: taskToday as string,
+    openTasks,
+    standupStreak,
+    loopkitScore: scoreBreakdown?.score ?? null,
+  }));
+
+  p.outro(colors.success.bold("Standup locked in. Go build. 🚀"));
 }
 
 // ─── Task Parser ─────────────────────────────────────────────────

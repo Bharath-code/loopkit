@@ -101,6 +101,7 @@ LoopKit replaces your scattered task manager with a simple `tasks.md` file:
 - **Auto-close via git:** Write `[#1]` in your commit message → task automatically marks as done
 - **Shipping score:** Done tasks / Total tasks × 100. Aim for > 70%.
 - **Score delta:** Compare your shipping score to last week (e.g. `↑+12%` or `↓-8%`) for a daily progress anchor.
+- **Daily Standup:** Run `loopkit track --stand` to log your #1 focus for the day and build daily momentum.
 - **Stale task detection:** Tasks open for 3+ days get flagged. Keep, snooze, or cut them.
 - **Smart Benchmarks:** Compares your performance against the network, unlocking after you reach 4 weeks of data.
 - **Never deleted:** Cut tasks move to `cut.md` — you might want them later.
@@ -172,6 +173,7 @@ Every Sunday, LoopKit synthesizes your week:
 - Feedback received
 - Your shipping streak
 - Proof this week: score delta, weeks active, decisions made, and feedback acted on
+- **Revenue**: Include MRR updates inline via `loopkit loop --revenue <amount>`
 
 Then AI names **What Moved Forward** and recommends **The One Thing** to focus on next week, following this priority:
 
@@ -184,7 +186,7 @@ You can accept it, change it, or skip it. Your choice is recorded.
 
 **Why this matters:** The hardest part of every week is deciding what to work on. LoopKit decides for you — based on data, not mood.
 
-**Output:** A proof loop, a loop log, a next-week priority, and a build-in-public post you can share.
+**Output:** A proof loop, a loop log, a next-week priority, a build-in-public post you can share, and a beautiful ASCII **Proof Card** that auto-copies to your clipboard for easy tweeting.
 
 **Time:** 2 minutes
 
@@ -251,6 +253,19 @@ Your shipping score is `done tasks / total tasks × 100`.
 | < 50%   | Stuck — loopkit loop will help       |
 
 **Don't aim for 100% every week.** That's a recipe for burnout. Aim for consistency (70%+).
+
+### The LoopKit Score™
+Beyond the base shipping score, LoopKit calculates your overall **LoopKit Score** (0-100). This aggregates your shipping consistency, your active week streak (bonus multiplier), and your feedback responsiveness (pulse bonus). A high LoopKit Score means you are excelling across all vectors of building, shipping, and learning.
+
+### Revenue Tracking
+LoopKit is the single source of truth for your founder journey. Log your structured revenue entries directly via:
+```bash
+loopkit revenue --add "12/mo Stripe"
+```
+Or when closing your loop on Sunday:
+```bash
+loopkit loop --revenue 240
+```
 
 ### The Streak
 

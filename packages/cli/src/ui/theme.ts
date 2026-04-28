@@ -228,3 +228,90 @@ export function patternCard(
 
   return box(lines.join("\n"), "⚡ Pattern Interrupt");
 }
+
+// ─── Standup Card (GF-3) ────────────────────────────────────────
+
+export function standupCard(data: {
+  taskToday: string;
+  openTasks: string[];
+  standupStreak: number;
+  loopkitScore?: number | null;
+}): string {
+  const lines: string[] = [];
+
+  lines.push(colors.success.bold("✓ Standup logged"));
+  lines.push("");
+  lines.push(`${colors.white("Today's #1:")} ${data.taskToday}`);
+
+  if (data.openTasks.length > 0) {
+    lines.push("");
+    lines.push(colors.white(`Open (${data.openTasks.length} tasks):`));
+    // Show up to 4 open tasks to keep the card compact
+    const preview = data.openTasks.slice(0, 4);
+    for (const t of preview) {
+      lines.push(`  ${colors.muted("○")} ${t}`);
+    }
+    if (data.openTasks.length > 4) {
+      lines.push(colors.dim(`  … and ${data.openTasks.length - 4} more`));
+    }
+  }
+
+  if (data.standupStreak >= 2) {
+    lines.push("");
+    lines.push(
+      `${colors.warning("🔥 Standup streak:")} ${colors.warning.bold(`${data.standupStreak} days`)}`
+    );
+  }
+
+  if (data.loopkitScore != null) {
+    lines.push(
+      `${colors.secondary("◆ LoopKit Score:")} ${colors.secondary.bold(`${data.loopkitScore}/100`)}`
+    );
+  }
+
+  const streakLabel = data.standupStreak >= 1 ? `Day ${data.standupStreak}` : "Day 1";
+  return box(lines.join("\n"), `📋 ${streakLabel}`);
+}
+
+// ─── Revenue Card (GF-4) ────────────────────────────────────────
+
+export function revenueCard(data: {
+  mrr: number;
+  delta: number | null;
+  currency: string;
+  entriesLogged: number;
+}): string {
+  const lines: string[] = [];
+
+  const fmt = (n: number) => {
+    try {
+      return new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: data.currency,
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      }).format(n);
+    } catch {
+      return `${data.currency} ${n}`;
+    }
+  };
+
+  lines.push(`${colors.white("MRR:")} ${colors.success.bold(fmt(data.mrr))}`);
+  lines.push(`${colors.white("ARR:")} ${colors.secondary(fmt(data.mrr * 12))}`);
+
+  if (data.delta !== null) {
+    const deltaFormatted = fmt(Math.abs(data.delta));
+    const deltaStr =
+      data.delta > 0
+        ? colors.success(`↑ +${deltaFormatted} this entry`)
+        : data.delta < 0
+          ? colors.danger(`↓ -${deltaFormatted} this entry`)
+          : colors.muted("→ No change");
+    lines.push(`${colors.white("Change:")} ${deltaStr}`);
+  }
+
+  lines.push(colors.dim(`${data.entriesLogged} revenue entr${data.entriesLogged === 1 ? "y" : "ies"} logged`));
+
+  return box(lines.join("\n"), "💰 Revenue");
+}
+

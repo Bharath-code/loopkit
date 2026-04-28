@@ -151,6 +151,35 @@ export const LoopLogSchema = z.object({
 
 export type LoopLog = z.infer<typeof LoopLogSchema>;
 
+// ─── GF-4: Revenue Entry ────────────────────────────────────────
+
+export const RevenueEntrySchema = z.object({
+  date: z.string(),              // YYYY-MM-DD
+  weekNumber: z.number().int().positive(),
+  mrr: z.number().nonnegative(), // monthly recurring revenue in user's currency
+  currency: z.string().length(3).default("USD"), // ISO 4217
+  note: z.string().max(200).optional(),
+  customer: z.string().max(100).optional(),
+  source: z.enum(["stripe", "lemon_squeezy", "gumroad", "manual", "other"]).optional(),
+});
+
+export type RevenueEntry = z.infer<typeof RevenueEntrySchema>;
+
+export const RevenueHistorySchema = z.array(RevenueEntrySchema);
+export type RevenueHistory = z.infer<typeof RevenueHistorySchema>;
+
+// ─── GF-3: Daily Standup Log ────────────────────────────────────
+
+export const StandupLogSchema = z.object({
+  date: z.string(),              // YYYY-MM-DD
+  taskToday: z.string().min(1).max(300),
+  openTasks: z.array(z.string()),
+  loopkitScore: z.number().min(0).max(100).optional(),
+  standupStreak: z.number().nonnegative().default(0),
+});
+
+export type StandupLog = z.infer<typeof StandupLogSchema>;
+
 // ─── Analytics: Shipping DNA ────────────────────────────────────
 
 export const ShippingDNASchema = z.object({

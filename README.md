@@ -38,6 +38,7 @@ These commands support the loop, but they are not the product's center of gravit
 | `loopkit keywords`             | Find low-competition keywords for content strategy       |
 | `loopkit timing`               | Market timing signal — is your space heating up?         |
 | `loopkit coach`                | AI coaching based on your shipping patterns              |
+| `loopkit revenue`              | Track structured MRR/ARR records                         |
 | `loopkit init --template <id>` | Pre-fill & AI-personalize tasks with 9 project templates |
 
 ## Quick Start
@@ -91,6 +92,7 @@ Five questions. AI scoring. A brief that stings when it should.
 - Snoozed tasks hidden until the snooze date, then resurfaced automatically
 - Cut tasks archived to `cut.md` — never silently deleted
 - Shipping score: tasks completed / tasks planned
+- **Daily Standup**: `loopkit track --stand` prompts for your #1 focus today and logs it to track daily momentum
 
 ### `loopkit ship` — never stare at a blank tweet again
 
@@ -115,6 +117,9 @@ Five questions. AI scoring. A brief that stings when it should.
 
 - Aggregates your week: tasks, ship logs, **pulse feedback**, and **previous weeks' context**
 - Tracks your consecutive **Loop Streak** (e.g. `🔥 4 consecutive weeks`) and acknowledges streak breaks
+- **LoopKit Score™**: Aggregates shipping score, streak multiplier, and feedback into one 0-100 metric
+- **Proof Card**: Generates a shareable, ASCII-styled terminal card that auto-copies to your clipboard
+- **Revenue**: Log your weekly MRR with `--revenue <amount>`
 - AI recommends the single highest-leverage thing for next week
 - Smart Unstuck Mode: kicks in if you have 0 tasks, but only after your first week
 - Context-aware upgrade prompts at week 4 or 8

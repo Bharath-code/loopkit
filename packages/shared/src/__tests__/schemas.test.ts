@@ -24,6 +24,8 @@ import {
   getWeekNumber,
   formatDate,
   detectProjectCategory,
+  RevenueEntrySchema,
+  StandupLogSchema,
 } from "../index";
 
 describe("InitAnswersSchema", () => {
@@ -947,5 +949,53 @@ describe("detectProjectCategory", () => {
   it("handles mixed case with punctuation", () => {
     expect(detectProjectCategory("My SaaS! (B2B)")).toBe("saas");
     expect(detectProjectCategory("iOS & Android — Mobile")).toBe("mobile");
+  });
+});
+
+describe("RevenueEntrySchema", () => {
+  it("parses valid revenue entry", () => {
+    const valid = {
+      date: "2026-04-25",
+      weekNumber: 3,
+      mrr: 1000,
+      currency: "USD",
+    };
+    const result = RevenueEntrySchema.parse(valid);
+    expect(result.mrr).toBe(1000);
+    expect(result.weekNumber).toBe(3);
+  });
+
+  it("rejects negative mrr", () => {
+    const invalid = {
+      date: "2026-04-25",
+      weekNumber: 3,
+      mrr: -500,
+      currency: "USD",
+    };
+    expect(() => RevenueEntrySchema.parse(invalid)).toThrow();
+  });
+});
+
+describe("StandupLogSchema", () => {
+  it("parses valid standup log", () => {
+    const valid = {
+      date: "2026-04-25",
+      taskToday: "Ship auth",
+      openTasks: ["Task 1", "Task 2"],
+      standupStreak: 5,
+    };
+    const result = StandupLogSchema.parse(valid);
+    expect(result.taskToday).toBe("Ship auth");
+    expect(result.standupStreak).toBe(5);
+  });
+
+  it("rejects negative streak", () => {
+    const invalid = {
+      date: "2026-04-25",
+      taskToday: "test",
+      openTasks: [],
+      standupStreak: -1,
+    };
+    expect(() => StandupLogSchema.parse(invalid)).toThrow();
   });
 });

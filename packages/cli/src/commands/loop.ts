@@ -15,6 +15,9 @@ import {
   loopLogExists,
   readLastNLoopLogs,
   getConsecutiveWeeksStreak,
+  readRevenueHistory,
+  appendRevenueEntry,
+  getLatestMRR,
 } from "../storage/local.js";
 import { pushLoopLogToConvex, getConvexProjectId } from "../storage/sync.js";
 import { recordEvent, startTelemetryPrompt, isTelemetryEnabled } from "../analytics/telemetry.js";
@@ -24,6 +27,8 @@ import { checkMissedSunday, saveAutoLoopDraft } from "../analytics/autoLoop.js";
 import { predictSuccess, renderPrediction } from "../analytics/predictor.js";
 import { detectPatterns } from "../analytics/patterns.js";
 import { getPriorityMoment, recordMomentShown } from "../analytics/coach.js";
+import { computeLoopKitScore, renderLoopKitScore, readLoopKitScoreFromLog } from "../analytics/score.js";
+import { buildProofCard, buildTweetLine, copyToClipboard } from "../ui/proof-card.js";
 import { colors, header, box, pass, warn, info, nextStep, scoreBar, shortcutsHint, emptyState, patternCard, coachingCard } from "../ui/theme.js";
 
 interface LoopProof {
@@ -36,7 +41,7 @@ interface LoopProof {
   feedbackActedOn: boolean;
 }
 
-export async function loopCommand(): Promise<void> {
+export async function loopCommand(options?: { revenue?: string }): Promise<void> {
   const config = readConfig();
   const slug = config.activeProject;
 
@@ -45,12 +50,48 @@ export async function loopCommand(): Promise<void> {
     process.exit(1);
   }
 
+  // ─── --revenue flag: direct MRR save ─────────────────────────
+  // Usage: loopkit loop --revenue 240
+  if (options?.revenue !== undefined) {
+    p.intro(colors.primary.bold("LoopKit — Revenue Update"));
+    const parsed = parseFloat(String(options.revenue).replace(/[^0-9.]/g, ""));
+    if (Number.isNaN(parsed) || parsed < 0) {
+      console.log(colors.danger(`Invalid amount: "${options.revenue}". Use a number like --revenue 240`));
+      process.exit(1);
+    }
+    const weekNum = getWeekNumber();
+    const prev = getLatestMRR();
+    const delta = prev !== null ? parsed - prev : null;
+    appendRevenueEntry({
+      date: new Date().toISOString().split("T")[0],
+      weekNumber: weekNum,
+      mrr: parsed,
+      currency: "USD",
+      source: "manual",
+    });
+    const history = readRevenueHistory();
+    if (history.length === 1) {
+      console.log(pass(colors.success.bold(`🎉 First revenue logged! MRR: $${parsed}`)));
+    } else {
+      const deltaStr =
+        delta !== null && delta !== 0
+          ? delta > 0
+            ? colors.success(` ↑+$${delta}`)
+            : colors.danger(` ↓$${Math.abs(delta)}`)
+          : "";
+      console.log(pass(`MRR logged: $${parsed}${deltaStr}`));
+    }
+    p.outro(colors.success.bold("Revenue saved. Keep shipping. 🚀"));
+    return;
+  }
+
   const weekNum = getWeekNumber();
   const today = new Date();
   const dayOfWeek = today.getDay(); // 0=Sun
   const isSunday = dayOfWeek === 0;
 
   p.intro(colors.primary.bold(`LoopKit — Week ${weekNum} Review`));
+
   console.log(shortcutsHint());
 
   // ─── Telemetry consent (once, on Sunday) ──────────────────────
@@ -347,6 +388,16 @@ export async function loopCommand(): Promise<void> {
     console.log(box([synthesis.weekWin, "", colors.dim(synthesis.founderNote)].join("\n"), `Week ${weekNum}`));
     renderProof(proof);
 
+    // ─── LoopKit Score™ (GF-1) ──────────────────────────────────
+    const scoreBreakdown = computeLoopKitScore();
+    let currentLoopKitScore: number | null = null;
+    if (scoreBreakdown) {
+      const prevWeekLog = previousLogsRaw.length > 0 ? previousLogsRaw[0] : null;
+      const prevScore = prevWeekLog ? readLoopKitScoreFromLog(prevWeekLog.weekNumber) : null;
+      console.log(renderLoopKitScore(scoreBreakdown, prevScore));
+      currentLoopKitScore = scoreBreakdown.score;
+    }
+
     // ─── Show recommendation ────────────────────────────────────
     console.log(
       box(
@@ -429,6 +480,35 @@ export async function loopCommand(): Promise<void> {
       ],
     });
 
+    // ─── Proof Card (GF-2) ───────────────────────────────────
+    const latestMRR = getLatestMRR();
+    const proofCardData = {
+      productName: briefData?.answers.name || slug,
+      weekNum,
+      shippingScore,
+      tasksCompleted: tasksCompleted.length,
+      tasksTotal: totalTasks,
+      streak: pastStreak + 1,
+      feedbackResponses: proof.feedbackResponses,
+      loopkitScore: currentLoopKitScore,
+      oneThing: finalOneThing,
+      mrr: latestMRR,
+      currency: "USD",
+    };
+
+    const proofCardText = buildProofCard(proofCardData);
+    const tweetLine = buildTweetLine(proofCardData);
+
+    console.log(header("Proof Card"));
+    console.log(box(proofCardText, `Week ${weekNum} Card`));
+    console.log(colors.dim(`  Tweet: ${tweetLine}`));
+
+    const copied = await copyToClipboard(tweetLine);
+    if (copied) {
+      console.log(pass("Tweet line copied to clipboard — paste and share!"));
+    }
+
+
     // ─── Save loop log ──────────────────────────────────────────
     const logContent = [
       `# Week ${weekNum} — ${formatDate()} | project:${slug}`,
@@ -443,6 +523,7 @@ export async function loopCommand(): Promise<void> {
       `- Decisions made: ${proof.decisionsMade}`,
       `- Feedback responses: ${proof.feedbackResponses}`,
       `- Feedback acted on: ${proof.feedbackActedOn ? "Yes" : "No"}`,
+      ...(currentLoopKitScore !== null ? [`**LoopKit Score:** ${currentLoopKitScore}`] : []),
       "",
       "## What Moved Forward",
       synthesis.weekWin,
@@ -524,6 +605,12 @@ export async function loopCommand(): Promise<void> {
 
     // ─── Override rate warning ───────────────────────────────────
     checkOverrideRate(slug);
+
+    // ─── Revenue prompt (GF-4) ──────────────────────────────────
+    // Only prompt on Sunday (the full ritual) and when no --revenue flag was used
+    if (isSunday && !options?.revenue) {
+      await maybePromptRevenue(slug, weekNum);
+    }
 
     await maybeShowUpgradeIntent(proof);
   } catch (error) {
@@ -735,3 +822,53 @@ function checkOverrideRate(slug: string): void {
     );
   }
 }
+
+// ─── GF-4: Revenue Prompt Helper ─────────────────────────────────
+
+async function maybePromptRevenue(_slug: string, weekNum: number): Promise<void> {
+  const latestMRR = getLatestMRR();
+  const history = readRevenueHistory();
+
+  const message =
+    latestMRR !== null
+      ? `Update MRR? (current: $${latestMRR})`
+      : "Any revenue to log? (MRR in USD — press Enter to skip)";
+
+  const revenueAnswer = await p.text({
+    message,
+    placeholder: latestMRR !== null ? `${latestMRR}` : "0 — skip with Enter",
+  });
+
+  if (p.isCancel(revenueAnswer)) return;
+
+  const raw = (revenueAnswer as string).trim();
+  if (!raw || raw === "0" || raw === "") return;
+
+  const parsed = parseFloat(raw.replace(/[^0-9.]/g, ""));
+  if (Number.isNaN(parsed) || parsed < 0) return;
+
+  const mrr = Math.round(parsed * 100) / 100;
+  const prev = history.length > 0 ? history[history.length - 1] : null;
+  const delta = prev ? mrr - prev.mrr : null;
+
+  appendRevenueEntry({
+    date: new Date().toISOString().split("T")[0],
+    weekNumber: weekNum,
+    mrr,
+    currency: "USD",
+    source: "manual",
+  });
+
+  if (history.length === 0) {
+    console.log(pass(colors.success.bold(`🎉 First revenue! MRR: $${mrr} — you're in business.`)));
+  } else {
+    const deltaStr =
+      delta !== null && delta !== 0
+        ? delta > 0
+          ? colors.success(` ↑+$${delta}`)
+          : colors.danger(` ↓$${Math.abs(delta)}`)
+        : "";
+    console.log(pass(`MRR updated: $${mrr}${deltaStr}`));
+  }
+}
+

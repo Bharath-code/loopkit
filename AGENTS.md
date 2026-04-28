@@ -98,8 +98,17 @@ const result = await generateStructured({
 - Team collaboration
 - Mobile app / VS Code extension
 - Zapier/Make integrations
-- Any 13th command beyond the current 12 (init/track/ship/pulse/loop/auth/celebrate/telemetry/radar/keywords/timing/coach)
+- Any 14th command beyond the current 13 (init/track/ship/pulse/loop/auth/celebrate/telemetry/radar/keywords/timing/coach/revenue)
 - New npm deps that duplicate existing functionality
+
+## Approved Extensions (user-approved, April 2026)
+
+| Feature | Implementation | Notes |
+| --- | --- | --- |
+| **LoopKit Score™** | `analytics/score.ts` | Vanity metric: shipping × streak × feedback |
+| **Proof Card** | `ui/proof-card.ts` | Shareable weekly card, clipboard auto-copy |
+| **Daily Standup** | `loopkit track --stand` | Flag on existing `track` command |
+| **Revenue Tracker** | `loopkit revenue` (13th command) | Structured MRR records, switching-cost feature |
 
 ---
 

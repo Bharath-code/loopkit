@@ -94,7 +94,8 @@ src/
 │   ├── radar.ts          # loopkit radar
 │   ├── keywords.ts       # loopkit keywords
 │   ├── timing.ts         # loopkit timing
-│   └── coach.ts          # loopkit coach
+│   ├── coach.ts          # loopkit coach
+│   └── revenue.ts        # loopkit revenue
 ├── analytics/
 │   ├── telemetry.ts      # Opt-in usage collection (on/off/export/delete)
 │   ├── dna.ts            # Shipping DNA profile (founder pattern detection)
@@ -339,6 +340,7 @@ When adding a new AI feature:
 | 9 — npm publish | ✅ Done | `npx loopkit init` ready, .npmignore set |
 | 10 — Analytics Phase 1 | ✅ Done | Telemetry, Shipping DNA, Benchmarks CLI, Snooze Oracle |
 | 11 — Analytics Phase 2 | ✅ Done | CSRF, resolveAuth, AI cache, git hook opt, Archetypes, Churn, Auto-Loop, Predictor |
+| 12 — Growth Features | ✅ Done | LoopKit Score, Proof Card, Daily Standup, Revenue Tracker |
 
 ---
 

@@ -12,6 +12,7 @@ import { radarCommand } from "./commands/radar.js";
 import { keywordsCommand } from "./commands/keywords.js";
 import { timingCommand } from "./commands/timing.js";
 import { coachCommand } from "./commands/coach.js";
+import { revenueCommand } from "./commands/revenue.js";
 import { recordEvent, telemetryCommand } from "./analytics/telemetry.js";
 
 const program = new Command();
@@ -26,11 +27,15 @@ program
 program.addHelpText(
   "beforeAll",
   `The weekly loop:
-  loopkit init   Define the bet
-  loopkit track  Build against it
-  loopkit ship   Put it in public
-  loopkit pulse  Capture feedback
-  loopkit loop   Close the week
+  loopkit init     Define the bet
+  loopkit track    Build against it
+  loopkit ship     Put it in public
+  loopkit pulse    Capture feedback
+  loopkit loop     Close the week
+  loopkit revenue  Track your MRR
+
+Daily habit:
+  loopkit track --stand   60-second morning standup
 
 Secondary add-ons: radar, keywords, timing, coach, celebrate, telemetry, auth
 `,
@@ -53,8 +58,9 @@ program
   .option("-a, --add [title]", "Add a new task inline (or open $EDITOR with no arg)")
   .option("-r, --repair", "Repair and re-sequence broken task IDs")
   .option("-p, --project <slug>", "Switch active project")
+  .option("-s, --stand", "Run 60-second daily standup check-in")
   .action((options) => {
-    recordEvent({ command: "track" });
+    recordEvent({ command: options.stand ? "track:stand" : "track" });
     trackCommand(options);
   });
 
@@ -81,9 +87,10 @@ program
 program
   .command("loop")
   .description("The Sunday ritual: AI synthesizes your week")
-  .action(() => {
+  .option("--revenue <amount>", "Log MRR directly (e.g. --revenue 240)")
+  .action((options) => {
     recordEvent({ command: "loop" });
-    loopCommand();
+    loopCommand(options);
   });
 
 program.addCommand(authCommand);
@@ -141,6 +148,16 @@ program
   .action((options) => {
     recordEvent({ command: "coach" });
     coachCommand(options);
+  });
+
+program
+  .command("revenue")
+  .description("Track MRR milestones — from idea to first dollar")
+  .option("-a, --add <amount>", "Log MRR directly (e.g. --add 240)")
+  .option("-l, --log", "Show full revenue history")
+  .action((options) => {
+    recordEvent({ command: "revenue" });
+    revenueCommand(options);
   });
 
 program.parse(process.argv);
