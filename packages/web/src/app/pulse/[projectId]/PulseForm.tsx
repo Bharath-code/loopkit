@@ -1,48 +1,73 @@
 "use client";
 
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { FormTextarea } from "@/components/form-textarea";
+
+const pulseSubmitSchema = z.object({
+  text: z
+    .string()
+    .min(1, "Please share your feedback")
+    .max(500, "Feedback must be under 500 characters"),
+});
+
+type PulseSubmitForm = z.infer<typeof pulseSubmitSchema>;
 
 const MAX_CHARS = 500;
 
 export function PulseForm({ projectId }: { projectId: string }) {
-  const [text, setText] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState("");
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!text.trim()) return;
+  const {
+    register,
+    handleSubmit,
+    watch,
+    reset,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm<PulseSubmitForm>({
+    resolver: zodResolver(pulseSubmitSchema),
+    defaultValues: { text: "" },
+  });
 
-    setIsSubmitting(true);
-    setError("");
+  const textValue = watch("text");
+  const charCount = textValue?.length ?? 0;
+  const nearLimit = charCount > MAX_CHARS * 0.9;
+
+  const onSubmit = async (data: PulseSubmitForm) => {
     try {
       const res = await fetch("/api/pulse/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ projectId, text }),
+        body: JSON.stringify({ projectId, text: data.text }),
       });
 
-      const data = await res.json();
+      const responseData = await res.json();
 
       if (!res.ok) {
-        setError(data.error || "Failed to submit feedback");
+        setError("root", {
+          message: responseData.error || "Failed to submit feedback",
+        });
         return;
       }
 
       setIsSuccess(true);
-      setText("");
+      reset();
     } catch {
-      setError("Network error. Please try again.");
-    } finally {
-      setIsSubmitting(false);
+      setError("root", {
+        message: "Network error. Please try again.",
+      });
     }
   };
 
   if (isSuccess) {
     return (
       <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/20 text-center">
-        <p className="text-green-400 font-medium">Thank you for your feedback!</p>
+        <p className="text-green-400 font-medium">
+          Thank you for your feedback!
+        </p>
         <button
           onClick={() => setIsSuccess(false)}
           className="mt-4 text-xs text-zinc-400 hover:text-white transition-colors"
@@ -54,28 +79,33 @@ export function PulseForm({ projectId }: { projectId: string }) {
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      <textarea
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        required
-        maxLength={MAX_CHARS}
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <FormTextarea
+        label=""
+        registration={register("text")}
         placeholder="What could be improved?"
         rows={4}
-        className="w-full p-4 rounded-xl bg-zinc-950 border border-zinc-800 text-white placeholder-zinc-500 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all resize-none mb-2"
+        maxLength={MAX_CHARS}
+        error={errors.text}
+        hint=""
+        className="[&_label]:sr-only"
       />
-      <div className="flex justify-between items-center mb-4">
-        <p className="text-xs text-zinc-500">HTML will be stripped automatically</p>
-        <p className={`text-xs ${text.length > MAX_CHARS * 0.9 ? "text-amber-400" : "text-zinc-500"}`}>
-          {text.length}/{MAX_CHARS}
+      <div className="flex justify-between items-center mb-4 -mt-1">
+        <p className="text-xs text-zinc-500">
+          HTML will be stripped automatically
+        </p>
+        <p
+          className={`text-xs ${nearLimit ? "text-amber-400" : "text-zinc-500"}`}
+        >
+          {charCount}/{MAX_CHARS}
         </p>
       </div>
-      {error && (
-        <p className="text-sm text-red-400 mb-4">{error}</p>
+      {errors.root && (
+        <p className="text-sm text-red-400 mb-4">{errors.root.message}</p>
       )}
       <button
         type="submit"
-        disabled={isSubmitting || !text.trim()}
+        disabled={isSubmitting || !textValue?.trim()}
         className="w-full py-3 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium transition-colors cursor-pointer"
       >
         {isSubmitting ? "Submitting..." : "Submit Feedback"}

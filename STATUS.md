@@ -508,17 +508,17 @@ WEEK 13+ (P3 — IE Phase 4-5 ML + Platform)
 
 ---
 
-### Phase 5 — Form Patterns (🟢 P2)
+### Phase 5 — Form Patterns (🟢 P2) ✅ COMPLETE
 
 > Add react-hook-form + zod for scale. Refactor existing form. Enable future forms.
 
-| #          | Task                                              | Effort | Files                                         | Acceptance Criteria                                                                                                                                                         |
-| ---------- | ------------------------------------------------- | ------ | --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **DS-5.1** | **Install react-hook-form + @hookform/resolvers** | XS     | `web/package.json`                            | `npm install react-hook-form @hookform/resolvers`. Build passes.                                                                                                            |
-| **DS-5.2** | **Create `FormInput` component**                  | S      | `web/src/components/form-input.tsx` (new)     | Wraps shadcn `Input` with label, error message, hint text. Uses `react-hook-form`'s `register`. Supports `error` and `hint` props.                                          |
-| **DS-5.3** | **Create `FormSelect` component**                 | S      | `web/src/components/form-select.tsx` (new)    | Wraps shadcn `Select` with label, error message, placeholder. Uses `react-hook-form`'s `register`.                                                                          |
-| **DS-5.4** | **Refactor PulseForm to use react-hook-form**     | M      | `web/src/app/pulse/[projectId]/PulseForm.tsx` | Current hand-rolled validation replaced with `useForm` + zod schema from `@loopkit/shared`. Character counter stays. Error states use `FormInput`. Success state unchanged. |
-| **DS-5.5** | **Create `FormTextarea` component**               | S      | `web/src/components/form-textarea.tsx` (new)  | Wraps HTML textarea with label, error, character counter, hint. Used by PulseForm.                                                                                          |
+| #          | Task                                              | Effort | Files                                         | Status | Acceptance Criteria                                                                                                                             |
+| ---------- | ------------------------------------------------- | ------ | --------------------------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| **DS-5.1** | **Install react-hook-form + @hookform/resolvers** | XS     | `web/package.json`                            | ✅     | `react-hook-form` and `@hookform/resolvers` installed. `zod` added to web package. Build passes.                                                |
+| **DS-5.2** | **Create `FormInput` component**                  | S      | `web/src/components/form-input.tsx` (new)     | ✅     | Wraps shadcn `Input` with label, error message, hint text. Uses `react-hook-form`'s `register`. Supports `error` and `hint` props.              |
+| **DS-5.3** | **Create `FormSelect` component**                 | S      | `web/src/components/form-select.tsx` (new)    | ✅     | Wraps shadcn `Select` with label, error message, placeholder. Controlled via `value` + `onValueChange`. Supports `options`, `disabled`, `hint`. |
+| **DS-5.4** | **Refactor PulseForm to use react-hook-form**     | M      | `web/src/app/pulse/[projectId]/PulseForm.tsx` | ✅     | Hand-rolled state replaced with `useForm` + zod schema. Character counter stays. Error states use form validation. Success state unchanged.     |
+| **DS-5.5** | **Create `FormTextarea` component**               | S      | `web/src/components/form-textarea.tsx` (new)  | ✅     | Wraps HTML textarea with label, error, character counter, hint. Used by PulseForm. Dark theme styling with focus ring and aria-invalid states.  |
 
 ---
 
@@ -649,7 +649,7 @@ SPRINT 6 (Phase 6 — Polish) ~2-3 days
 | Hard-coded hex colors (`bg-[#09090b]`, `bg-[#0c0c0f]`)             | **Low**    | ✅ Fixed — replaced with `bg-background`, `bg-sidebar`                    | DS-1.7         |
 | Pulse "New" badge shows "New" for both states                      | **Low**    | ✅ Fixed — now shows "Read" for non-new items                             | DS-1.6         |
 | No data visualization (no charts)                                  | **Medium** | ✅ Resolved — recharts charts added (sparklines, area charts, bar charts) | DS-4.1–4.7     |
-| No form validation library                                         | **Low**    | 🟡 Open                                                                   | DS-5.1–5.5     |
+| No form validation library                                         | **Low**    | ✅ Resolved — react-hook-form + zod, FormInput/FormSelect/FormTextarea    | DS-5.1–5.5     |
 | No skip-nav link                                                   | **Low**    | ✅ Added skip-to-content link                                             | DS-3.7         |
 
 ---
