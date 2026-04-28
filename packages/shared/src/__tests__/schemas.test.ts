@@ -60,6 +60,7 @@ describe("BriefSchema", () => {
   it("parses valid brief", () => {
     const valid = {
       bet: "Freelancers lose deals due to amateur proposals",
+      uncomfortableTruth: "You have not proven clients care about proposal polish.",
       icpScore: 8,
       icpNote: "Specific and findable",
       problemScore: 7,
@@ -78,6 +79,7 @@ describe("BriefSchema", () => {
   it("rejects score below 1", () => {
     const invalid = {
       bet: "test",
+      uncomfortableTruth: "test",
       icpScore: 0,
       icpNote: "",
       problemScore: 5,
@@ -95,6 +97,7 @@ describe("BriefSchema", () => {
   it("rejects score above 10", () => {
     const invalid = {
       bet: "test",
+      uncomfortableTruth: "test",
       icpScore: 11,
       icpNote: "",
       problemScore: 5,
@@ -322,10 +325,12 @@ describe("PulseClusterSchema", () => {
 describe("LoopSynthesisSchema", () => {
   it("parses valid synthesis", () => {
     const valid = {
+      weekWin: "You shipped the landing page instead of rewriting the plan.",
       oneThing: "Ship the landing page",
       rationale: "Nothing shipped this week",
       tension: null,
       bipPost: "Week 3 of building. Shipped: nothing. Next: landing page.",
+      founderNote: "The next move is visible now.",
     };
     const result = LoopSynthesisSchema.parse(valid);
     expect(result.tension).toBeNull();
@@ -333,10 +338,12 @@ describe("LoopSynthesisSchema", () => {
 
   it("parses with tension string", () => {
     const valid = {
+      weekWin: "You listened to feedback before adding another feature.",
       oneThing: "Fix onboarding",
       rationale: "Pulse says users are confused",
       tension: "Pulse wants onboarding fix, tasks focus on new features",
       bipPost: "Week 4. Learned: users are lost. Next: fix onboarding.",
+      founderNote: "Cut the noise and fix the bottleneck.",
     };
     const result = LoopSynthesisSchema.parse(valid);
     expect(result.tension).toContain("Pulse");
@@ -356,6 +363,27 @@ describe("LoopLogSchema", () => {
     expect(result.overridden).toBe(false);
   });
 
+  it("parses proof metrics when present", () => {
+    const valid = {
+      weekNumber: 4,
+      date: "2026-04-25",
+      tasksCompleted: 4,
+      tasksTotal: 5,
+      shippingScore: 80,
+      proof: {
+        previousScore: 60,
+        currentScore: 80,
+        scoreDelta: 20,
+        weeksActive: 4,
+        decisionsMade: 4,
+        feedbackResponses: 6,
+        feedbackActedOn: true,
+      },
+    };
+    const result = LoopLogSchema.parse(valid);
+    expect(result.proof?.scoreDelta).toBe(20);
+  });
+
   it("parses with optional synthesis", () => {
     const valid = {
       weekNumber: 3,
@@ -364,10 +392,12 @@ describe("LoopLogSchema", () => {
       tasksTotal: 8,
       shippingScore: 6,
       synthesis: {
+        weekWin: "You shipped one visible thing.",
         oneThing: "Ship landing page",
         rationale: "test",
         tension: null,
         bipPost: "test",
+        founderNote: "Keep the next move small.",
       },
     };
     const result = LoopLogSchema.parse(valid);

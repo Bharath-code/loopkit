@@ -10,6 +10,7 @@ describe("INIT_SYSTEM_PROMPT", () => {
     expect(INIT_SYSTEM_PROMPT).toContain("ICP:");
     expect(INIT_SYSTEM_PROMPT).toContain("PROBLEM:");
     expect(INIT_SYSTEM_PROMPT).toContain("MVP SCOPE:");
+    expect(INIT_SYSTEM_PROMPT).toContain("UNCOMFORTABLE TRUTH");
   });
 
   it("contains critical rules", () => {
@@ -59,6 +60,8 @@ describe("LOOP_SYSTEM_PROMPT", () => {
   it("contains ranking logic", () => {
     expect(LOOP_SYSTEM_PROMPT).toContain("Fix now");
     expect(LOOP_SYSTEM_PROMPT).toContain("riskiest assumption");
+    expect(LOOP_SYSTEM_PROMPT).toContain("week win");
+    expect(LOOP_SYSTEM_PROMPT).toContain("founder note");
   });
 
   it("contains BIP post rules", () => {

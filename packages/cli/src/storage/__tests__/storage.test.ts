@@ -290,6 +290,7 @@ describe("Brief I/O", () => {
       },
       {
         bet: "test bet",
+        uncomfortableTruth: "test truth",
         icpScore: 8,
         icpNote: "good",
         problemScore: 7,

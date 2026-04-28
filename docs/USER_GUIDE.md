@@ -1,14 +1,14 @@
 # LoopKit User Guide
 
-> **The Solo Founder's Shipping OS**
+> **The CLI for solo technical founders shipping weekly**
 >
-> Define · Develop · Deliver · Learn · Repeat
+> Define · Develop · Deliver · Feedback · Iterate
 
 ---
 
 ## What Is LoopKit?
 
-LoopKit is a command-line tool that helps solo founders ship products consistently. It closes the entire product loop — from idea to launch to feedback to iteration — in one lightweight workflow.
+LoopKit is a command-line tool that helps solo technical founders ship every week. It closes one lightweight loop — define the bet, build against it, ship, collect feedback, and decide the next move.
 
 If you've ever:
 
@@ -18,7 +18,7 @@ If you've ever:
 - Struggled to write launch copy
 - Lost track of what to work on next
 
-...LoopKit is for you.
+...LoopKit is for you if you live in git and want a weekly shipping habit.
 
 ---
 
@@ -69,9 +69,9 @@ An AI then scores your answers on three dimensions:
 
 **Why this matters:** Most founders build for "everyone" with a "solution looking for a problem." This step prevents that.
 
-**Output:** A `brief.md` file with your bet, scores, riskiest assumption, and a validation plan.
+**Output:** A `brief.md` file with your uncomfortable truth, bet, scores, riskiest assumption, and a validation plan.
 
-**Time:** 10-15 minutes
+**Time:** Under 5 minutes for first value
 
 ---
 
@@ -168,8 +168,9 @@ Every Sunday, LoopKit synthesizes your week:
 - What you shipped
 - Feedback received
 - Your shipping streak
+- Proof this week: score delta, weeks active, decisions made, and feedback acted on
 
-Then AI recommends **The One Thing** to focus on next week, following this priority:
+Then AI names **What Moved Forward** and recommends **The One Thing** to focus on next week, following this priority:
 
 1. **Fix now** (critical user issues)
 2. **Ship** (finish what's almost done)
@@ -180,7 +181,7 @@ You can accept it, change it, or skip it. Your choice is recorded.
 
 **Why this matters:** The hardest part of every week is deciding what to work on. LoopKit decides for you — based on data, not mood.
 
-**Output:** A loop log + a build-in-public post you can share.
+**Output:** A proof loop, a loop log, a next-week priority, and a build-in-public post you can share.
 
 **Time:** 2 minutes
 
@@ -299,7 +300,7 @@ But if you're overriding > 50% of the time for a month, ask yourself: _Is the sy
 
 ## Intelligence Engine
 
-Once you opt into telemetry (`loopkit telemetry on`), LoopKit unlocks market intelligence features no other tool can offer.
+Once you opt into telemetry (`loopkit telemetry on`), LoopKit can unlock market intelligence features. These are secondary add-ons; the five-command weekly loop is the core product.
 
 ### Trending Validations
 
@@ -590,7 +591,7 @@ A: Override it. The AI is a partner, not a boss. But if you find yourself overri
 
 > "The goal is not to build a perfect product. The goal is to build, learn, and iterate faster than anyone else."
 
-LoopKit is not a todo app. It's not a project manager. It's a **shipping system**.
+LoopKit is not a todo app. It's not a project manager. It's a **weekly shipping loop**.
 
 The difference:
 

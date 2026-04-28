@@ -55,11 +55,9 @@ export async function initCommand(
 
   ensureLoopkitDir();
 
-  p.intro(colors.primary.bold("LoopKit — Define your product"));
+  p.intro(colors.primary.bold("LoopKit — Define your weekly shipping bet"));
   console.log(shortcutsHint());
-  console.log(
-    colors.muted("This takes 4 minutes. Be honest, not optimistic.\n"),
-  );
+  console.log(colors.muted("This takes under 5 minutes. Be honest, not optimistic.\n"));
 
   // ─── Template selection ───────────────────────────────────────
   let selectedTemplate = options?.template
@@ -76,28 +74,6 @@ export async function initCommand(
       console.log(colors.dim(`  • ${t.id}: ${t.name} — ${t.description}`));
     }
     console.log(colors.muted("  Continuing without a template...\n"));
-  }
-
-  if (!selectedTemplate && options?.template === undefined) {
-    const useTemplate = await p.confirm({
-      message: "Use a project template? (pre-fills task scaffold)",
-    });
-
-    if (!p.isCancel(useTemplate) && useTemplate) {
-      const templateOptions = getTemplateList().map((t) => ({
-        value: t.id,
-        label: `${t.name} — ${t.description}`,
-      }));
-
-      const choice = await p.select({
-        message: "Choose a template:",
-        options: templateOptions,
-      });
-
-      if (!p.isCancel(choice)) {
-        selectedTemplate = getTemplate(choice);
-      }
-    }
   }
 
   // ─── Check for resume ────────────────────────────────────────
@@ -284,6 +260,28 @@ export async function initCommand(
     // Render
     renderBrief(finalAnswers, brief, slug);
 
+    if (!selectedTemplate && options?.template === undefined) {
+      const useTemplate = await p.confirm({
+        message: "Add starter tasks from a project template?",
+      });
+
+      if (!p.isCancel(useTemplate) && useTemplate) {
+        const templateOptions = getTemplateList().map((t) => ({
+          value: t.id,
+          label: `${t.name} — ${t.description}`,
+        }));
+
+        const choice = await p.select({
+          message: "Choose a template:",
+          options: templateOptions,
+        });
+
+        if (!p.isCancel(choice)) {
+          selectedTemplate = getTemplate(choice);
+        }
+      }
+    }
+
     // Create tasks.md scaffold from template (F5 / F5-AI)
     if (selectedTemplate) {
       const { createTasksScaffold, writeTasksFile, readTasksFile } =
@@ -372,6 +370,7 @@ function renderBrief(
   answers: InitAnswers,
   brief: {
     bet: string;
+    uncomfortableTruth: string;
     icpScore: number;
     icpNote: string;
     problemScore: number;
@@ -387,8 +386,14 @@ function renderBrief(
   console.log(
     box(
       [
+        `${colors.danger.bold("THE UNCOMFORTABLE TRUTH")}`,
+        brief.uncomfortableTruth,
+        "",
         `${colors.white.bold("THE BET")}`,
         `${colors.dim('"')}${brief.bet}${colors.dim('"')}`,
+        "",
+        `${colors.secondary.bold("VALIDATE TONIGHT")}`,
+        brief.validateAction,
         "",
         `${colors.white("ICP")}      ${scoreBar(brief.icpScore)}`,
         `${colors.dim(brief.icpNote)}`,
@@ -401,9 +406,6 @@ function renderBrief(
         "",
         `${colors.danger.bold("RISKIEST ASSUMPTION")}`,
         brief.riskiestAssumption,
-        "",
-        `${colors.secondary.bold("✦ VALIDATE TONIGHT")}`,
-        brief.validateAction,
         "",
         `${colors.white.bold("MVP IN PLAIN ENGLISH")}`,
         brief.mvpPlainEnglish,

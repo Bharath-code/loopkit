@@ -36,6 +36,10 @@ packages/web/src/app/api/     ← API routes (all have CSRF protection, includes
 packages/web/convex/          ← Convex backend (schema, queries, mutations, analytics, competitorRadar, marketTiming)
 ```
 
+**Product hierarchy:** primary loop commands are `init/track/ship/pulse/loop`. Secondary add-ons (`radar/keywords/timing/coach/celebrate/telemetry/auth`) must support the weekly loop, not replace it as the product center.
+
+**Current schema notes:** `BriefSchema` includes `uncomfortableTruth`; `LoopSynthesisSchema` includes `weekWin` and `founderNote`; `LoopLogSchema` may include optional `proof` metrics (`previousScore`, `currentScore`, `scoreDelta`, `weeksActive`, `decisionsMade`, `feedbackResponses`, `feedbackActedOn`).
+
 **Never touch:** `node_modules/`, `dist/`, `.next/`, `pnpm-lock.yaml`, `.git/hooks/`
 
 ---

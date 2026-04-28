@@ -23,9 +23,9 @@ const jetbrains = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "LoopKit — The Solo Founder's Shipping OS",
+  title: "LoopKit — CLI for Solo Technical Founders Shipping Weekly",
   description:
-    "Define · Develop · Deliver · Learn · Repeat. The CLI-first tool that closes every phase of the shipping loop for solo technical founders.",
+    "Define · Develop · Deliver · Feedback · Iterate. The CLI for solo technical founders shipping weekly.",
   keywords: [
     "solo founder",
     "shipping",
@@ -35,8 +35,8 @@ export const metadata: Metadata = {
     "productivity",
   ],
   openGraph: {
-    title: "LoopKit — The Solo Founder's Shipping OS",
-    description: "One CLI. Five commands. The entire shipping loop closed.",
+    title: "LoopKit — CLI for Solo Technical Founders Shipping Weekly",
+    description: "One CLI. Five commands. One weekly shipping loop.",
     type: "website",
   },
 };

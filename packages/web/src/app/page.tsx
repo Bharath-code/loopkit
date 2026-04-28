@@ -160,9 +160,8 @@ export default function LandingPage() {
 
           {/* Subheadline */}
           <p className="fade-up delay-2 mt-6 text-lg sm:text-xl text-zinc-400 max-w-2xl mx-auto leading-relaxed">
-            LoopKit is the CLI that closes the entire shipping loop for solo
-            founders — from raw idea to paid customer, without social energy or
-            tool switching.
+            LoopKit is the CLI for solo technical founders shipping weekly —
+            from fuzzy bet to shipped work, feedback, and one clear next move.
           </p>
 
           {/* CTA */}
@@ -339,7 +338,9 @@ export default function LandingPage() {
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
               Start free.{" "}
-              <span className="text-zinc-500">Pay when it clicks.</span>
+              <span className="text-zinc-500">
+                Upgrade when the loop sticks.
+              </span>
             </h2>
             <p className="mt-4 text-zinc-400">
               Less than one lunch out per week. Cancel anytime.
@@ -387,9 +388,12 @@ export default function LandingPage() {
                   <span className="text-zinc-600">No web dashboard</span>
                 </li>
               </ul>
-              <button className="mt-8 w-full py-2.5 rounded-xl border border-zinc-700 text-zinc-300 text-sm hover:bg-zinc-800 transition-colors">
+              <Link
+                href="/login?intent=start&plan=free&source=pricing"
+                className="block mt-8 w-full py-2.5 rounded-xl border border-zinc-700 text-zinc-300 text-sm hover:bg-zinc-800 transition-colors text-center"
+              >
                 Get started
-              </button>
+              </Link>
             </div>
 
             {/* Solo — highlighted */}
@@ -441,9 +445,12 @@ export default function LandingPage() {
                   Sunday loop synthesis
                 </li>
               </ul>
-              <button className="mt-8 w-full py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium transition-colors">
+              <Link
+                href="/login?intent=upgrade&plan=solo&source=pricing"
+                className="block mt-8 w-full py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium transition-colors text-center"
+              >
                 Start shipping →
-              </button>
+              </Link>
             </div>
 
             {/* Pro */}
@@ -492,9 +499,12 @@ export default function LandingPage() {
                   Bring your own API key
                 </li>
               </ul>
-              <button className="mt-8 w-full py-2.5 rounded-xl border border-zinc-700 text-zinc-300 text-sm hover:bg-zinc-800 transition-colors">
+              <Link
+                href="/login?intent=upgrade&plan=pro&source=pricing"
+                className="block mt-8 w-full py-2.5 rounded-xl border border-zinc-700 text-zinc-300 text-sm hover:bg-zinc-800 transition-colors text-center"
+              >
                 Go Pro
-              </button>
+              </Link>
             </div>
           </div>
         </div>
@@ -526,7 +536,7 @@ export default function LandingPage() {
         <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-zinc-600">
           <div className="flex items-center gap-2">
             <span className="font-bold text-zinc-400">LoopKit</span>
-            <span>· Built by a solo founder, for solo founders.</span>
+            <span>· Built for solo technical founders shipping weekly.</span>
           </div>
           <div className="flex gap-6">
             <a

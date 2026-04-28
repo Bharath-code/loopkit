@@ -1,12 +1,12 @@
 # LoopKit
 
-**The Solo Founder's Shipping OS**
+**The CLI for solo technical founders shipping weekly**
 
-Define · Develop · Deliver · Learn · Repeat
+Define · Develop · Deliver · Feedback · Iterate
 
 ---
 
-Five commands. One loop. The entire shipping cycle closed from your terminal.
+Five commands. One weekly loop. Define the bet, build against it, ship, collect feedback, and decide the next move from your terminal.
 
 ```bash
 $ npx loopkit init
@@ -14,11 +14,11 @@ $ npx loopkit init
 
 ## The Problem
 
-Solo founders are strong builders but weak shippers. The loop — define → develop → deliver → feedback → iterate — was designed for teams. Every tool handles one phase. None connects them.
+Solo technical founders are strong builders but weak weekly shippers. The loop — define → develop → deliver → feedback → iterate — was designed for teams. Every tool handles one phase. None connects them from the terminal.
 
 **LoopKit connects them.**
 
-## The Loop
+## The Weekly Loop
 
 | Command                        | Phase        | What It Does                                             |
 | ------------------------------ | ------------ | -------------------------------------------------------- |
@@ -27,11 +27,18 @@ Solo founders are strong builders but weak shippers. The loop — define → dev
 | `loopkit ship`                 | Deliver      | AI writes your HN post, Twitter thread, and IH update    |
 | `loopkit pulse`                | Feedback     | Async feedback, AI-clustered, no meetings required       |
 | `loopkit loop`                 | Iterate      | Sunday ritual — one decision, one post, loop closed      |
-| `loopkit radar`                | Intelligence | Scan PH & HN for competitor launches in your category    |
-| `loopkit keywords`             | Intelligence | Find low-competition keywords for content strategy       |
-| `loopkit timing`               | Intelligence | Market timing signal — is your space heating up?         |
-| `loopkit coach`                | Intelligence | AI coaching based on your shipping patterns              |
-| `loopkit init --template <id>` | Define       | Pre-fill & AI-personalize tasks with 9 project templates |
+
+## Secondary Add-Ons
+
+These commands support the loop, but they are not the product's center of gravity.
+
+| Command                        | What It Does                                             |
+| ------------------------------ | -------------------------------------------------------- |
+| `loopkit radar`                | Scan PH & HN for competitor launches in your category    |
+| `loopkit keywords`             | Find low-competition keywords for content strategy       |
+| `loopkit timing`               | Market timing signal — is your space heating up?         |
+| `loopkit coach`                | AI coaching based on your shipping patterns              |
+| `loopkit init --template <id>` | Pre-fill & AI-personalize tasks with 9 project templates |
 
 ## Quick Start
 
@@ -157,6 +164,6 @@ When you authenticate with `loopkit auth`, your loop logs and ship logs optional
 
 ---
 
-Built by a solo founder, for solo founders.
+Built for solo technical founders shipping weekly.
 
 _The best time to ship was yesterday. The second best time is now._

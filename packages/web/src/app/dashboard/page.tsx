@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
@@ -71,6 +72,17 @@ export default function DashboardOverviewPage() {
   const tasksCompleted = latestLoop?.tasksCompleted ?? 0;
   const tasksTotal = latestLoop?.tasksTotal ?? 0;
   const shippingScore = latestLoop?.shippingScore ?? 0;
+  const previousScore =
+    latestLoop?.proof?.previousScore ?? loopLogs?.[1]?.shippingScore ?? 0;
+  const scoreDelta =
+    latestLoop?.proof?.scoreDelta ?? shippingScore - previousScore;
+  const weeksActive = latestLoop?.proof?.weeksActive ?? loopLogs?.length ?? 0;
+  const decisionsMade =
+    latestLoop?.proof?.decisionsMade ??
+    (loopLogs?.filter((log) => log.synthesis).length ?? 0);
+  const feedbackResponses =
+    latestLoop?.proof?.feedbackResponses ?? pulseCount ?? 0;
+  const feedbackActedOn = latestLoop?.proof?.feedbackActedOn ?? false;
 
   return (
     <div className="space-y-8 fade-up">
@@ -92,9 +104,12 @@ export default function DashboardOverviewPage() {
         </div>
 
         {isFreeTier && (
-          <button className="hidden sm:block px-4 py-2 bg-white text-black text-sm font-medium rounded-lg hover:bg-zinc-200 transition-colors">
+          <Link
+            href="/login?intent=upgrade&plan=solo&source=dashboard"
+            className="hidden sm:block px-4 py-2 bg-white text-black text-sm font-medium rounded-lg hover:bg-zinc-200 transition-colors"
+          >
             Upgrade for full access
-          </button>
+          </Link>
         )}
       </header>
 
@@ -107,6 +122,46 @@ export default function DashboardOverviewPage() {
           </p>
         </div>
       )}
+
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="p-5 rounded-2xl border border-violet-500/20 bg-zinc-900/30">
+          <p className="text-xs text-zinc-500 uppercase tracking-wider mb-2">
+            Score Delta
+          </p>
+          <div className="text-2xl font-bold text-white">
+            {scoreDelta > 0 ? "+" : ""}
+            {scoreDelta}
+          </div>
+          <p className="text-xs text-zinc-500 mt-2">
+            {previousScore}% → {shippingScore}%
+          </p>
+        </div>
+        <div className="p-5 rounded-2xl border border-zinc-800 bg-zinc-900/30">
+          <p className="text-xs text-zinc-500 uppercase tracking-wider mb-2">
+            Weeks Active
+          </p>
+          <div className="text-2xl font-bold text-white">{weeksActive}</div>
+          <p className="text-xs text-zinc-500 mt-2">Weekly loops closed</p>
+        </div>
+        <div className="p-5 rounded-2xl border border-zinc-800 bg-zinc-900/30">
+          <p className="text-xs text-zinc-500 uppercase tracking-wider mb-2">
+            Decisions Made
+          </p>
+          <div className="text-2xl font-bold text-white">{decisionsMade}</div>
+          <p className="text-xs text-zinc-500 mt-2">One thing at a time</p>
+        </div>
+        <div className="p-5 rounded-2xl border border-amber-500/20 bg-zinc-900/30">
+          <p className="text-xs text-zinc-500 uppercase tracking-wider mb-2">
+            Feedback Acted On
+          </p>
+          <div className="text-2xl font-bold text-white">
+            {feedbackActedOn ? "Yes" : "Not yet"}
+          </div>
+          <p className="text-xs text-zinc-500 mt-2">
+            {feedbackResponses} response{feedbackResponses === 1 ? "" : "s"}
+          </p>
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Metric 1 */}
@@ -311,6 +366,16 @@ export default function DashboardOverviewPage() {
 
             {latestLoop?.synthesis ? (
               <div className="space-y-4">
+                {latestLoop.synthesis.weekWin && (
+                  <div>
+                    <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-2">
+                      What Moved Forward
+                    </p>
+                    <p className="text-sm text-zinc-300">
+                      {latestLoop.synthesis.weekWin}
+                    </p>
+                  </div>
+                )}
                 <div>
                   <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-2">
                     The One Thing
@@ -332,6 +397,11 @@ export default function DashboardOverviewPage() {
                     &quot;
                   </p>
                 </div>
+                {latestLoop.synthesis.founderNote && (
+                  <p className="text-xs text-zinc-500">
+                    {latestLoop.synthesis.founderNote}
+                  </p>
+                )}
               </div>
             ) : (
               <p className="text-sm text-zinc-500">

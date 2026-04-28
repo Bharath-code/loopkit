@@ -14,6 +14,7 @@ export type InitAnswers = z.infer<typeof InitAnswersSchema>;
 
 export const BriefSchema = z.object({
   bet: z.string(),
+  uncomfortableTruth: z.string(),
   icpScore: z.number().min(1).max(10),
   icpNote: z.string(),
   problemScore: z.number().min(1).max(10),
@@ -108,10 +109,12 @@ export type PulseCluster = z.infer<typeof PulseClusterSchema>;
 // ─── loopkit loop ───────────────────────────────────────────────
 
 export const LoopSynthesisSchema = z.object({
+  weekWin: z.string(),
   oneThing: z.string(),
   rationale: z.string(),
   tension: z.string().nullable(),
   bipPost: z.string(),
+  founderNote: z.string(),
 });
 
 export type LoopSynthesis = z.infer<typeof LoopSynthesisSchema>;
@@ -133,6 +136,17 @@ export const LoopLogSchema = z.object({
   overridden: z.boolean().default(false),
   overrideReason: z.string().optional(),
   bipPost: z.string().optional(),
+  proof: z
+    .object({
+      previousScore: z.number(),
+      currentScore: z.number(),
+      scoreDelta: z.number(),
+      weeksActive: z.number(),
+      decisionsMade: z.number(),
+      feedbackResponses: z.number(),
+      feedbackActedOn: z.boolean(),
+    })
+    .optional(),
 });
 
 export type LoopLog = z.infer<typeof LoopLogSchema>;

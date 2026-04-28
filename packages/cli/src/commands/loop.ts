@@ -9,6 +9,8 @@ import {
   readBriefJson,
   readTasksFile,
   readShipLog,
+  readPulseResponses,
+  readLoopLog,
   saveLoopLog,
   loopLogExists,
   readLastNLoopLogs,
@@ -23,6 +25,16 @@ import { predictSuccess, renderPrediction } from "../analytics/predictor.js";
 import { detectPatterns } from "../analytics/patterns.js";
 import { getPriorityMoment, recordMomentShown } from "../analytics/coach.js";
 import { colors, header, box, pass, warn, info, nextStep, scoreBar, shortcutsHint, emptyState, patternCard, coachingCard } from "../ui/theme.js";
+
+interface LoopProof {
+  previousScore: number;
+  currentScore: number;
+  scoreDelta: number;
+  weeksActive: number;
+  decisionsMade: number;
+  feedbackResponses: number;
+  feedbackActedOn: boolean;
+}
 
 export async function loopCommand(): Promise<void> {
   const config = readConfig();
@@ -102,6 +114,14 @@ export async function loopCommand(): Promise<void> {
       ? Math.round((tasksCompleted.length / totalTasks) * 100)
       : 0;
 
+  const proof = computeLoopProof({
+    slug,
+    weekNum,
+    shippingScore,
+    tasksCompleted,
+    tasksOpen,
+  });
+
   // ─── Record telemetry (anonymous, opt-in only) ────────────────
   if (isTelemetryEnabled()) {
     const projectType = briefData?.answers?.mvp
@@ -158,6 +178,11 @@ export async function loopCommand(): Promise<void> {
         `**Next:** ${nextThing}`,
         "",
         `**Shipping Score:** ${shippingScore}%`,
+        `**Score Delta:** ${formatScoreDelta(proof.scoreDelta)}`,
+        `**Weeks Active:** ${proof.weeksActive}`,
+        `**Decisions Made:** ${proof.decisionsMade}`,
+        `**Feedback Responses:** ${proof.feedbackResponses}`,
+        `**Feedback Acted On:** ${proof.feedbackActedOn ? "Yes" : "No"}`,
         "",
         "_Week 1 baseline set._",
       ].join("\n");
@@ -174,6 +199,7 @@ export async function loopCommand(): Promise<void> {
           tasksCompleted: tasksCompleted.length,
           tasksTotal: totalTasks,
           shippingScore,
+          proof,
           overridden: false,
         });
       }
@@ -284,6 +310,11 @@ export async function loopCommand(): Promise<void> {
 
     s.stop("Synthesis complete.");
 
+    // ─── Show week reward + proof ────────────────────────────────
+    console.log(header("What Moved Forward"));
+    console.log(box([synthesis.weekWin, "", colors.dim(synthesis.founderNote)].join("\n"), `Week ${weekNum}`));
+    renderProof(proof);
+
     // ─── Show recommendation ────────────────────────────────────
     console.log(
       box(
@@ -375,6 +406,16 @@ export async function loopCommand(): Promise<void> {
       `- Tasks open: ${tasksOpen.length}`,
       `- Shipping score: ${shippingScore}%`,
       `- Shipped Friday: ${shipLog ? "Yes" : "No"}`,
+      `- Score delta: ${formatScoreDelta(proof.scoreDelta)}`,
+      `- Weeks active: ${proof.weeksActive}`,
+      `- Decisions made: ${proof.decisionsMade}`,
+      `- Feedback responses: ${proof.feedbackResponses}`,
+      `- Feedback acted on: ${proof.feedbackActedOn ? "Yes" : "No"}`,
+      "",
+      "## What Moved Forward",
+      synthesis.weekWin,
+      "",
+      synthesis.founderNote,
       "",
       "## The One Thing",
       finalOneThing,
@@ -406,7 +447,10 @@ export async function loopCommand(): Promise<void> {
           rationale: synthesis.rationale,
           tension: synthesis.tension || null,
           bipPost: synthesis.bipPost,
+          weekWin: synthesis.weekWin,
+          founderNote: synthesis.founderNote,
         },
+        proof,
         overridden,
         overrideReason,
         bipPost: synthesis.bipPost,
@@ -448,6 +492,8 @@ export async function loopCommand(): Promise<void> {
 
     // ─── Override rate warning ───────────────────────────────────
     checkOverrideRate(slug);
+
+    await maybeShowUpgradeIntent(proof);
   } catch (error) {
     s.stop("Synthesis failed.");
     console.log(colors.danger("AI unavailable. Saving week data without synthesis."));
@@ -458,6 +504,11 @@ export async function loopCommand(): Promise<void> {
       `- Tasks completed: ${tasksCompleted.length}`,
       `- Tasks open: ${tasksOpen.length}`,
       `- Shipping score: ${shippingScore}%`,
+      `- Score delta: ${formatScoreDelta(proof.scoreDelta)}`,
+      `- Weeks active: ${proof.weeksActive}`,
+      `- Decisions made: ${proof.decisionsMade}`,
+      `- Feedback responses: ${proof.feedbackResponses}`,
+      `- Feedback acted on: ${proof.feedbackActedOn ? "Yes" : "No"}`,
       "",
       "_AI synthesis unavailable._",
     ].join("\n");
@@ -473,6 +524,7 @@ export async function loopCommand(): Promise<void> {
         tasksCompleted: tasksCompleted.length,
         tasksTotal: totalTasks,
         shippingScore,
+        proof,
         overridden: false,
       });
     }
@@ -484,8 +536,96 @@ export async function loopCommand(): Promise<void> {
     }
   }
 
-  console.log(nextStep("init"));
-  p.outro(colors.muted(`Week ${weekNum} complete. See you next Sunday.`));
+  console.log(nextStep("track"));
+  p.outro(colors.muted(`Week ${weekNum} closed. You made the next move visible.`));
+}
+
+// ─── Proof Loop Helpers ──────────────────────────────────────────
+
+function computeLoopProof({
+  slug,
+  weekNum,
+  shippingScore,
+  tasksCompleted,
+  tasksOpen,
+}: {
+  slug: string;
+  weekNum: number;
+  shippingScore: number;
+  tasksCompleted: string[];
+  tasksOpen: string[];
+}): LoopProof {
+  const previousLogs = readLastNLoopLogs(100, slug).filter(
+    (log) => log.weekNumber !== weekNum,
+  );
+  const previousScore = findPreviousScore(previousLogs.map((log) => log.weekNumber));
+  const feedbackResponses = readPulseResponses().length;
+  const taskText = [...tasksCompleted, ...tasksOpen].join(" ").toLowerCase();
+  const feedbackActedOn =
+    feedbackResponses > 0 &&
+    /\b(feedback|pulse|user|customer|fix|onboarding|response)\b/.test(taskText);
+
+  return {
+    previousScore,
+    currentScore: shippingScore,
+    scoreDelta: shippingScore - previousScore,
+    weeksActive: previousLogs.length + 1,
+    decisionsMade: previousLogs.length + 1,
+    feedbackResponses,
+    feedbackActedOn,
+  };
+}
+
+function findPreviousScore(weekNumbers: number[]): number {
+  for (const weekNumber of weekNumbers.sort((a, b) => b - a)) {
+    const log = readLoopLog(weekNumber);
+    const score = parseShippingScore(log);
+    if (score !== null) return score;
+  }
+  return 0;
+}
+
+function parseShippingScore(content: string | null): number | null {
+  if (!content) return null;
+  const match =
+    content.match(/Shipping score:\s*(\d+)%/i) ||
+    content.match(/\*\*Shipping Score:\*\*\s*(\d+)%/i);
+  if (!match) return null;
+  return Number.parseInt(match[1], 10);
+}
+
+function renderProof(proof: LoopProof): void {
+  const lines = [
+    `${colors.white("Score:")} ${proof.previousScore}% -> ${proof.currentScore}% (${formatScoreDelta(proof.scoreDelta)})`,
+    `${colors.white("Weeks active:")} ${proof.weeksActive}`,
+    `${colors.white("Decisions made:")} ${proof.decisionsMade}`,
+    `${colors.white("Feedback:")} ${proof.feedbackResponses} response${proof.feedbackResponses === 1 ? "" : "s"}${proof.feedbackActedOn ? " -> acted on" : ""}`,
+  ];
+
+  console.log(header("Proof This Week"));
+  console.log(box(lines.join("\n")));
+}
+
+function formatScoreDelta(delta: number): string {
+  if (delta > 0) return `+${delta}`;
+  return `${delta}`;
+}
+
+async function maybeShowUpgradeIntent(proof: LoopProof): Promise<void> {
+  if (proof.weeksActive !== 1) return;
+
+  const wantsUpgrade = await p.confirm({
+    message: "Want the dashboard, hosted Pulse, and AI proxy when this loop starts compounding?",
+  });
+
+  if (p.isCancel(wantsUpgrade) || !wantsUpgrade) return;
+
+  recordEvent({ command: "upgrade:intent:solo" });
+  console.log(
+    info(
+      "Upgrade path: /login?intent=upgrade&plan=solo&source=cli-loop",
+    ),
+  );
 }
 
 // ─── Shipping DNA Display ────────────────────────────────────────

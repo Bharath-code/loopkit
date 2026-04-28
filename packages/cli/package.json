@@ -1,7 +1,7 @@
 {
   "name": "@loopkit/cli",
   "version": "0.1.0",
-  "description": "The Solo Founder's Shipping OS — Define · Develop · Deliver · Learn · Repeat",
+  "description": "The CLI for solo technical founders shipping weekly",
   "type": "module",
   "bin": {
     "loopkit": "./dist/index.js"

@@ -263,6 +263,10 @@ function renderBriefMarkdown(answers: InitAnswers, brief?: Brief): string {
   lines.push("");
 
   if (brief) {
+    lines.push("## The Uncomfortable Truth");
+    lines.push("");
+    lines.push(brief.uncomfortableTruth);
+    lines.push("");
     lines.push("## The Bet");
     lines.push("");
     lines.push(`> ${brief.bet}`);

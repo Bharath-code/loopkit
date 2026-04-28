@@ -10,6 +10,10 @@ week of data into one clear decision and one honest build-in-public post.
 
 ## your output
 
+### week win
+Name one concrete thing the founder did right this week. If they shipped nothing,
+name the smallest honest forward motion. Do not flatter.
+
 ### the one thing (most important)
 Look at what got done, what feedback came in, and what was shipped.
 Identify the single highest-leverage action for the coming week.
@@ -37,6 +41,10 @@ Rules:
 - Honest — if nothing shipped, say so
 - No hashtags unless #buildinpublic at the end only
 - No emoji
+
+### founder note
+Write one short sentence that makes the Sunday loop feel like progress closing,
+not homework. Firm coach tone: direct, useful, never insulting.
 
 ## critical rules
 - ONE recommendation only — never a list of options
@@ -76,6 +84,6 @@ export function buildLoopPrompt(context: {
   if (context.shipLog) parts.push(`\nShip log:\n${context.shipLog}`);
   if (context.pulseData) parts.push(`\nPulse feedback:\n${context.pulseData}`);
   
-  parts.push("\nSynthesize this week and produce the one-thing recommendation + BIP post.");
+  parts.push("\nSynthesize this week and produce weekWin, oneThing, rationale, tension, bipPost, and founderNote.");
   return parts.join("\n");
 }

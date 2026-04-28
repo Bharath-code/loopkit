@@ -10,10 +10,21 @@ interface LoopLogSyncPayload {
   tasksTotal: number;
   shippingScore: number;
   synthesis?: {
+    weekWin?: string;
     oneThing: string;
     rationale: string;
     tension: string | null;
     bipPost: string;
+    founderNote?: string;
+  };
+  proof?: {
+    previousScore: number;
+    currentScore: number;
+    scoreDelta: number;
+    weeksActive: number;
+    decisionsMade: number;
+    feedbackResponses: number;
+    feedbackActedOn: boolean;
   };
   overridden: boolean;
   overrideReason?: string;

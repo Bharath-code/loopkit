@@ -65,10 +65,23 @@ export const syncLoopLog = mutation({
     shippingScore: v.number(),
     synthesis: v.optional(
       v.object({
+        weekWin: v.optional(v.string()),
         oneThing: v.string(),
         rationale: v.string(),
         tension: v.union(v.string(), v.null()),
         bipPost: v.string(),
+        founderNote: v.optional(v.string()),
+      })
+    ),
+    proof: v.optional(
+      v.object({
+        previousScore: v.number(),
+        currentScore: v.number(),
+        scoreDelta: v.number(),
+        weeksActive: v.number(),
+        decisionsMade: v.number(),
+        feedbackResponses: v.number(),
+        feedbackActedOn: v.boolean(),
       })
     ),
     overridden: v.boolean(),
@@ -93,6 +106,7 @@ export const syncLoopLog = mutation({
         tasksTotal: args.tasksTotal,
         shippingScore: args.shippingScore,
         synthesis: args.synthesis,
+        proof: args.proof,
         overridden: args.overridden,
         overrideReason: args.overrideReason,
         bipPost: args.bipPost,
@@ -109,6 +123,7 @@ export const syncLoopLog = mutation({
       tasksTotal: args.tasksTotal,
       shippingScore: args.shippingScore,
       synthesis: args.synthesis,
+      proof: args.proof,
       overridden: args.overridden,
       overrideReason: args.overrideReason,
       bipPost: args.bipPost,

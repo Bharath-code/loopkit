@@ -19,9 +19,22 @@ const program = new Command();
 program
   .name("loopkit")
   .description(
-    "The Solo Founder's Shipping OS — Define · Develop · Deliver · Learn · Repeat"
+    "The CLI for solo technical founders shipping weekly"
   )
   .version("0.1.0");
+
+program.addHelpText(
+  "beforeAll",
+  `The weekly loop:
+  loopkit init   Define the bet
+  loopkit track  Build against it
+  loopkit ship   Put it in public
+  loopkit pulse  Capture feedback
+  loopkit loop   Close the week
+
+Secondary add-ons: radar, keywords, timing, coach, celebrate, telemetry, auth
+`,
+);
 
 program
   .command("init [name]")

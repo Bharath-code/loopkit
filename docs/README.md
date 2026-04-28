@@ -32,6 +32,7 @@ Welcome to the LoopKit documentation. This directory contains everything you nee
 | Feature                                   | Status         | Commands                                             | Dashboard            |
 | ----------------------------------------- | -------------- | ---------------------------------------------------- | -------------------- |
 | Core Loop (init/track/ship/pulse/loop)    | ✅ Shipped     | CLI                                                  | Full                 |
+| **Sharp v1 Refinement**                   | ✅ **Shipped** | Fast init, uncomfortable truth, proof loops          | Proof metrics        |
 | Auth + Payments                           | ✅ Shipped     | `loopkit auth`                                       | Login/Signup         |
 | Telemetry + Benchmarks                    | ✅ Shipped     | `loopkit telemetry`                                  | `/benchmarks`        |
 | Intelligence Engine Phase 1-2             | ✅ Shipped     | DNA, benchmarks, oracle, churn, auto-loop, predictor | Overview, Benchmarks |

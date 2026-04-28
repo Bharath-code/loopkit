@@ -312,7 +312,7 @@ LoopKit's position: **Terminal-native, opinionated, single-player focused**
 
 ## Competitive Positioning Statement
 
-> **For solo technical founders who want to ship consistently, LoopKit is the CLI-first shipping system that closes the entire product loop — from idea to launch to feedback to iteration — with AI assistance at every phase. Unlike Notion or Linear, LoopKit is opinionated (enforcing the 5-phase loop), CLI-native (integrated with your git workflow), and founder-specific (not team-oriented).**
+> **For solo technical founders shipping weekly, LoopKit is the CLI that turns a fuzzy bet into shipped work, feedback, proof of progress, and one clear next move. Unlike Notion or Linear, LoopKit is opinionated around the five-command weekly loop, CLI-native, local-first, and built for solo founder execution instead of team project management.**
 
 ---
 

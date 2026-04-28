@@ -14,13 +14,13 @@ npm install -g loopkit
 
 ---
 
-## 1. Define Your Idea (3 minutes)
+## 1. Define Your Weekly Shipping Bet (Under 5 minutes)
 
 ```bash
 loopkit init my-project
 ```
 
-Answer 5 questions. Be specific. The AI will score your idea and give you a validation plan.
+Answer 5 questions. Be specific. The AI will give you the first value fast: one uncomfortable truth, a scored bet, and a validation action you can do tonight.
 
 **Tip:** If your ICP score is < 7, narrow your target customer. "Freelance designers in Berlin" beats "creative professionals."
 
@@ -84,7 +84,7 @@ When you have 5+ responses, run `loopkit pulse` to see AI-clustered insights.
 loopkit loop
 ```
 
-Review your week. Accept the AI's recommendation for next week. Share your build-in-public post.
+Review your week. LoopKit shows what moved forward, proof this week (score delta, weeks active, decisions made, feedback acted on), and the AI's recommendation for next week. Share your build-in-public post.
 
 **Do this every Sunday.** This is the habit that separates founders who ship from founders who don't.
 
@@ -136,7 +136,7 @@ loopkit loop                           # Weekly synthesis
 # Auth
 loopkit auth                           # Log in
 
-# Intelligence Engine
+# Secondary add-ons
 loopkit radar                          # Scan PH & HN for competitor launches
 loopkit radar --category "saas"        # Scan a specific category
 loopkit keywords                       # Find low-competition keywords in your niche
@@ -150,4 +150,4 @@ loopkit telemetry status               # Check current status
 
 ---
 
-*Last updated: April 2026 · v0.1.0 (IE-7 through IE-17 shipped · Pattern Interrupt + Peer Inspiration + Keywords + Timing + Radar + Trending + AI Coach all complete · P0 launch blockers resolved)*
+*Last updated: April 2026 · v0.1.0 (Sharp v1 refinement: fast init, uncomfortable truth, proof loops, Sunday reward, upgrade-intent probes · IE-7 through IE-17 shipped)*

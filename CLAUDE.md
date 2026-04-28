@@ -23,15 +23,16 @@ Read this before touching any code.
 
 ## What This Product Is
 
-LoopKit is a **CLI-first shipping OS for solo technical founders**.
-Five commands close the entire product loop: Define → Develop → Deliver → Feedback → Iterate.
+LoopKit is **the CLI for solo technical founders shipping weekly**.
+Five primary commands close the weekly loop: Define → Develop → Deliver → Feedback → Iterate.
+Secondary intelligence commands support the loop but should not become the center of gravity.
 
 ```
-loopkit init    → scored product brief (AI)
+loopkit init    → scored product brief + uncomfortable truth (AI)
 loopkit track   → task management synced to git commits
 loopkit ship    → launch post generator (HN, Twitter, IH)
 loopkit pulse   → async feedback clustering (AI)
-loopkit loop    → weekly synthesis + BIP post (AI)
+loopkit loop    → proof loop + weekly synthesis + BIP post (AI)
 ```
 
 The PRD is the source of truth: `prd.md` in the root.
@@ -80,7 +81,7 @@ Never define a type in `cli` or `web` that belongs in `shared`.
 
 ```
 src/
-├── index.ts              # Entry — Commander routes 9 commands
+├── index.ts              # Entry — Commander routes primary loop + secondary add-ons
 ├── commands/
 │   ├── init.ts           # loopkit init
 │   ├── track.ts          # loopkit track
@@ -89,7 +90,11 @@ src/
 │   ├── loop.ts           # loopkit loop
 │   ├── auth.ts           # loopkit auth
 │   ├── celebrate.ts      # loopkit celebrate
-│   └── telemetry.ts      # loopkit telemetry
+│   ├── telemetry.ts      # loopkit telemetry
+│   ├── radar.ts          # loopkit radar
+│   ├── keywords.ts       # loopkit keywords
+│   ├── timing.ts         # loopkit timing
+│   └── coach.ts          # loopkit coach
 ├── analytics/
 │   ├── telemetry.ts      # Opt-in usage collection (on/off/export/delete)
 │   ├── dna.ts            # Shipping DNA profile (founder pattern detection)
@@ -108,6 +113,7 @@ src/
 │       └── unstuck.ts    # Micro-task generation prompt
 ├── storage/
 │   ├── local.ts          # All .loopkit/ file operations
+│   ├── sync.ts           # CLI → Convex sync for loop/ship/radar/timing
 │   └── cache.ts          # AI result cache (hash-based, 7-day TTL)
 └── ui/
     └── theme.ts           # Colors, scoreBar, box, header helpers
@@ -207,11 +213,12 @@ Contains all Zod schemas. When adding a new data type:
 3. Use in CLI or web via `import { ... } from "@loopkit/shared"`
 
 Schemas defined:
-- `BriefSchema` — AI output from `loopkit init` (includes `overallScore`)
+- `BriefSchema` — AI output from `loopkit init` (includes `overallScore` + `uncomfortableTruth`)
 - `TaskSchema` — single task entry
 - `ShipDraftsSchema` — HN + Twitter + IH drafts
 - `PulseClusterSchema` — AI clustering output
-- `LoopSynthesisSchema` — one-thing + BIP post
+- `LoopSynthesisSchema` — week win + one thing + BIP post + founder note
+- `LoopLogSchema` — weekly proof metrics (`previousScore`, `currentScore`, `scoreDelta`, `weeksActive`, `decisionsMade`, `feedbackResponses`, `feedbackActedOn`)
 - `ConfigSchema` — user config
 - Helpers: `slugify()`, `getWeekNumber()`, `formatDate()`
 
