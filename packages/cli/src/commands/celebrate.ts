@@ -210,6 +210,19 @@ export async function celebrateCommand(
   console.log(colors.dim("  Copy this to share your progress:"));
   console.log(box(shareText));
 
+  // Auto-copy to clipboard on macOS
+  try {
+    const { spawnSync } = await import("node:child_process");
+    if (process.platform === "darwin") {
+      const result = spawnSync("pbcopy", [], { input: shareText, encoding: "utf-8" });
+      if (!result.error) {
+        console.log(pass("Copied to clipboard — paste and share!"));
+      }
+    }
+  } catch {
+    // Silent — clipboard is a convenience, not required
+  }
+
   // ─── What's next ──────────────────────────────────────────────
   console.log(header("What's Next"));
   console.log(info("Run `loopkit loop` to synthesize your week"));

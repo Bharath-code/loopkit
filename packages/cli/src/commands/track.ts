@@ -3,7 +3,7 @@ import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { formatDate, slugify } from "@loopkit/shared";
+import { formatDate, slugify, getWeekNumber } from "@loopkit/shared";
 import {
   readConfig,
   readTasksFile,
@@ -13,6 +13,8 @@ import {
   ensureProjectDir,
   appendToCut,
   projectExists,
+  readLastNLoopLogs,
+  readLoopLog,
 } from "../storage/local.js";
 import { computeBenchmarks, renderBenchmarks } from "../analytics/benchmarks.js";
 import { getSnoozeWarning } from "../analytics/oracle.js";
@@ -146,8 +148,27 @@ export async function trackCommand(options?: {
   }
 
   // ─── Shipping Score ───────────────────────────────────────────
+  const weekNum = getWeekNumber();
+  const prevLogs = readLastNLoopLogs(2, slug);
+  const prevLog = prevLogs.find((l) => l.weekNumber !== weekNum);
+  let prevScore: number | null = null;
+  if (prevLog) {
+    const logContent = readLoopLog(prevLog.weekNumber);
+    if (logContent) {
+      const m = logContent.match(/[Ss]hipping score:\s*(\d+)%/);
+      if (m) prevScore = parseInt(m[1], 10);
+    }
+  }
+  const deltaStr =
+    prevScore !== null
+      ? shippingScore > prevScore
+        ? colors.success(` ↑+${shippingScore - prevScore}%`)
+        : shippingScore < prevScore
+          ? colors.danger(` ↓${shippingScore - prevScore}%`)
+          : colors.dim(" ↔ same as last week")
+      : "";
   console.log(
-    `\n  ${colors.white.bold("Shipping")} ${renderProgressBar(shippingScore)} ${colors.white.bold(`${shippingScore}%`)}`
+    `\n  ${colors.white.bold("Shipping")} ${renderProgressBar(shippingScore)} ${colors.white.bold(`${shippingScore}%`)}${deltaStr}`
   );
 
   // ─── AI Coach v1 (IE-10) — stuck state ────────────────────────
@@ -161,7 +182,7 @@ export async function trackCommand(options?: {
 
   // ─── Smart Benchmarks ──────────────────────────────────────────
   const benchmarks = computeBenchmarks();
-  if (benchmarks && benchmarks.metrics.totalWeeks >= 2) {
+  if (benchmarks && benchmarks.metrics.totalWeeks >= 4) {
     console.log(header("Benchmarks"));
     console.log(renderBenchmarks(benchmarks));
   }
@@ -519,10 +540,10 @@ function renderWeekSummary(
   );
 
   // Benchmarks in week summary
-  const benchmarks = computeBenchmarks();
-  if (benchmarks && benchmarks.metrics.totalWeeks >= 2) {
+  const weekBenchmarks = computeBenchmarks();
+  if (weekBenchmarks && weekBenchmarks.metrics.totalWeeks >= 4) {
     console.log(header("Benchmarks"));
-    console.log(renderBenchmarks(benchmarks));
+    console.log(renderBenchmarks(weekBenchmarks));
   }
 
   if (done.length > 0) {

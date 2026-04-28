@@ -361,6 +361,13 @@ export async function initCommand(
   }
 
   console.log(nextStep("track"));
+  console.log(
+    colors.dim(
+      "\n  💡 Set a Sunday reminder to close your week:\n" +
+      "     macOS: Add a weekly calendar event for Sunday 6pm\n" +
+      `     Or cron: 0 18 * * 0 cd ${process.cwd()} && loopkit loop\n`
+    )
+  );
   p.outro(colors.muted("Brief saved. Now build against it."));
 }
 

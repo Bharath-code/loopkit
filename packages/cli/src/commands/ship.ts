@@ -158,38 +158,18 @@ export async function shipCommand(): Promise<void> {
   }
 
   // ─── What shipped ────────────────────────────────────────────
-  const whatShipped = await p.text({
+  const rawWhatShipped = await p.text({
     message: "What's the main thing you shipped? (one sentence)",
     placeholder: "e.g. Added PDF export for SOW documents",
   });
 
-  if (p.isCancel(whatShipped)) {
+  if (p.isCancel(rawWhatShipped)) {
     p.cancel("Cancelled.");
     process.exit(0);
   }
 
-  // ─── Pre-launch checklist ────────────────────────────────────
-  console.log(header("Pre-Launch Checklist"));
-
-  const checklist: Record<string, boolean> = {};
-
-  const readmeUpdated = await p.confirm({ message: "README updated this week?" });
-  checklist["readme"] = !p.isCancel(readmeUpdated) && readmeUpdated;
-  console.log(checklist["readme"] ? pass("README updated") : warn("README not updated"));
-
-  const landingLive = await p.confirm({ message: "Landing page live?" });
-  checklist["landing"] = !p.isCancel(landingLive) && landingLive;
-  console.log(checklist["landing"] ? pass("Landing page live") : warn("No landing page"));
-
-  const analyticsOn = await p.confirm({ message: "Analytics installed?" });
-  checklist["analytics"] = !p.isCancel(analyticsOn) && analyticsOn;
-  console.log(checklist["analytics"] ? pass("Analytics active") : warn("No analytics — add PostHog"));
-
-  const feedbackOn = await p.confirm({ message: "Feedback collection active?" });
-  checklist["feedback"] = !p.isCancel(feedbackOn) && feedbackOn;
-  console.log(
-    checklist["feedback"] ? pass("Feedback active") : warn("No feedback — run `loopkit pulse --setup`")
-  );
+  // Truncate to keep AI output calibrated
+  const whatShipped = (rawWhatShipped as string).slice(0, 200);
 
   // ─── Check if ship log exists today ───────────────────────────
   const today = formatDate();
@@ -224,6 +204,9 @@ export async function shipCommand(): Promise<void> {
   let platforms: PlatformDraft[];
   let rawDrafts: typeof ShipDraftsSchema._type | undefined;
 
+  // Initialise checklist — will be filled after draft review
+  const checklist: Record<string, boolean> = {};
+
   try {
     const result = await generateDrafts(ctx);
     platforms = result.platforms;
@@ -232,6 +215,17 @@ export async function shipCommand(): Promise<void> {
   } catch {
     s.stop("Draft generation failed.");
     console.log(colors.danger("AI unavailable. Saving ship log without drafts."));
+
+    // Still collect the checklist on failure
+    console.log(header("Pre-Launch Checklist"));
+    const readmeUpdated = await p.confirm({ message: "README updated this week?" });
+    checklist["readme"] = !p.isCancel(readmeUpdated) && readmeUpdated;
+    const landingLive = await p.confirm({ message: "Landing page live?" });
+    checklist["landing"] = !p.isCancel(landingLive) && landingLive;
+    const analyticsOn = await p.confirm({ message: "Analytics installed?" });
+    checklist["analytics"] = !p.isCancel(analyticsOn) && analyticsOn;
+    const feedbackOn = await p.confirm({ message: "Feedback collection active?" });
+    checklist["feedback"] = !p.isCancel(feedbackOn) && feedbackOn;
 
     const logContent = buildLogContent(today, productName, whatShipped, checklist, []);
     saveShipLog(logContent, today);
@@ -253,7 +247,7 @@ export async function shipCommand(): Promise<void> {
     }
 
     console.log(info(`Ship log saved → .loopkit/ships/${today}.md`));
-    console.log(nextStep("loop"));
+    console.log(nextStep("loop", "Close your week Sunday"));
     p.outro(colors.muted("Shipped. Now close the loop Sunday."));
     return;
   }
@@ -268,6 +262,17 @@ export async function shipCommand(): Promise<void> {
     while (!done) {
       console.log(header(platform.label));
       console.log(box(platform.content));
+
+      // Show character count for Twitter drafts
+      if (platform.key === "twitter") {
+        const tweetParts = platform.content.split("\n\n");
+        for (const tweet of tweetParts) {
+          const clean = tweet.replace(/^\d+\.\s*/, "");
+          if (clean.length > 240) {
+            console.log(colors.warning(`  ⚠ Tweet is ${clean.length} chars — over 240 recommended`));
+          }
+        }
+      }
 
       const action = await p.select({
         message: `${platform.label}:`,
@@ -292,9 +297,7 @@ export async function shipCommand(): Promise<void> {
 
       if (action === "edit") {
         const edited = openInEditor(platform.content);
-        // Show edited version and ask again
         platform = { ...platform, content: edited };
-        // Loop again to show the edited version and let them use/skip/regen
         continue;
       }
 
@@ -312,13 +315,32 @@ export async function shipCommand(): Promise<void> {
         } catch {
           rs.stop("Regeneration failed.");
           console.log(warn("Could not regenerate — using previous draft."));
-          // Loop again with same content
         }
-        // Loop back to show the new draft
         continue;
       }
     }
   }
+
+  // ─── Pre-launch checklist (after draft review — user has seen value first) ──
+  console.log(header("Pre-Launch Checklist"));
+
+  const readmeUpdated = await p.confirm({ message: "README updated this week?" });
+  checklist["readme"] = !p.isCancel(readmeUpdated) && readmeUpdated;
+  console.log(checklist["readme"] ? pass("README updated") : warn("README not updated"));
+
+  const landingLive = await p.confirm({ message: "Landing page live?" });
+  checklist["landing"] = !p.isCancel(landingLive) && landingLive;
+  console.log(checklist["landing"] ? pass("Landing page live") : warn("No landing page"));
+
+  const analyticsOn = await p.confirm({ message: "Analytics installed?" });
+  checklist["analytics"] = !p.isCancel(analyticsOn) && analyticsOn;
+  console.log(checklist["analytics"] ? pass("Analytics active") : warn("No analytics — add PostHog"));
+
+  const feedbackOn = await p.confirm({ message: "Feedback collection active?" });
+  checklist["feedback"] = !p.isCancel(feedbackOn) && feedbackOn;
+  console.log(
+    checklist["feedback"] ? pass("Feedback active") : warn("No feedback — run `loopkit pulse --setup`")
+  );
 
   // ─── Save ship log ────────────────────────────────────────────
   const logContent = buildLogContent(today, productName, whatShipped, checklist, usedDrafts);
@@ -362,10 +384,14 @@ export async function shipCommand(): Promise<void> {
     }
   }
 
-  console.log(nextStep("celebrate"));
-
-  // Auto-trigger celebration
-  await celebrateCommand();
+  // ─── Auto-trigger celebration only when drafts were used ──────
+  if (usedDrafts.length > 0) {
+    console.log(nextStep("celebrate"));
+    await celebrateCommand();
+  } else {
+    console.log(nextStep("loop", "Close your week Sunday"));
+    p.outro(colors.muted("Shipped. Now close the loop Sunday."));
+  }
 }
 
 // ─── Helpers ──────────────────────────────────────────────────

@@ -88,8 +88,9 @@ function stripAnsi(str: string): string {
   );
 }
 
-export function nextStep(command: string): string {
-  return `\n${colors.muted("Next:")} ${colors.primary(`loopkit ${command}`)}\n`;
+export function nextStep(command: string, hint?: string): string {
+  const note = hint ? ` ${colors.dim(`(${hint})`)}` : "";
+  return `\n${colors.muted("Next:")} ${colors.primary(`loopkit ${command}`)}${note}\n`;
 }
 
 // ─── Keyboard Shortcuts Hint ────────────────────────────────────

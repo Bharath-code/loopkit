@@ -81,6 +81,7 @@ Five questions. AI scoring. A brief that stings when it should.
 - **Overall score** — averaged anchor at a glance
 - Riskiest assumption named explicitly
 - One async validation action you can do tonight
+- **Sunday Reminder**: Provides a helpful hint to set a recurring calendar event or cron job to close your week
 
 ### `loopkit track` — zero-overhead task management
 
@@ -96,22 +97,27 @@ Five questions. AI scoring. A brief that stings when it should.
 - Reads your brief + completed tasks for AI context
 - Generates drafts for Show HN, Twitter, and Indie Hackers
 - Per-draft: **use**, **edit in `$EDITOR`**, **regenerate**, or **skip**
-- Pre-launch checklist catches what you forgot
+- Pre-launch checklist catches what you forgot (runs *after* draft generation to get to value faster)
+- AI output remains calibrated by truncating long descriptions
+- Auto-triggers `celebrate` confetti, but only if you actually use a draft
 - Ship log saved to `.loopkit/ships/YYYY-MM-DD.md`
 
 ### `loopkit pulse` — feedback that comes to you
 
 - **Hosted Form & Widget**: Collect feedback async via your own `/pulse/[projectId]` hosted page or an embeddable JS widget on your landing page. Fully supports offline submission with automatic real-time sync.
-- Add responses from the CLI: `loopkit pulse --add "user said this"`
+- Add responses from the CLI: `loopkit pulse --add "user said this"` (automatically deduplicates)
+- Embeddable widget displays your actual `projectId` for easy copy-pasting
 - AI clusters responses into: Fix now / Validate later / Noise
 - Requires 5+ responses for clustering; shows raw list below threshold
 - Tag clusters directly to your sprint
 
 ### `loopkit loop` — the Sunday ritual
 
-- Aggregates your week: tasks, feedback, ship logs
-- Tracks your consecutive **Loop Streak** (e.g. `🔥 4 consecutive weeks`)
+- Aggregates your week: tasks, ship logs, **pulse feedback**, and **previous weeks' context**
+- Tracks your consecutive **Loop Streak** (e.g. `🔥 4 consecutive weeks`) and acknowledges streak breaks
 - AI recommends the single highest-leverage thing for next week
+- Smart Unstuck Mode: kicks in if you have 0 tasks, but only after your first week
+- Context-aware upgrade prompts at week 4 or 8
 - Override rate tracked — warns if you're overriding AI > 50% of the time
 - Generates a build-in-public post (280-char checked)
 - One decision. One post. Week done.

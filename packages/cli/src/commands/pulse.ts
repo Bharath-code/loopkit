@@ -106,9 +106,7 @@ export async function pulseCommand(options: PulseOptions): Promise<void> {
 
       console.log(
         colors.muted(
-          '\n  Embed widget: <script src="' +
-            API_URL +
-            '/api/pulse/widget?projectId=..."></script>\n',
+          `\n  Embed widget: <script src="${API_URL}/api/pulse/widget?projectId=${convexProjectId || 'YOUR_PROJECT_ID'}"></script>\n`,
         ),
       );
     } catch (err) {
@@ -124,13 +122,25 @@ export async function pulseCommand(options: PulseOptions): Promise<void> {
     return;
   }
 
-  // ─── --add: Append a single response ─────────────────────────
+  // ─── --add: Append a single response ────────────────────────────────────
   if (options.add !== undefined) {
     const text = options.add.trim();
     if (!text) {
       console.log(colors.danger("Response text cannot be empty."));
       process.exit(1);
     }
+
+    // Dedup: skip exact duplicates (normalized)
+    const existing = readPulseResponses();
+    const normalized = text.toLowerCase().replace(/\s+/g, " ");
+    const isDuplicate = existing.some(
+      (r) => r.toLowerCase().replace(/\s+/g, " ") === normalized
+    );
+    if (isDuplicate) {
+      console.log(colors.warning("Response already exists (skipped duplicate)."));
+      return;
+    }
+
     appendPulseResponse(text);
     const total = readPulseResponses().length;
     console.log(pass(`Response added (${total} total)`));

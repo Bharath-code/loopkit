@@ -64,26 +64,35 @@ export function buildLoopPrompt(context: {
   tasksOpen: string[];
   shipLog?: string;
   pulseData?: string;
+  previousWeeks?: Array<{ weekNumber: number; score: number; oneThing: string }>;
 }): string {
   const parts: string[] = [];
   parts.push(`Product: ${context.productName}`);
   parts.push(`Week: ${context.weekNumber}`);
   if (context.bet) parts.push(`Bet: ${context.bet}`);
   if (context.riskiestAssumption) parts.push(`Riskiest assumption: ${context.riskiestAssumption}`);
-  
+
+  if (context.previousWeeks && context.previousWeeks.length > 0) {
+    parts.push(
+      `\nRecent weeks (for accountability):\n${context.previousWeeks
+        .map((w) => `- Week ${w.weekNumber}: ${w.score}% score · one thing was "${w.oneThing}"`)
+        .join("\n")}`
+    );
+  }
+
   if (context.tasksCompleted.length > 0) {
     parts.push(`\nTasks completed:\n${context.tasksCompleted.map((t) => `- ${t}`).join("\n")}`);
   } else {
     parts.push("\nTasks completed: None this week.");
   }
-  
+
   if (context.tasksOpen.length > 0) {
     parts.push(`\nTasks still open:\n${context.tasksOpen.map((t) => `- ${t}`).join("\n")}`);
   }
-  
+
   if (context.shipLog) parts.push(`\nShip log:\n${context.shipLog}`);
   if (context.pulseData) parts.push(`\nPulse feedback:\n${context.pulseData}`);
-  
+
   parts.push("\nSynthesize this week and produce weekWin, oneThing, rationale, tension, bipPost, and founderNote.");
   return parts.join("\n");
 }

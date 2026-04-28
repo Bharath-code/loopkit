@@ -55,7 +55,7 @@ MVP SCOPE:
 - If MVP has more than 1 core feature, tell them to cut it
 - The validate action must be something they can do alone tonight — no "talk to 10 customers"
 - If Q2 answer is a solution not a problem, flag it: "That reads as a solution. What's the pain before your product exists?"
-- Max 250 words total in your entire output
+- Be concise: each field is 1-2 sentences max. Prefer precision over length.
 
 ## few-shot calibration
 

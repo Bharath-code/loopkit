@@ -100,7 +100,9 @@ LoopKit replaces your scattered task manager with a simple `tasks.md` file:
 
 - **Auto-close via git:** Write `[#1]` in your commit message → task automatically marks as done
 - **Shipping score:** Done tasks / Total tasks × 100. Aim for > 70%.
+- **Score delta:** Compare your shipping score to last week (e.g. `↑+12%` or `↓-8%`) for a daily progress anchor.
 - **Stale task detection:** Tasks open for 3+ days get flagged. Keep, snooze, or cut them.
+- **Smart Benchmarks:** Compares your performance against the network, unlocking after you reach 4 weeks of data.
 - **Never deleted:** Cut tasks move to `cut.md` — you might want them later.
 
 **Why this matters:** Visibility creates accountability. A 60% shipping score is a data point, not a feeling.
@@ -120,12 +122,13 @@ Shipping isn't just deploying code. It's announcing it to the right people on th
 LoopKit asks: "What did you ship?" Then AI generates:
 
 - **Hacker News:** Title + body (no hype, developer tone)
-- **Twitter:** 3-tweet thread (build in public style)
+- **Twitter:** 3-tweet thread (build in public style, with character count warnings)
 - **Indie Hackers:** Narrative post (story-driven)
 
 You can use, edit, regenerate, or skip each draft.
+After reviewing the drafts, you run through a pre-launch checklist to ensure you updated your README, landing page, analytics, and feedback form.
 
-**Why this matters:** Writing launch copy takes 1-2 hours. LoopKit does it in 30 seconds. The faster you launch, the faster you learn.
+**Why this matters:** Writing launch copy takes 1-2 hours. LoopKit does it in 30 seconds. The faster you launch, the faster you learn. By generating the drafts first, you get immediate value before doing the housekeeping tasks.
 
 **Output:** Published posts + a `ship log` saved for your records.
 
@@ -141,8 +144,8 @@ Most founders build in a vacuum. LoopKit makes feedback collection automatic.
 
 **Two ways to collect:**
 
-1. **Inline:** `loopkit pulse --add "User said the pricing is confusing"`
-2. **Shareable form:** `loopkit pulse --share` → get a URL + QR code → embed on your site
+1. **Inline:** `loopkit pulse --add "User said the pricing is confusing"` (automatically deduplicates)
+2. **Shareable form:** `loopkit pulse --share` → get a URL + QR code → embed on your site (widget outputs your actual `projectId`)
 
 Once you have 5+ responses, AI clusters them into:
 
@@ -253,7 +256,7 @@ Your shipping score is `done tasks / total tasks × 100`.
 
 Consecutive weeks where you run `loopkit loop` and close your synthesis.
 
-A 4-week streak means you've shipped and reflected for a month straight. This is the #1 predictor of eventual success.
+If you miss a week, your streak resets, but you get a gentle acknowledgment to help you start a new streak today. A 4-week streak means you've shipped and reflected for a month straight. This is the #1 predictor of eventual success.
 
 ### The Override
 
@@ -274,7 +277,7 @@ But if you're overriding > 50% of the time for a month, ask yourself: _Is the sy
 
 ### For Consistency
 
-- **Run `loopkit loop` every Sunday at the same time.** Make it a ritual.
+- **Run `loopkit loop` every Sunday at the same time.** Make it a ritual. LoopKit will even provide a cron reminder hint after you initialize a project.
 - **Set a calendar reminder.** "Sunday 9 AM — LoopKit Loop"
 - **Share your BIP post every week.** Public commitment = accountability.
 

@@ -92,6 +92,16 @@ export async function loopCommand(): Promise<void> {
   const tasksContent = readTasksFile(slug);
   const shipLog = readShipLog();
 
+  // ─── Build pulse context for AI ──────────────────────────────
+  const pulseResponses = readPulseResponses();
+  const pulseData =
+    pulseResponses.length > 0
+      ? `${pulseResponses.length} responses. Recent: ${pulseResponses
+          .slice(-5)
+          .map((r, i) => `${i + 1}. "${r}"`)
+          .join(" | ")}`
+      : undefined;
+
   // Parse tasks
   let tasksCompleted: string[] = [];
   let tasksOpen: string[] = [];
@@ -113,6 +123,24 @@ export async function loopCommand(): Promise<void> {
     totalTasks > 0
       ? Math.round((tasksCompleted.length / totalTasks) * 100)
       : 0;
+
+  // ─── Build previousWeeks for AI accountability context ───────
+  const previousLogsRaw = readLastNLoopLogs(3, slug).filter(
+    (l) => l.weekNumber !== weekNum,
+  );
+  const previousWeeks = previousLogsRaw
+    .map((l) => {
+      const content = readLoopLog(l.weekNumber);
+      if (!content) return null;
+      const scoreMatch = content.match(/[Ss]hipping score:\s*(\d+)%/);
+      const oneThingMatch = content.match(/## The One Thing\n([^\n]+)/);
+      return {
+        weekNumber: l.weekNumber,
+        score: scoreMatch ? parseInt(scoreMatch[1], 10) : 0,
+        oneThing: oneThingMatch ? oneThingMatch[1].trim() : "",
+      };
+    })
+    .filter(Boolean) as Array<{ weekNumber: number; score: number; oneThing: string }>;
 
   const proof = computeLoopProof({
     slug,
@@ -148,6 +176,8 @@ export async function loopCommand(): Promise<void> {
   const currentStreak = pastStreak + 1;
   if (currentStreak >= 2) {
     console.log(`  ${colors.primary.bold("Streak:")} 🔥 ${currentStreak} consecutive weeks`);
+  } else if (pastStreak === 0 && proof.weeksActive >= 2) {
+    console.log(warn("  Streak reset — you missed a week. Let's start a new one today."));
   }
 
   // ─── Handle no data (first week) ─────────────────────────────
@@ -209,8 +239,8 @@ export async function loopCommand(): Promise<void> {
     return;
   }
 
-  // ─── Unstuck Mode: 0 tasks this week ──────────────────────────
-  if (totalTasks === 0 && tasksCompleted.length === 0) {
+  // ─── Unstuck Mode: 0 tasks (only triggers after week 1) ──────
+  if (totalTasks === 0 && tasksCompleted.length === 0 && proof.weeksActive >= 2) {
     console.log(colors.warning("\n  No tasks this week. Feeling stuck?\n"));
 
     const wantUnstuck = await p.confirm({
@@ -302,6 +332,8 @@ export async function loopCommand(): Promise<void> {
         tasksCompleted,
         tasksOpen,
         shipLog: shipLog || undefined,
+        pulseData,
+        previousWeeks: previousWeeks.length > 0 ? previousWeeks : undefined,
       }),
       schema: LoopSynthesisSchema,
       tier: "fast",
@@ -612,11 +644,14 @@ function formatScoreDelta(delta: number): string {
 }
 
 async function maybeShowUpgradeIntent(proof: LoopProof): Promise<void> {
-  if (proof.weeksActive !== 1) return;
+  if (proof.weeksActive !== 4 && proof.weeksActive !== 8) return;
 
-  const wantsUpgrade = await p.confirm({
-    message: "Want the dashboard, hosted Pulse, and AI proxy when this loop starts compounding?",
-  });
+  const isWeek8 = proof.weeksActive === 8;
+  const message = isWeek8
+    ? `${proof.weeksActive} weeks of data — want the dashboard and AI proxy to go deeper?`
+    : "You're 4 weeks in — this is when the dashboard starts compounding. Want to unlock it?";
+
+  const wantsUpgrade = await p.confirm({ message });
 
   if (p.isCancel(wantsUpgrade) || !wantsUpgrade) return;
 
