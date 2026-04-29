@@ -22,6 +22,10 @@ loopkit init my-project
 
 Answer 5 questions. Be specific. The AI will give you the first value fast: one uncomfortable truth, a scored bet, and a validation action you can do tonight.
 
+**Optional flags:**
+- `--cron` — Install a Friday reminder cron job (4 PM)
+- `--validate` — Run devil's advocate AI to stress-test your brief
+
 **Tip:** If your ICP score is < 7, narrow your target customer. "Freelance designers in Berlin" beats "creative professionals."
 
 ---
@@ -86,6 +90,8 @@ loopkit loop
 
 Review your week. LoopKit shows what moved forward, proof this week (score delta, weeks active, decisions made, feedback acted on), and the AI's recommendation for next week. Share your build-in-public post.
 
+**Optional flag:** `--async` — Run loop any day within a 7-day window without breaking your streak
+
 **Do this every Sunday.** This is the habit that separates founders who ship from founders who don't.
 
 ---
@@ -116,11 +122,14 @@ Review your week. LoopKit shows what moved forward, proof this week (score delta
 ```bash
 # Define
 loopkit init my-project
+loopkit init --cron                    # Install Friday reminder cron
+loopkit init --validate                # Run devil's advocate validation
 
 # Develop
 loopkit track                          # View board
 loopkit track --add "Task title"       # Add task
 loopkit track --project other-project  # Switch project
+loopkit track --stand                  # Daily standup (60s)
 
 # Deliver
 loopkit ship                           # Generate launch copy
@@ -132,6 +141,11 @@ loopkit pulse                          # View clusters
 
 # Iterate
 loopkit loop                           # Weekly synthesis
+loopkit loop --async                  # Run any day within 7-day window
+
+# Celebrate
+loopkit celebrate                      # Show shipping score + confetti
+loopkit celebrate --share              # Post win to public feed
 
 # Auth
 loopkit auth                           # Log in
@@ -146,8 +160,13 @@ loopkit timing --category "saas"       # Check timing for a specific category
 loopkit telemetry on                   # Opt-in to anonymous usage data
 loopkit telemetry off                  # Opt-out
 loopkit telemetry status               # Check current status
+
+# Utilities
+loopkit aliases                        # Manage shell shortcuts
+loopkit aliases --remove               # Remove shell shortcuts
+loopkit revenue                        # Track MRR milestones
 ```
 
 ---
 
-*Last updated: April 2026 · v0.1.0 (Sharp v1 refinement: fast init, uncomfortable truth, proof loops, Sunday reward, upgrade-intent probes · IE-7 through IE-17 shipped)*
+*Last updated: April 2026 · v0.1.0 (Sharp v1 refinement: fast init, uncomfortable truth, proof loops, Sunday reward, upgrade-intent probes · IE-7 through IE-17 shipped · Phase 13 growth loops: milestones, Friday reminder, validation, aliases, async loop, referral, public wins)*

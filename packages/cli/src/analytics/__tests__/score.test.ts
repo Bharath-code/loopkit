@@ -4,6 +4,7 @@ import {
   renderLoopKitScore,
   formatLoopKitScoreShort,
   readLoopKitScoreFromLog,
+  readLastNLoopKitScores,
 } from "../score.js";
 
 // Mock dependencies
@@ -101,6 +102,28 @@ describe("LoopKit Score Analytics", () => {
     });
   });
 
+  describe("readLastNLoopKitScores", () => {
+    it("reads and sorts scores from logs, ignoring those without a score", () => {
+      vi.mocked(readLastNLoopLogs).mockReturnValue([
+        { weekNumber: 42, overridden: false },
+        { weekNumber: 40, overridden: false },
+        { weekNumber: 41, overridden: false },
+      ]);
+      // Mock readLoopLog to return different scores
+      vi.mocked(readLoopLog).mockImplementation((weekNum) => {
+        if (weekNum === 42) return "**LoopKit Score:** 85/100";
+        if (weekNum === 41) return "**LoopKit Score:** 80/100";
+        return "No score"; // week 40
+      });
+
+      const scores = readLastNLoopKitScores(3);
+      expect(scores).toEqual([
+        { week: 41, score: 80 },
+        { week: 42, score: 85 },
+      ]);
+    });
+  });
+
   describe("renderLoopKitScore", () => {
     it("renders green color and positive delta when score > previous", () => {
       const breakdown = { score: 85, shippingScore: 80, streakMultiplier: 1.0, feedbackBonus: 5, streak: 1, feedbackResponses: 0 };
@@ -114,6 +137,13 @@ describe("LoopKit Score Analytics", () => {
       const out = renderLoopKitScore(breakdown, 50);
       expect(out).toContain("30/100");
       expect(out).toContain("↓-20");
+    });
+
+    it("renders muted color and no delta when score is same", () => {
+      const breakdown = { score: 50, shippingScore: 50, streakMultiplier: 1.0, feedbackBonus: 0, streak: 1, feedbackResponses: 0 };
+      const out = renderLoopKitScore(breakdown, 50);
+      expect(out).toContain("50/100");
+      expect(out).toContain("→same");
     });
   });
 

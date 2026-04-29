@@ -43,6 +43,15 @@ import {
   saveDraft,
   readDraft,
   deleteDraft,
+  appendRevenueEntry,
+  readRevenueHistory,
+  getLatestMRR,
+  getRevenuePath,
+  saveStandup,
+  readStandup,
+  getStandupStreak,
+  getStandupPath,
+  getStandupDir,
 } from "../local";
 
 const TEST_BASE = fs.mkdtempSync(path.join(os.tmpdir(), "loopkit-test-"));
@@ -605,6 +614,80 @@ describe("projectExists", () => {
 
   it("returns false for missing project", () => {
     expect(projectExists("nonexistent")).toBe(false);
+  });
+});
+
+describe("Revenue I/O", () => {
+  beforeEach(() => {
+    cleanupTestDir();
+    fs.mkdirSync(TEST_BASE);
+    setCwdToTestDir();
+  });
+
+  afterEach(() => cleanupTestDir());
+
+  it("readRevenueHistory returns empty array when missing", () => {
+    expect(readRevenueHistory()).toEqual([]);
+  });
+
+  it("appendRevenueEntry creates file and adds entry", () => {
+    appendRevenueEntry({ mrr: 1000, date: "2026-04-01", weekNumber: 14, currency: "USD", note: "Start" });
+    const history = readRevenueHistory();
+    expect(history).toHaveLength(1);
+    expect(history[0].mrr).toBe(1000);
+    expect(fs.existsSync(getRevenuePath())).toBe(true);
+  });
+
+  it("getLatestMRR returns null when no entries", () => {
+    expect(getLatestMRR()).toBeNull();
+  });
+
+  it("getLatestMRR returns the mrr of the most recent entry", () => {
+    appendRevenueEntry({ mrr: 1000, date: "2026-04-01", weekNumber: 14, currency: "USD", note: "Start" });
+    appendRevenueEntry({ mrr: 1200, date: "2026-05-01", weekNumber: 18, currency: "USD", note: "Growth" });
+    expect(getLatestMRR()).toBe(1200);
+  });
+});
+
+describe("Standup I/O", () => {
+  beforeEach(() => {
+    cleanupTestDir();
+    fs.mkdirSync(TEST_BASE);
+    setCwdToTestDir();
+  });
+
+  afterEach(() => cleanupTestDir());
+
+  it("readStandup returns null for missing date", () => {
+    expect(readStandup("2026-04-25")).toBeNull();
+  });
+
+  it("saveStandup and readStandup round-trip", () => {
+    const log = { date: "2026-04-25", taskToday: "A", openTasks: ["B", "C"], standupStreak: 1 };
+    saveStandup(log);
+    const result = readStandup("2026-04-25");
+    expect(result).not.toBeNull();
+    expect(result?.taskToday).toBe("A");
+  });
+
+  it("getStandupStreak returns 0 if dir missing", () => {
+    expect(getStandupStreak()).toBe(0);
+  });
+
+  it("getStandupStreak calculates correctly starting today", () => {
+    // Note: getStandupStreak uses new Date(), so we need to mock or just write dates relative to today.
+    const today = new Date();
+    const dates = Array.from({ length: 3 }).map((_, i) => {
+      const d = new Date(today);
+      d.setDate(today.getDate() - i);
+      return d.toISOString().split("T")[0];
+    });
+
+    for (const d of dates) {
+      saveStandup({ date: d, taskToday: "x", openTasks: ["y", "z"], standupStreak: 1 });
+    }
+
+    expect(getStandupStreak()).toBe(3);
   });
 });
 

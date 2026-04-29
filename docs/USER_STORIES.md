@@ -554,6 +554,176 @@ So that I feel confident using LoopKit in any context
 
 ---
 
+## Phase 6: Growth & Retention
+
+### US-GROWTH-01: Celebrate Milestones
+
+```
+As a solo founder (Sarah)
+I want to be celebrated when I hit key milestones (first week, month 1, first revenue)
+So that I feel motivated to keep shipping
+```
+
+**Acceptance Criteria:**
+
+- Given I complete my first loop (week 1), when I run `loopkit loop`, then I see an encouraging message: "First week complete! The hardest week is behind you."
+- Given I reach 4 consecutive weeks, when I run `loopkit loop`, then I see: "4-week streak — you're building a habit!"
+- Given I log my first revenue, when the milestone triggers, then I see: "First dollar! This is a huge milestone."
+- Given I'm authenticated, when a milestone triggers, then it's synced to Convex and I receive an email notification (if opted in)
+
+**Priority:** 🟡 Medium | **Effort:** M | **Persona:** All
+
+---
+
+### US-GROWTH-02: Friday Reminder
+
+```
+As a solo founder (Sarah)
+I want to be reminded to ship every Friday at 4 PM
+So that I don't forget to ship before the weekend
+```
+
+**Acceptance Criteria:**
+
+- Given I run `loopkit init --cron`, when the command completes, then a cron job is installed to run `loopkit remind:friday` at 4 PM every Friday
+- Given it's Friday at 4 PM and I haven't shipped, when the cron runs, then I see a terminal notification: "Haven't shipped yet this week. Time to ship?"
+- Given it's Friday at 4 PM and I have shipped, when the cron runs, then I see a terminal notification: "You shipped this week! Great job!"
+- Given the notification appears, when I see it, then I can respond with [s] to run `loopkit ship` immediately or dismiss
+
+**Priority:** 🟡 Medium | **Effort:** M | **Persona:** Sarah, Jordan
+
+---
+
+### US-GROWTH-03: Validate My Brief Before Building
+
+```
+As a first-time founder (Alex)
+I want to run a devil's advocate validation on my brief
+So that I catch potential weaknesses before I start building
+```
+
+**Acceptance Criteria:**
+
+- Given I run `loopkit init my-saas --validate`, when the init flow completes, then AI generates 3 challenging questions about my brief
+- Given the questions are displayed, when I read them, then I see an encouraging message: "These questions are designed to strengthen your thinking, not discourage you."
+- Given I want to iterate, when I see the prompt, then I can choose to run `loopkit init --analyze my-saas` to update my brief
+
+**Priority:** 🟡 Medium | **Effort:** S | **Persona:** Alex, Sarah
+
+---
+
+### US-GROWTH-04: Use Shell Aliases for Faster Commands
+
+```
+As an indie hacker (Marcus)
+I want to install shell shortcuts for common commands
+So that I can type less and ship faster
+```
+
+**Acceptance Criteria:**
+
+- Given I run `loopkit init` for the first time, when the flow completes, then I'm prompted: "Install shell aliases for faster commands? (Recommended)"
+- Given I select yes, when the installer runs, then it detects my shell (zsh/bash/fish) and appends aliases to my config file
+- Given the aliases are installed, when I restart my shell, then I can use: `lk` (init), `lks` (ship), `lkl` (loop), `lkt` (track)
+- Given I want to remove aliases later, when I run `loopkit aliases --remove`, then the aliases are removed from my shell config
+
+**Priority:** 🟢 Low | **Effort:** S | **Persona:** Marcus
+
+---
+
+### US-GROWTH-05: Run Loop Any Day Within 7-Day Window
+
+```
+As a solo founder (Sarah)
+I want to run my loop on a weekday if I'm traveling on Sunday
+So that I don't break my streak due to scheduling conflicts
+```
+
+**Acceptance Criteria:**
+
+- Given I run `loopkit loop --async` on Wednesday, when the command runs, then it skips the mid-week check-in prompt and proceeds with full synthesis
+- Given my last loop was 5 days ago, when I run with --async, then my streak is preserved (not broken)
+- Given my last loop was 8 days ago, when I run with --async, then I see a warning: "It's been 8 days since your last loop. Your streak may be affected."
+- Given I run --async, when the loop completes, then the log is saved normally and streak is calculated correctly
+
+**Priority:** 🟡 Medium | **Effort:** S | **Persona:** Sarah, Jordan
+
+---
+
+### US-GROWTH-06: Get Nudged When Almost Done
+
+```
+As an indie hacker (Marcus)
+I want to be nudged when my shipping score is 50-70% with 2 tasks left
+So that I push through to finish the week strong
+```
+
+**Acceptance Criteria:**
+
+- Given I run `loopkit track` and my score is 60% with 2 tasks open, when the board renders, then I see: "Almost there — 2 tasks left to hit 80%."
+- Given I see the nudge, when I read it, then I see suggested actions like marking tasks done or snoozing
+- Given my score is 40% or 80%, when I run `loopkit track`, then no nudge is shown (only triggers in 50-70% range)
+
+**Priority:** 🟢 Low | **Effort:** S | **Persona:** Marcus
+
+---
+
+### US-GROWTH-07: Share LoopKit with Friends for Credits
+
+```
+As a side project shipper (Jordan)
+I want to get referral credits when I share LoopKit with friends
+So that I can extend my subscription for free
+```
+
+**Acceptance Criteria:**
+
+- Given I have a 4-week streak, when I run `loopkit loop`, then I'm prompted: "Share LoopKit with a founder friend and get 1 month of Solo free?"
+- Given I select yes, when the system generates a code, then I see my referral link: "loopkit.dev/r/a3b7c9d2"
+- Given I share the link, when a friend signs up, then we both get 1 month of Solo tier credit
+- Given I've already seen the prompt, when I run `loopkit loop` again, then I'm not prompted again (flag prevents repeat)
+
+**Priority:** 🟡 Medium | **Effort:** S | **Persona:** Jordan
+
+---
+
+### US-GROWTH-08: Share Wins to Public Feed
+
+```
+As a solo founder (Sarah)
+I want to post my weekly wins to a public feed
+So that I build accountability and discover other founders
+```
+
+**Acceptance Criteria:**
+
+- Given I run `loopkit celebrate --share`, when the command completes, then my win is posted to the public feed at loopkit.dev/wins
+- Given I'm not authenticated, when I run with --share, then I see: "Not authenticated — win not posted. Run `loopkit auth` to enable sharing."
+- Given my win is posted, when I visit the feed, then I see my product name, week number, shipping score, streak, and tasks completed
+- Given the API call fails, when the error occurs, then I see a warning but the celebration still displays locally
+
+**Priority:** 🟡 Medium | **Effort:** M | **Persona:** Sarah
+
+---
+
+### US-GROWTH-09: Feel Supported After Breaking Streak
+
+```
+As an indie hacker (Marcus)
+I want to receive encouraging support when I break my streak
+So that I don't feel guilty about missing a week
+```
+
+**Acceptance Criteria:**
+
+- Given I had an 8-week streak and missed a week, when I run `loopkit loop` after the gap, then I see: "You had an 8-week streak before! Life happens — what matters is you're back."
+- Given I see the message, when I read it, then I feel encouraged to restart my streak
+- Given the streak breaks, when I run loop again, then my counter resets to 0 and starts counting from the new week
+
+**Priority:** 🟢 Low | **Effort:** S | **Persona:** Marcus
+
+---
+
 ## Story → Feature Mapping
 
 | Feature     | Stories Covered                     | Primary Personas | Priority |
@@ -565,6 +735,7 @@ So that I feel confident using LoopKit in any context
 | `loop`      | US-LOOP-01, 02, 03, 04, 05          | Jordan, Sarah    | 🔴       |
 | `auth`      | US-AUTH-01                          | All              | 🔴       |
 | Tier gating | US-TIER-01                          | All              | 🟡       |
+| Growth      | US-GROWTH-01, 02, 03, 04, 05, 06, 07, 08, 09 | All | 🟡       |
 
 ---
 
@@ -581,4 +752,4 @@ So that I feel confident using LoopKit in any context
 
 ---
 
-_Last updated: April 2026_
+_Last updated: April 2026 · Phase 13 growth loops added_

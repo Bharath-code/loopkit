@@ -96,10 +96,14 @@ describe("Proof Card UI", () => {
 
   describe("copyToClipboard", () => {
     it("fails silently gracefully on non-mac platform without crashing", async () => {
+      vi.mock("node:child_process", () => ({
+        spawnSync: vi.fn(() => ({ status: 0, error: undefined }))
+      }));
       // Assuming vitest runs on a platform, we just ensure it doesn't throw.
       // process.platform mocking is tricky in vitest, but we can verify it doesn't throw an unhandled rejection.
       const result = await copyToClipboard("test");
       expect(typeof result).toBe("boolean");
+      vi.unmock("node:child_process");
     });
   });
 });

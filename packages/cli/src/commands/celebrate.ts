@@ -9,10 +9,12 @@ import {
   listProjects,
   getLatestMRR,
   readRevenueHistory,
+  readPulseResponses,
 } from "../storage/local.js";
 import { computeLoopKitScore } from "../analytics/score.js";
 import { buildProofCard, buildTweetLine, copyToClipboard } from "../ui/proof-card.js";
 import { colors, header, box, pass, info } from "../ui/theme.js";
+import { getConvexProjectId } from "../storage/sync.js";
 
 // ─── ASCII Confetti ─────────────────────────────────────────────
 
@@ -141,6 +143,7 @@ function getRank(score: number): { title: string; emoji: string } {
 
 export async function celebrateCommand(
   standalone: boolean = true,
+  options?: { share?: boolean },
 ): Promise<void> {
   const config = readConfig();
   const slug = config.activeProject;
@@ -243,6 +246,37 @@ export async function celebrateCommand(
   const copied = await copyToClipboard(tweetLine);
   if (copied) {
     console.log(pass("Tweet line copied to clipboard — paste and share!"));
+  }
+
+  // ─── Share to public wins feed (if --share flag) ─────────────────
+  if (options?.share) {
+    const convexProjectId = getConvexProjectId(slug);
+    if (convexProjectId) {
+      const pulseResponses = readPulseResponses();
+      const feedbackCount = pulseResponses.length;
+      
+      // Build public win payload
+      const publicWin = {
+        projectId: convexProjectId,
+        productName,
+        weekNum,
+        shippingScore: score.shippingScore,
+        streak: score.currentStreak,
+        tasksCompleted: score.tasksDone,
+        tasksTotal: score.tasksTotal,
+        feedbackCount,
+        loopkitScore,
+        mrr: latestMRR,
+        oneThing: "Keep shipping",
+      };
+
+      // Sync to Convex
+      const { pushPublicWinToConvex } = await import("../storage/sync.js");
+      await pushPublicWinToConvex(publicWin);
+      console.log(info("Win posted to public feed at loopkit.dev/wins"));
+    } else {
+      console.log(colors.warning("Not authenticated — win not posted to public feed. Run `loopkit auth` to enable sharing."));
+    }
   }
 
   // ─── What's next ──────────────────────────────────────────────

@@ -125,3 +125,35 @@ export function getConvexProjectId(slug: string): string | undefined {
   const brief = readBriefJson(slug);
   return brief?.convexProjectId;
 }
+
+interface MilestoneTriggerPayload {
+  milestoneType: string;
+  projectId?: string;
+  metadata?: Record<string, unknown>;
+}
+
+export async function triggerMilestone(
+  payload: MilestoneTriggerPayload,
+): Promise<void> {
+  await postSync("/api/sync/milestone", payload);
+}
+
+interface PublicWinPayload {
+  projectId: string;
+  productName: string;
+  weekNum: number;
+  shippingScore: number;
+  streak: number;
+  tasksCompleted: number;
+  tasksTotal: number;
+  feedbackCount: number;
+  loopkitScore: number | null;
+  mrr: number | null;
+  oneThing: string;
+}
+
+export async function pushPublicWinToConvex(
+  payload: PublicWinPayload,
+): Promise<void> {
+  await postSync("/api/sync/win", payload);
+}

@@ -193,4 +193,45 @@ export default defineSchema({
   })
     .index("by_project", ["projectId"])
     .index("by_project_date", ["projectId", "date"]),
+
+  milestoneTriggers: defineTable({
+    userId: v.id("users"),
+    milestoneType: v.string(),
+    projectId: v.optional(v.id("projects")),
+    triggeredAt: v.number(),
+    metadata: v.optional(v.record(v.string(), v.any())),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_type", ["userId", "milestoneType"])
+    .index("by_project", ["projectId"]),
+
+  userPreferences: defineTable({
+    userId: v.id("users"),
+    emailOptIn: v.boolean(),
+    pushOptIn: v.boolean(),
+    referralCode: v.optional(v.string()),
+    referredBy: v.optional(v.id("users")),
+    leaderboardOptIn: v.boolean(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_referral_code", ["referralCode"]),
+
+  publicWins: defineTable({
+    userId: v.id("users"),
+    projectId: v.id("projects"),
+    productName: v.string(),
+    weekNum: v.number(),
+    shippingScore: v.number(),
+    streak: v.number(),
+    tasksCompleted: v.number(),
+    tasksTotal: v.number(),
+    feedbackCount: v.number(),
+    loopkitScore: v.optional(v.number()),
+    mrr: v.optional(v.number()),
+    oneThing: v.string(),
+    createdAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_project", ["projectId"])
+    .index("by_created_at", ["createdAt"]),
 });

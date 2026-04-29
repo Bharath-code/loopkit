@@ -65,7 +65,7 @@ The card goes on Twitter. Every tweet is a free impression. This is the **viral 
 
 ---
 
-**3. Milestone Emails / Push Notifications (Web)**
+**3. Milestone Emails / Push Notifications (Web) [✅ PARTIALLY IMPLEMENTED]**
 
 Trigger-based messages the user actually wants to open:
 
@@ -77,9 +77,11 @@ Trigger-based messages the user actually wants to open:
 | Streak break | "You missed Sunday. 47 other founders ran `loopkit loop` yesterday." |
 | Peer passed you | "A founder in your category just hit week 10. You're at 6." |
 
+**Status:** CLI milestone detection complete, email sending function implemented via Resend API. Web push notifications deferred.
+
 ---
 
-**4. The "Ship or Shame" Friday Reminder**
+**4. The "Ship or Shame" Friday Reminder [✅ IMPLEMENTED]**
 
 An opt-in Friday 4 PM terminal notification:
 
@@ -92,9 +94,11 @@ An opt-in Friday 4 PM terminal notification:
   → loopkit ship
 ```
 
+**Status:** Implemented via `loopkit init --cron` flag and `loopkit remind:friday` command with terminal notification system.
+
 ---
 
-**5. Inline Validation Hook — `loopkit validate`**
+**5. Inline Validation Hook — `loopkit validate` [✅ IMPLEMENTED]**
 
 A new lightweight command (not a 13th command — it's a sub-mode of `init`):
 
@@ -103,6 +107,8 @@ loopkit init --validate  # Runs the brief through a "devil's advocate" AI mode
 ```
 
 Output: 3 brutal questions your ICP would ask. Forces the founder to stress-test before building. Becomes a ritual before starting any project.
+
+**Status:** Implemented via `--validate` flag on `loopkit init` with AI-generated validation questions.
 
 ---
 
@@ -134,13 +140,15 @@ This is the "Spotify Wrapped" for founders. Goes massively viral in November/Dec
 
 ---
 
-**8. `loopkit loop --async` — Async Sunday for Busy Weeks**
+**8. `loopkit loop --async` — Async Sunday for Busy Weeks [✅ IMPLEMENTED]**
 
 Let users run `loop` any day Mon–Sun without breaking their streak if they do it within the 7-day window. Removes the friction point of "I missed Sunday."
 
+**Status:** Implemented via `--async` flag on `loopkit loop` command with 7-day window check.
+
 ---
 
-**9. Keyboard Shortcut / Shell Alias Installer**
+**9. Keyboard Shortcut / Shell Alias Installer [✅ IMPLEMENTED]**
 
 On first run, offer:
 
@@ -154,9 +162,11 @@ On first run, offer:
 
 Reduces friction from 9 keystrokes to 2. Tiny, but compounding.
 
+**Status:** Implemented via `loopkit aliases` command with automatic prompt on first `loopkit init`.
+
 ---
 
-**10. The "Almost There" Nudge**
+**10. The "Almost There" Nudge [✅ IMPLEMENTED]**
 
 When a user is at 60% shipping score with 2 tasks left:
 
@@ -168,11 +178,13 @@ When a user is at 60% shipping score with 2 tasks left:
 
 Closing loops is satisfying. Exploit that.
 
+**Status:** Implemented in `loopkit track` command when shipping score is 50-70% with exactly 2 tasks remaining.
+
 ---
 
 #### 🟢 Growth (Referral & Network Effects)
 
-**11. Referral System — Built Into the Loop**
+**11. Referral System — Built Into the Loop [✅ PARTIALLY IMPLEMENTED]**
 
 After `loopkit loop` completes, when streak ≥ 4:
 
@@ -183,9 +195,11 @@ After `loopkit loop` completes, when streak ≥ 4:
 
 The timing is perfect — the user just had their best moment of the week (closing the loop). This is when NPS is highest.
 
+**Status:** CLI side complete (referral code generation, prompt at streak ≥4). Web landing page for referral tracking deferred.
+
 ---
 
-**12. Community Leaderboard — "The Shipping Board"**
+**12. Community Leaderboard — "The Shipping Board" [⏸️ DEFERRED]**
 
 Opt-in weekly leaderboard at `loopkit.dev/board`:
 
@@ -195,9 +209,11 @@ Opt-in weekly leaderboard at `loopkit.dev/board`:
 
 Founders love status. This makes shipping competitive.
 
+**Status:** Deferred - web feature requiring leaderboard UI and opt-in system.
+
 ---
 
-**13. `loopkit celebrate --share` — Public Wins**
+**13. `loopkit celebrate --share` — Public Wins [✅ IMPLEMENTED]**
 
 Let users post auto-formatted wins to a public feed at `loopkit.dev/wins`:
 
@@ -209,11 +225,13 @@ Feedback: 12 responses · Fix now: 1 · Validate later: 3
 
 Public = accountability + discovery engine.
 
+**Status:** Implemented via `--share` flag on `loopkit celebrate` command with Convex sync to publicWins table.
+
 ---
 
 ## Part 2 — New Workflows to Beat the Market
 
-### 2.1 The "Validation Before Build" Workflow
+### 2.1 The "Validation Before Build" Workflow [⏸️ NOT IMPLEMENTED]
 
 **Problem it solves:** Founders build for months, then discover nobody wants it.
 
@@ -229,6 +247,8 @@ loopkit init my-idea --validate-first
 ```
 
 This is **Build in Public + Lean Startup** as a CLI workflow. No other tool does this.
+
+**Status:** Not implemented - requires landing page generation and threshold tracking.
 
 ---
 
@@ -252,7 +272,7 @@ This makes LoopKit the **single source of truth** for the whole founder journey.
 
 ---
 
-### 2.3 The "Co-Founder Mode" — Async Pairing
+### 2.3 The "Co-Founder Mode" — Async Pairing [⏸️ NOT IMPLEMENTED]
 
 Two founders, one LoopKit project. They each run `loopkit loop` and their synthesis merges:
 
@@ -265,9 +285,11 @@ Co-founder summary:
 
 This expands TAM from solo founders to small teams (2–3 people). Price point jumps to $49–$79/mo.
 
+**Status:** Not implemented - requires multi-user project support and synthesis merging.
+
 ---
 
-### 2.4 The "Investor Update" Workflow
+### 2.4 The "Investor Update" Workflow [⏸️ NOT IMPLEMENTED]
 
 Every month, generate a formatted investor update from your loop logs:
 
@@ -284,9 +306,11 @@ loopkit update --month april
 
 Output: A shareable Markdown file or email-ready HTML. This is worth $19/mo alone for funded founders.
 
+**Status:** Not implemented - requires new command and template generation.
+
 ---
 
-### 2.5 The "Launch Runway" Workflow
+### 2.5 The "Launch Runway" Workflow [⏸️ NOT IMPLEMENTED]
 
 ```bash
 loopkit launch --date 2026-06-01
@@ -299,6 +323,8 @@ loopkit launch --date 2026-06-01
 ```
 
 Launch dates create urgency. Urgency drives shipping. Shipping drives retention.
+
+**Status:** Not implemented - requires new command and milestone planning system.
 
 ---
 
@@ -488,8 +514,8 @@ Pioneer.app has weekly progress tournaments. LoopKit's loop output is a perfect 
 ### Week 1–2: Polish & Pre-Launch
 - [x] Add Proof Card generation to `loopkit loop`
 - [x] Add daily standup command (`loopkit track --stand`)
-- [ ] Set up referral tracking links
-- [ ] Build `loopkit.dev/wins` public feed
+- [x] Set up referral tracking links (CLI side complete)
+- [x] Build `loopkit.dev/wins` public feed (Convex backend complete, web UI deferred)
 
 ### Week 3–4: Soft Launch
 - [ ] Post "Show HN: LoopKit" — use LoopKit's own `ship` command to write the post
@@ -522,4 +548,5 @@ The product is already excellent. The gap is habit formation infrastructure and 
 ---
 
 *Generated: April 2026 · For LoopKit strategic planning*
+*Updated: April 2026 · Phase 13 growth loops implementation status marked*
 

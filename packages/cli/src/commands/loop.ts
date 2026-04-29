@@ -19,7 +19,7 @@ import {
   appendRevenueEntry,
   getLatestMRR,
 } from "../storage/local.js";
-import { pushLoopLogToConvex, getConvexProjectId } from "../storage/sync.js";
+import { pushLoopLogToConvex, getConvexProjectId, triggerMilestone } from "../storage/sync.js";
 import { recordEvent, startTelemetryPrompt, isTelemetryEnabled } from "../analytics/telemetry.js";
 import { computeShippingDNA, type ShippingDNA } from "../analytics/dna.js";
 import { detectChurnRisk, renderChurnWarning } from "../analytics/churn.js";
@@ -41,7 +41,7 @@ interface LoopProof {
   feedbackActedOn: boolean;
 }
 
-export async function loopCommand(options?: { revenue?: string }): Promise<void> {
+export async function loopCommand(options?: { revenue?: string; async?: boolean }): Promise<void> {
   const config = readConfig();
   const slug = config.activeProject;
 
@@ -89,8 +89,9 @@ export async function loopCommand(options?: { revenue?: string }): Promise<void>
   const today = new Date();
   const dayOfWeek = today.getDay(); // 0=Sun
   const isSunday = dayOfWeek === 0;
+  const isAsync = options?.async;
 
-  p.intro(colors.primary.bold(`LoopKit — Week ${weekNum} Review`));
+  p.intro(colors.primary.bold(`LoopKit — Week ${weekNum} Review${isAsync ? " (Async Mode)" : ""}`));
 
   console.log(shortcutsHint());
 
@@ -124,7 +125,7 @@ export async function loopCommand(options?: { revenue?: string }): Promise<void>
   }
 
   // ─── Mid-week check ──────────────────────────────────────────
-  if (!isSunday) {
+  if (!isSunday && !isAsync) {
     console.log(colors.muted("  Mid-week check-in mode (full loop runs Sunday).\n"));
   }
 
@@ -345,8 +346,8 @@ export async function loopCommand(options?: { revenue?: string }): Promise<void>
     }
   }
 
-  // ─── Mid-week: no AI by default ──────────────────────────────
-  if (!isSunday) {
+  // ─── Mid-week: no AI by default (unless async mode) ──────────────────────
+  if (!isSunday && !isAsync) {
     const runFull = await p.confirm({
       message: "Run full AI synthesis anyway?",
     });
@@ -354,6 +355,27 @@ export async function loopCommand(options?: { revenue?: string }): Promise<void>
     if (p.isCancel(runFull) || !runFull) {
       p.outro(colors.muted("Check back Sunday for full loop."));
       return;
+    }
+  }
+
+  // ─── Async mode: check 7-day window ────────────────────────────────
+  if (isAsync) {
+    const previousLogs = readLastNLoopLogs(1, slug);
+    if (previousLogs.length > 0) {
+      const lastLog = previousLogs[0];
+      const lastLogContent = readLoopLog(lastLog.weekNumber);
+      if (lastLogContent) {
+        const dateMatch = lastLogContent.match(/date:\s*(\d{4}-\d{2}-\d{2})/);
+        if (dateMatch) {
+          const lastLogDate = new Date(dateMatch[1]);
+          const daysSinceLastLoop = Math.floor((today.getTime() - lastLogDate.getTime()) / (1000 * 60 * 60 * 24));
+
+          if (daysSinceLastLoop > 7) {
+            console.log(colors.warning(`\n  Warning: It's been ${daysSinceLastLoop} days since your last loop.`));
+            console.log(colors.dim("  Async mode allows up to 7 days. Your streak may be affected.\n"));
+          }
+        }
+      }
     }
   }
 
@@ -606,11 +628,43 @@ export async function loopCommand(options?: { revenue?: string }): Promise<void>
     // ─── Override rate warning ───────────────────────────────────
     checkOverrideRate(slug);
 
+    // ─── Referral prompt (streak >= 4) ────────────────────────────
+    if (currentStreak >= 4) {
+      const config = readConfig();
+      if (!config.referralShown) {
+        const wantReferral = await p.confirm({
+          message: "Share LoopKit with a founder friend and get 1 month of Solo free?",
+        });
+
+        if (!p.isCancel(wantReferral) && wantReferral) {
+          // Generate referral code and show it
+          const referralCode = generateReferralCode();
+          console.log(info(`Your referral link: loopkit.dev/r/${referralCode}`));
+          console.log(colors.dim("Share this link — when a friend signs up, you both get 1 month free."));
+          
+          config.referralShown = true;
+          config.referralCode = referralCode;
+          const { writeConfig } = await import("../storage/local.js");
+          writeConfig(config);
+        }
+      }
+    }
+
     // ─── Revenue prompt (GF-4) ──────────────────────────────────
     // Only prompt on Sunday (the full ritual) and when no --revenue flag was used
     if (isSunday && !options?.revenue) {
       await maybePromptRevenue(slug, weekNum);
     }
+
+    // ─── Milestone Detection (GF-3) ──────────────────────────────
+    await detectAndTriggerMilestones({
+      slug,
+      weekNum,
+      proof,
+      convexProjectId: convexProjectId2,
+      currentStreak,
+      pulseResponses: pulseResponses.length,
+    });
 
     await maybeShowUpgradeIntent(proof);
   } catch (error) {
@@ -869,6 +923,97 @@ async function maybePromptRevenue(_slug: string, weekNum: number): Promise<void>
           : colors.danger(` ↓$${Math.abs(delta)}`)
         : "";
     console.log(pass(`MRR updated: $${mrr}${deltaStr}`));
+  }
+}
+
+// ─── Referral Code Generator ─────────────────────────────────────
+
+function generateReferralCode(): string {
+  const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+  let code = "";
+  for (let i = 0; i < 8; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
+}
+
+// ─── Milestone Detection (GF-3) ─────────────────────────────────────
+
+interface MilestoneDetectionContext {
+  slug: string;
+  weekNum: number;
+  proof: LoopProof;
+  convexProjectId: string | undefined;
+  currentStreak: number;
+  pulseResponses: number;
+}
+
+async function detectAndTriggerMilestones(ctx: MilestoneDetectionContext): Promise<void> {
+  const { weekNum, proof, convexProjectId, currentStreak, pulseResponses } = ctx;
+
+  // Milestone 1: Week 1 complete
+  if (weekNum === 1 && proof.weeksActive === 1) {
+    await triggerMilestone({
+      milestoneType: "week_1_complete",
+      projectId: convexProjectId,
+      metadata: { weekNumber: weekNum },
+    });
+    console.log(header("🎉 Milestone"));
+    console.log(box("You shipped your first week. 70% of founders quit by week 2. You're in the top 30%."));
+  }
+
+  // Milestone 2: Week 4 complete
+  if (weekNum === 4 && proof.weeksActive === 4) {
+    await triggerMilestone({
+      milestoneType: "week_4_complete",
+      projectId: convexProjectId,
+      metadata: { weekNumber: weekNum },
+    });
+    console.log(header("🎉 Milestone"));
+    console.log(box("One month straight. Here's your pattern analysis — check your shipping DNA above."));
+  }
+
+  // Milestone 3: First revenue signal
+  const latestMRR = getLatestMRR();
+  const revenueHistory = readRevenueHistory();
+  if (latestMRR !== null && latestMRR > 0 && revenueHistory.length === 1) {
+    await triggerMilestone({
+      milestoneType: "first_revenue",
+      projectId: convexProjectId,
+      metadata: { mrr: latestMRR, weekNumber: weekNum },
+    });
+    console.log(header("💰 Milestone"));
+    console.log(box("First revenue signal! You've crossed the chasm from builder to business."));
+  }
+
+  // Milestone 4: Streak break (detected when currentStreak is 1 but weeksActive > 2)
+  if (currentStreak === 1 && proof.weeksActive >= 2) {
+    await triggerMilestone({
+      milestoneType: "streak_break",
+      projectId: convexProjectId,
+      metadata: { weekNumber: weekNum, weeksActive: proof.weeksActive },
+    });
+    console.log(header("📊 Milestone"));
+    console.log(box("You missed a week. 47 other founders ran loopkit loop yesterday. Get back in the game!"));
+  }
+
+  // Milestone 5: First revenue signal from pulse feedback (pricing mentions)
+  const pulseData = readPulseResponses();
+  const pricingMentions = pulseData.filter(r => 
+    r.toLowerCase().includes("pricing") || 
+    r.toLowerCase().includes("price") ||
+    r.toLowerCase().includes("pay") ||
+    r.toLowerCase().includes("charge")
+  ).length;
+  
+  if (pricingMentions >= 3 && latestMRR === null) {
+    await triggerMilestone({
+      milestoneType: "pricing_signal",
+      projectId: convexProjectId,
+      metadata: { weekNumber: weekNum, pricingMentions },
+    });
+    console.log(header("🎯 Milestone"));
+    console.log(box("Pulse feedback mentions 'pricing' 3 times — time to charge for what you've built."));
   }
 }
 

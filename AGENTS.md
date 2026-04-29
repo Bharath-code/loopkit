@@ -19,15 +19,17 @@ node packages/cli/dist/index.js --help
 
 ```
 packages/cli/src/
-  commands/        ← one file per command (init, track, ship, pulse, loop, auth, celebrate, telemetry, radar, keywords, timing, coach)
-  analytics/       ← telemetry, benchmarks, dna, oracle, churn, autoLoop, predictor, competitorRadar, keywordFinder, marketTiming, patterns, peers, coach
+  commands/        ← one file per command (init, track, ship, pulse, loop, auth, celebrate, telemetry, radar, keywords, timing, coach, revenue, remind, aliases)
+  analytics/       ← telemetry, benchmarks, dna, oracle, churn, autoLoop, predictor, competitorRadar, keywordFinder, marketTiming, patterns, peers, coach, score
   templates/       ← project template scaffolds (saas, api, mobile, cli, newsletter, agency, open-source, marketplace, ai-wrapper)
   ai/prompts/      ← system prompts
   ai/client.ts     ← generateStructured() wrapper (with cache + resolveAuth)
   storage/local.ts ← all .loopkit/ file I/O
-  storage/sync.ts  ← CLI → Convex push (loop logs + ship logs + radar + timing)
+  storage/sync.ts  ← CLI → Convex push (loop logs + ship logs + radar + timing + milestone + win)
   storage/cache.ts ← AI result cache (hash-based, 7-day TTL)
   ui/theme.ts      ← terminal colors/UI helpers
+  cron/            ← cron job installer for Friday reminder
+  notifications/   ← terminal notification system (macOS/Linux/Windows)
 
 packages/shared/src/index.ts  ← ALL Zod schemas (single source of truth)
 
@@ -98,7 +100,7 @@ const result = await generateStructured({
 - Team collaboration
 - Mobile app / VS Code extension
 - Zapier/Make integrations
-- Any 14th command beyond the current 13 (init/track/ship/pulse/loop/auth/celebrate/telemetry/radar/keywords/timing/coach/revenue)
+- Any 16th command beyond the current 15 (init/track/ship/pulse/loop/auth/celebrate/telemetry/radar/keywords/timing/coach/revenue/remind/aliases)
 - New npm deps that duplicate existing functionality
 
 ## Approved Extensions (user-approved, April 2026)
@@ -109,6 +111,7 @@ const result = await generateStructured({
 | **Proof Card** | `ui/proof-card.ts` | Shareable weekly card, clipboard auto-copy |
 | **Daily Standup** | `loopkit track --stand` | Flag on existing `track` command |
 | **Revenue Tracker** | `loopkit revenue` (13th command) | Structured MRR records, switching-cost feature |
+| **Growth Loops** | Milestone system, Friday reminder, validation, aliases, async loop, referral, public wins | Habit-forming infrastructure for retention and growth (Phase 13) |
 
 ---
 

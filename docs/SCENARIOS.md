@@ -627,4 +627,266 @@ This document catalogs every possible way a user can interact with LoopKit — h
 
 ---
 
-_Last updated: April 2026_
+## Growth Loop Scenarios
+
+### SC-GROWTH-01: First Milestone Triggered (Week 1)
+
+**Persona:** Alex (First-Time Founder)
+**Trigger:** Completes first loop (week 1)
+**Pre-conditions:** First loop log saved
+
+**Flow:**
+
+1. User runs `loopkit loop` on Sunday
+2. Week number detected: 1
+3. Milestone detection logic identifies "first week completed"
+4. Encouraging message displayed: "🎉 First week complete! The hardest week is behind you."
+5. Milestone trigger synced to Convex (if authenticated)
+6. Email notification sent (if opted in)
+
+**Expected Outcome:** User feels celebrated and motivated to continue
+
+**Edge Cases:**
+
+- **SC-GROWTH-01a:** Not authenticated → milestone still detected, no Convex sync, no email
+- **SC-GROWTH-01b:** Week 1 but no loop log → milestone not triggered (requires actual loop completion)
+
+---
+
+### SC-GROWTH-02: Friday Reminder Triggered
+
+**Persona:** Sarah (Solo Founder)
+**Trigger:** Cron job runs `loopkit remind:friday` at 4 PM on Friday
+**Pre-conditions:** Cron job installed via `loopkit init --cron`
+
+**Flow:**
+
+1. Cron job executes at 4 PM Friday
+2. Command runs `loopkit remind:friday`
+3. System checks if user shipped this week (has ship log)
+4. If shipped: Terminal notification "🚀 You shipped this week! Great job!"
+5. If not shipped: Terminal notification "⚠️ Haven't shipped yet this week. Time to ship?" with option to run `loopkit ship`
+6. User can respond with [s] to run ship immediately or dismiss
+
+**Expected Outcome:** Gentle nudge helps user remember to ship before weekend
+
+**Edge Cases:**
+
+- **SC-GROWTH-02a:** Terminal notifications not supported on platform → falls back to console output
+- **SC-GROWTH-02b:** Cron job not installed → reminder never runs (user must install manually)
+
+---
+
+### SC-GROWTH-03: Validation Mode
+
+**Persona:** Marcus (Indie Hacker)
+**Trigger:** Runs `loopkit init --validate` to stress-test brief
+**Pre-conditions:** Brief exists (new or existing)
+
+**Flow:**
+
+1. User runs `loopkit init my-saas --validate`
+2. Normal init flow completes (questions answered, brief generated)
+3. After brief saved, validation prompt appears: "Running devil's advocate validation..."
+4. AI generates 3 challenging questions based on brief
+5. Questions displayed in terminal box
+6. Encouragement message: "These questions are designed to strengthen your thinking, not discourage you."
+7. Prompt: "Want to iterate on your brief based on these questions?" [y/n]
+8. If yes: Suggestion to run `loopkit init --analyze my-saas` to update
+
+**Expected Outcome:** User catches potential weaknesses before building
+
+**Edge Cases:**
+
+- **SC-GROWTH-03a:** AI unavailable → validation skipped, warning shown
+- **SC-GROWTH-03b:** User says no → validation complete, brief remains as-is
+
+---
+
+### SC-GROWTH-04: Shell Aliases Installation
+
+**Persona:** Jordan (Side Project Shipper)
+**Trigger:** First-time user runs `loopkit init`
+**Pre-conditions:** No aliases installed yet
+
+**Flow:**
+
+1. User completes `loopkit init`
+2. After brief saved, prompt appears: "Install shell aliases for faster commands? (Recommended)"
+3. User selects yes
+4. System detects shell (zsh/bash/fish)
+5. Aliases appended to shell config file:
+   - `lk` → `loopkit`
+   - `lks` → `loopkit ship`
+   - `lkl` → `loopkit loop`
+   - `lkt` → `loopkit track`
+6. config.json updated with `aliasesInstalled: true`
+7. Output: "Shell aliases installed: lk, lks, lkl, lkt. Restart your shell to apply changes."
+
+**Expected Outcome:** User can use shorter commands after shell restart
+
+**Edge Cases:**
+
+- **SC-GROWTH-04a:** User declines → aliases not installed, can run `loopkit aliases` later
+- **SC-GROWTH-04b:** Shell not detected → message shown with manual instructions
+- **SC-GROWTH-04c:** Config file not found → falls back to default locations
+
+---
+
+### SC-GROWTH-05: Async Loop Mode
+
+**Persona:** Sarah (Solo Founder)
+**Trigger:** Traveling on Wednesday, wants to run loop early
+**Pre-conditions:** Previous loop was 5 days ago
+
+**Flow:**
+
+1. User runs `loopkit loop --async`
+2. System detects it's not Sunday
+3. Async mode enabled: skips mid-week check-in prompt
+4. Checks days since last loop: 5 days (within 7-day window)
+5. Proceeds with full AI synthesis
+6. Output shows "Week 7 Review (Async Mode)"
+7. Loop log saved normally
+8. Streak preserved (not broken by running early)
+
+**Expected Outcome:** User can maintain streak despite scheduling constraints
+
+**Edge Cases:**
+
+- **SC-GROWTH-05a:** More than 7 days since last loop → warning: "It's been 8 days since your last loop. Your streak may be affected."
+- **SC-GROWTH-05b:** No previous loop → proceeds normally (first loop)
+
+---
+
+### SC-GROWTH-06: Almost There Nudge
+
+**Persona:** Marcus (Indie Hacker)
+**Trigger:** Running `loopkit track` on Thursday afternoon
+**Pre-conditions:** Shipping score is 60%, 2 tasks remaining
+
+**Flow:**
+
+1. User runs `loopkit track`
+2. System calculates shipping score: 60% (3/5 tasks done)
+3. Detects conditions: score 50-70% range, exactly 2 tasks open
+4. Nudge displayed: "Almost there — 2 tasks left to hit 80%."
+5. Suggested actions shown:
+   - "→ loopkit track #4 --done (if you finished it)"
+   - "→ loopkit track #4 --snooze tomorrow"
+6. User motivated to complete tasks before end of week
+
+**Expected Outcome:** Small nudge helps user reach higher completion rate
+
+**Edge Cases:**
+
+- **SC-GROWTH-06a:** Score outside 50-70% range → no nudge shown
+- **SC-GROWTH-06b:** Not exactly 2 tasks remaining → no nudge shown
+
+---
+
+### SC-GROWTH-07: Referral Prompt
+
+**Persona:** Jordan (Side Project Shipper)
+**Trigger:** Completes 4-week streak
+**Pre-conditions:** User has streak ≥4, referral not yet shown
+
+**Flow:**
+
+1. User runs `loopkit loop`
+2. Current streak calculated: 4 weeks
+3. System checks config: `referralShown` is false
+4. Prompt appears: "Share LoopKit with a founder friend and get 1 month of Solo free?"
+5. User selects yes
+6. System generates 8-character referral code (e.g., "a3b7c9d2")
+7. Referral link displayed: "loopkit.dev/r/a3b7c9d2"
+8. Encouragement: "Share this link — when a friend signs up, you both get 1 month free."
+9. config.json updated with `referralShown: true` and `referralCode: "a3b7c9d2"`
+
+**Expected Outcome:** User motivated to share, referral system activated
+
+**Edge Cases:**
+
+- **SC-GROWTH-07a:** User declines → referral not shown again (flag prevents repeat prompts)
+- **SC-GROWTH-07b:** Streak < 4 → referral prompt not shown yet
+
+---
+
+### SC-GROWTH-08: Public Wins Sharing
+
+**Persona:** Sarah (Solo Founder)
+**Trigger:** Runs `loopkit celebrate --share` after shipping
+**Pre-conditions:** User is authenticated, has shipping score
+
+**Flow:**
+
+1. User runs `loopkit celebrate --share`
+2. Celebration card displayed with score, streak, rank
+3. System checks authentication status
+4. If authenticated:
+   - Reads pulse responses count
+   - Builds public win payload (product name, week, score, streak, tasks, feedback)
+   - Syncs to Convex via `/api/sync/win`
+   - Output: "Win posted to public feed at loopkit.dev/wins"
+5. If not authenticated:
+   - Warning: "Not authenticated — win not posted to public feed. Run `loopkit auth` to enable sharing."
+   - Celebration still displays locally
+
+**Expected Outcome:** User's win shared to community for accountability and discovery
+
+**Edge Cases:**
+
+- **SC-GROWTH-08a:** API call fails → warning shown, celebration still completes
+- **SC-GROWTH-08b:** Not authenticated → clear next step provided
+
+---
+
+### SC-GROWTH-09: Streak Break Milestone
+
+**Persona:** Marcus (Indie Hacker)
+**Trigger:** Missed a week, streak broken after 8-week run
+**Pre-conditions:** Previous streak was 8 weeks
+
+**Flow:**
+
+1. User runs `loopkit loop` after 2-week gap
+2. System detects streak break (gap > 7 days)
+3. Milestone detection identifies "streak break after 8 weeks"
+4. Encouraging message: "You had an 8-week streak before! Life happens — what matters is you're back."
+5. Encouragement to restart: "Let's build a new streak together."
+6. Streak counter resets to 0, starts counting from this week
+
+**Expected Outcome:** User feels supported rather than guilty about breaking streak
+
+**Edge Cases:**
+
+- **SC-GROWTH-09a:** First streak break after 4+ weeks → milestone triggered
+- **SC-GROWTH-09b:** First week ever → no streak break milestone (no previous streak)
+
+---
+
+### SC-GROWTH-10: First Revenue Milestone
+
+**Persona:** Alex (First-Time Founder)
+**Trigger:** Logs first revenue via `loopkit revenue` or `loopkit loop --revenue`
+**Pre-conditions:** Previous revenue was null or 0
+
+**Flow:**
+
+1. User runs `loopkit revenue 100` (or `loopkit loop --revenue 100`)
+2. System detects first revenue (previous was 0)
+3. Milestone detection identifies "first revenue"
+4. Celebration message: "🎉 First dollar! This is a huge milestone. Many founders never make it here."
+5. Milestone synced to Convex
+6. Email notification sent (if opted in)
+
+**Expected Outcome:** User feels celebrated for reaching first revenue milestone
+
+**Edge Cases:**
+
+- **SC-GROWTH-10a:** Revenue logged is $0 → not considered first revenue milestone
+- **SC-GROWTH-10b:** Revenue already > 0 → milestone not triggered
+
+---
+
+_Last updated: April 2026 · Phase 13 growth loops added_

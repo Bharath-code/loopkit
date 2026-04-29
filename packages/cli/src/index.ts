@@ -13,6 +13,8 @@ import { keywordsCommand } from "./commands/keywords.js";
 import { timingCommand } from "./commands/timing.js";
 import { coachCommand } from "./commands/coach.js";
 import { revenueCommand } from "./commands/revenue.js";
+import { remindFridayCommand } from "./commands/remind.js";
+import { aliasesCommand } from "./commands/aliases.js";
 import { recordEvent, telemetryCommand } from "./analytics/telemetry.js";
 
 const program = new Command();
@@ -46,6 +48,8 @@ program
   .description("Turn a fuzzy idea into a scored, falsifiable brief")
   .option("--analyze <name>", "Run AI analysis on a previously saved session")
   .option("-t, --template <id>", "Use a project template (saas|api|mobile|cli|newsletter|agency|open-source|marketplace|ai-wrapper)")
+  .option("--cron", "Install Friday reminder cron job")
+  .option("--validate", "Run devil's advocate validation on your brief")
   .action((name, options) => {
     recordEvent({ command: "init" });
     initCommand(name, options);
@@ -88,6 +92,7 @@ program
   .command("loop")
   .description("The Sunday ritual: AI synthesizes your week")
   .option("--revenue <amount>", "Log MRR directly (e.g. --revenue 240)")
+  .option("--async", "Run loop any day within 7-day window (doesn't break streak)")
   .action((options) => {
     recordEvent({ command: "loop" });
     loopCommand(options);
@@ -98,9 +103,10 @@ program.addCommand(authCommand);
 program
   .command("celebrate")
   .description("ASCII confetti + your shipping score, streak, and shareable card")
-  .action(() => {
+  .option("--share", "Post your win to the public feed at loopkit.dev/wins")
+  .action((options) => {
     recordEvent({ command: "celebrate" });
-    celebrateCommand();
+    celebrateCommand(true, options);
   });
 
 program
@@ -158,6 +164,22 @@ program
   .action((options) => {
     recordEvent({ command: "revenue" });
     revenueCommand(options);
+  });
+
+program
+  .command("remind:friday")
+  .description("Friday reminder: check if you've shipped (called by cron)")
+  .action(() => {
+    remindFridayCommand();
+  });
+
+program
+  .command("aliases")
+  .description("Manage shell aliases for faster LoopKit commands")
+  .option("--remove", "Remove LoopKit aliases from shell config")
+  .action((options) => {
+    recordEvent({ command: "aliases" });
+    aliasesCommand(options);
   });
 
 program.parse(process.argv);

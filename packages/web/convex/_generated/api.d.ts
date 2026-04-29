@@ -17,6 +17,7 @@ import type * as http from "../http.js";
 import type * as keywords from "../keywords.js";
 import type * as loopLogs from "../loopLogs.js";
 import type * as marketTiming from "../marketTiming.js";
+import type * as milestones from "../milestones.js";
 import type * as patterns from "../patterns.js";
 import type * as peers from "../peers.js";
 import type * as projects from "../projects.js";
@@ -42,6 +43,7 @@ declare const fullApi: ApiFromModules<{
   keywords: typeof keywords;
   loopLogs: typeof loopLogs;
   marketTiming: typeof marketTiming;
+  milestones: typeof milestones;
   patterns: typeof patterns;
   peers: typeof peers;
   projects: typeof projects;

@@ -95,7 +95,9 @@ src/
 │   ├── keywords.ts       # loopkit keywords
 │   ├── timing.ts         # loopkit timing
 │   ├── coach.ts          # loopkit coach
-│   └── revenue.ts        # loopkit revenue
+│   ├── revenue.ts        # loopkit revenue
+│   ├── remind.ts         # loopkit remind:friday (cron-triggered)
+│   └── aliases.ts        # loopkit aliases (shell shortcuts)
 ├── analytics/
 │   ├── telemetry.ts      # Opt-in usage collection (on/off/export/delete)
 │   ├── dna.ts            # Shipping DNA profile (founder pattern detection)
@@ -103,7 +105,9 @@ src/
 │   ├── oracle.ts         # Snooze completion probability oracle
 │   ├── churn.ts          # Churn Guardian: declining score, skipped loops, override rate
 │   ├── autoLoop.ts       # Auto-Loop: missed Sunday detection + auto-draft
-│   └── predictor.ts      # Success Predictor: revenue probability heuristic
+│   ├── predictor.ts      # Success Predictor: revenue probability heuristic
+│   ├── score.ts          # LoopKit Score™ calculation
+│   └── patterns.ts       # Pattern detection for coaching moments
 ├── ai/
 │   ├── client.ts         # generateStructured() wrapper (resolveAuth + cache)
 │   └── prompts/
@@ -111,13 +115,19 @@ src/
 │       ├── ship.ts       # Launch copy system prompt
 │       ├── pulse.ts      # Clustering system prompt
 │       ├── loop.ts       # Weekly synthesis system prompt
-│       └── unstuck.ts    # Micro-task generation prompt
+│       ├── unstuck.ts    # Micro-task generation prompt
+│       └── validation.ts # Devil's advocate validation prompt
 ├── storage/
 │   ├── local.ts          # All .loopkit/ file operations
-│   ├── sync.ts           # CLI → Convex sync for loop/ship/radar/timing
+│   ├── sync.ts           # CLI → Convex sync for loop/ship/radar/timing/milestone/win
 │   └── cache.ts          # AI result cache (hash-based, 7-day TTL)
+├── cron/
+│   └── installer.ts      # Cron job installer for Friday reminder
+├── notifications/
+│   └── terminal.ts      # Terminal notification system (macOS/Linux/Windows)
 └── ui/
-    └── theme.ts           # Colors, scoreBar, box, header helpers
+    ├── theme.ts           # Colors, scoreBar, box, header helpers
+    └── proof-card.ts     # Proof card generation and clipboard copy
 ```
 
 ### Critical: Local Storage Layout
@@ -171,6 +181,8 @@ src/
 | `churn.ts` | `detectChurnRisk()`, `renderChurnWarning()` — declining score, skipped loops, overrides |
 | `autoLoop.ts` | `checkMissedSunday()`, `saveAutoLoopDraft()` — Monday auto-draft generation |
 | `predictor.ts` | `predictSuccess()`, `renderPrediction()` — 8-week revenue probability heuristic |
+| `score.ts` | `computeLoopKitScore()`, `renderLoopKitScore()` — LoopKit Score™ calculation |
+| `patterns.ts` | `detectPatterns()`, coaching moment detection |
 | `cache.ts` | `getCachedResult()`, `setCachedResult()` — hash-based AI result reuse, 7-day TTL |
 
 ### AI Usage Pattern
@@ -220,7 +232,10 @@ Schemas defined:
 - `PulseClusterSchema` — AI clustering output
 - `LoopSynthesisSchema` — week win + one thing + BIP post + founder note
 - `LoopLogSchema` — weekly proof metrics (`previousScore`, `currentScore`, `scoreDelta`, `weeksActive`, `decisionsMade`, `feedbackResponses`, `feedbackActedOn`)
-- `ConfigSchema` — user config
+- `ConfigSchema` — user config (includes `aliasesInstalled`, `referralShown`, `referralCode`)
+- `ValidationQuestionsSchema` — devil's advocate validation output (3 questions + encouragement)
+- `RevenueEntrySchema` — MRR tracking records
+- `StandupLogSchema` — daily standup logs
 - Helpers: `slugify()`, `getWeekNumber()`, `formatDate()`
 
 ---
@@ -341,6 +356,7 @@ When adding a new AI feature:
 | 10 — Analytics Phase 1 | ✅ Done | Telemetry, Shipping DNA, Benchmarks CLI, Snooze Oracle |
 | 11 — Analytics Phase 2 | ✅ Done | CSRF, resolveAuth, AI cache, git hook opt, Archetypes, Churn, Auto-Loop, Predictor |
 | 12 — Growth Features | ✅ Done | LoopKit Score, Proof Card, Daily Standup, Revenue Tracker |
+| 13 — Growth Loops | ✅ Done | Milestone system, Friday reminder, validation mode, shell aliases, async loop, referral system, public wins |
 
 ---
 

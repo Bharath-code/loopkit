@@ -3,6 +3,7 @@ import {
   slugify,
   BriefSchema,
   ScaffoldSchema,
+  ValidationQuestionsSchema,
   type InitAnswers,
   formatDate,
 } from "@loopkit/shared";
@@ -13,6 +14,10 @@ import {
   SCAFFOLD_SYSTEM_PROMPT,
   buildScaffoldPrompt,
 } from "../ai/prompts/init.js";
+import {
+  VALIDATION_SYSTEM_PROMPT,
+  buildValidationPrompt,
+} from "../ai/prompts/validation.js";
 import {
   ensureLoopkitDir,
   projectExists,
@@ -42,10 +47,12 @@ import {
   categorizeMVP,
 } from "../analytics/competitorRadar.js";
 import { getTemplate, getTemplateList } from "../templates/index.js";
+import { installFridayReminder } from "../cron/installer.js";
+import { installAliases } from "../aliases/installer.js";
 
 export async function initCommand(
   resumeName?: string,
-  options?: { analyze?: string; template?: string },
+  options?: { analyze?: string; template?: string; cron?: boolean; validate?: boolean },
 ): Promise<void> {
   // Handle --analyze flag
   if (options?.analyze) {
@@ -341,6 +348,47 @@ export async function initCommand(
 
     // Show trend hint (IE-8.4)
     renderTrendHint(finalAnswers);
+
+    // ─── Validation mode (if --validate flag is set) ─────────────────
+    if (options?.validate) {
+      const vSpinner = p.spinner();
+      vSpinner.start("Running devil's advocate validation...");
+
+      try {
+        const validation = await generateStructured({
+          command: "init",
+          system: VALIDATION_SYSTEM_PROMPT,
+          prompt: buildValidationPrompt({
+            productName: finalAnswers.name,
+            problem: finalAnswers.problem,
+            icp: finalAnswers.icp,
+            bet: brief.bet,
+            riskiestAssumption: brief.riskiestAssumption,
+            mvpPlainEnglish: brief.mvpPlainEnglish,
+          }),
+          schema: ValidationQuestionsSchema,
+          tier: "fast",
+          temperature: 0.4,
+        });
+
+        vSpinner.stop("Validation complete.");
+
+        console.log(header("🎯 Devil's Advocate Questions"));
+        console.log(box(validation.questions.map((q, i) => `${i + 1}. ${q}`).join("\n")));
+        console.log(colors.dim(validation.encouragement));
+
+        const wantIterate = await p.confirm({
+          message: "Want to iterate on your brief based on these questions?",
+        });
+
+        if (!p.isCancel(wantIterate) && wantIterate) {
+          console.log(info("Run `loopkit init --analyze <name>` to update your brief."));
+        }
+      } catch {
+        vSpinner.stop("Validation failed.");
+        console.log(colors.warning("AI unavailable — skipping validation."));
+      }
+    }
   } catch (error) {
     s.stop("AI analysis unavailable.");
 
@@ -369,6 +417,35 @@ export async function initCommand(
     )
   );
   p.outro(colors.muted("Brief saved. Now build against it."));
+
+  // ─── Install cron job if --cron flag is set ───────────────────────
+  if (options?.cron) {
+    const installed = await installFridayReminder();
+    if (installed) {
+      console.log(info("Friday reminder cron job installed. You'll get a reminder at 4 PM every Friday."));
+    } else {
+      console.log(colors.warning("Cron job already installed or failed to install."));
+    }
+  }
+
+  // ─── Prompt to install shell aliases (first-time users) ─────────────
+  const config = readConfig();
+  if (!config.aliasesInstalled) {
+    const wantAliases = await p.confirm({
+      message: "Install shell aliases for faster commands? (Recommended)",
+    });
+
+    if (!p.isCancel(wantAliases) && wantAliases) {
+      const installed = await installAliases();
+      if (installed) {
+        console.log(info("Shell aliases installed: lk, lks, lkl, lkt"));
+        console.log(colors.muted("Restart your shell to apply changes."));
+        config.aliasesInstalled = true;
+        const { writeConfig } = await import("../storage/local.js");
+        writeConfig(config);
+      }
+    }
+  }
 }
 
 // ─── Render Brief ───────────────────────────────────────────────

@@ -39,6 +39,8 @@ These commands support the loop, but they are not the product's center of gravit
 | `loopkit timing`               | Market timing signal — is your space heating up?         |
 | `loopkit coach`                | AI coaching based on your shipping patterns              |
 | `loopkit revenue`              | Track structured MRR/ARR records                         |
+| `loopkit celebrate`            | ASCII confetti + shareable proof card                    |
+| `loopkit aliases`             | Manage shell aliases for faster commands                |
 | `loopkit init --template <id>` | Pre-fill & AI-personalize tasks with 9 project templates |
 
 ## Quick Start
@@ -83,6 +85,9 @@ Five questions. AI scoring. A brief that stings when it should.
 - Riskiest assumption named explicitly
 - One async validation action you can do tonight
 - **Sunday Reminder**: Provides a helpful hint to set a recurring calendar event or cron job to close your week
+- **Friday Reminder**: `--cron` flag installs a cron job that reminds you to ship every Friday at 4 PM
+- **Validation Mode**: `--validate` flag runs a devil's advocate AI to stress-test your brief before building
+- **Shell Aliases**: Prompted on first run to install shortcuts (lk, lks, lkl, lkt) for faster commands
 
 ### `loopkit track` — zero-overhead task management
 
@@ -93,6 +98,7 @@ Five questions. AI scoring. A brief that stings when it should.
 - Cut tasks archived to `cut.md` — never silently deleted
 - Shipping score: tasks completed / tasks planned
 - **Daily Standup**: `loopkit track --stand` prompts for your #1 focus today and logs it to track daily momentum
+- **Almost There Nudge**: When shipping score is 50-70% with 2 tasks left, suggests completing them to hit 80%
 
 ### `loopkit ship` — never stare at a blank tweet again
 
@@ -125,7 +131,38 @@ Five questions. AI scoring. A brief that stings when it should.
 - Context-aware upgrade prompts at week 4 or 8
 - Override rate tracked — warns if you're overriding AI > 50% of the time
 - Generates a build-in-public post (280-char checked)
+- **Async Mode**: `--async` flag allows running loop any day within a 7-day window without breaking streak
+- **Milestone System**: Detects and celebrates key moments (first week, month 1, first revenue, streak breaks, pricing signals)
+- **Referral Prompt**: At streak ≥4, prompts to share LoopKit with friends for 1-month free credit
 - One decision. One post. Week done.
+
+### `loopkit celebrate` — celebrate your wins
+
+- ASCII confetti burst for visual celebration
+- Displays your shipping score, streak, and rank title
+- **LoopKit Score™** breakdown
+- Revenue display if MRR > 0
+- Shareable proof card auto-copies to clipboard
+- **Public Wins**: `--share` flag posts your win to the public feed at loopkit.dev/wins for accountability and discovery
+
+### `loopkit aliases` — faster commands
+
+- Installs shell shortcuts for common commands (lk, lks, lkl, lkt)
+- Supports zsh, bash, and fish shells
+- Prompted on first run after `loopkit init`
+- Remove with `loopkit aliases --remove`
+
+## Growth & Retention Features
+
+LoopKit includes several features designed to build habits and drive retention:
+
+- **Milestone System**: Automatically detects and celebrates 5 key moments (first week, month 1, first revenue, streak breaks, pricing signals) with encouraging messages
+- **Friday Reminder**: Cron job (`loopkit init --cron`) reminds you to ship every Friday at 4 PM with terminal notifications
+- **Async Loop Mode**: `--async` flag allows flexible scheduling without breaking your streak
+- **Almost There Nudge**: Encourages completion when you're at 50-70% shipping score with 2 tasks remaining
+- **Referral System**: Share your referral link (at streak ≥4) to earn 1-month free credits
+- **Public Wins Feed**: Share your wins to the community for accountability and discovery
+- **Validation Mode**: `--validate` flag runs a devil's advocate AI to stress-test your brief before building
 
 ## Pricing
 

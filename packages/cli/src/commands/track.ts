@@ -182,6 +182,15 @@ export async function trackCommand(options?: {
     `\n  ${colors.white.bold("Shipping")} ${renderProgressBar(shippingScore)} ${colors.white.bold(`${shippingScore}%`)}${deltaStr}`
   );
 
+  // ─── "Almost There" Nudge ─────────────────────────────────────
+  if (shippingScore >= 50 && shippingScore <= 70 && visibleOpen.length === 2) {
+    const tasksLeft = visibleOpen.length;
+    const potentialScore = Math.round(((done.length + tasksLeft) / weekTasks.length) * 100);
+    console.log(colors.warning(`\n  Almost there — ${tasksLeft} tasks left to hit ${potentialScore}%.`));
+    console.log(colors.dim(`  → loopkit track #${visibleOpen[0].id} --done  (if you finished it)`));
+    console.log(colors.dim(`  → loopkit track #${visibleOpen[0].id} --snooze tomorrow`));
+  }
+
   // ─── LoopKit Score™ (GF-1) ─────────────────────────────────
   const scoreBreakdown = computeLoopKitScore();
   if (scoreBreakdown) {

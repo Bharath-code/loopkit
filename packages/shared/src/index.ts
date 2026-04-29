@@ -304,6 +304,9 @@ export const ConfigSchema = z.object({
       lastShownAt: z.string().optional(),
     })
     .optional(),
+  aliasesInstalled: z.boolean().optional(),
+  referralShown: z.boolean().optional(),
+  referralCode: z.string().optional(),
 });
 
 export type Config = z.infer<typeof ConfigSchema>;
@@ -554,3 +557,12 @@ export function detectProjectCategory(text: string): string {
   }
   return "general";
 }
+
+// ─── Validation Questions ───────────────────────────────────────
+
+export const ValidationQuestionsSchema = z.object({
+  questions: z.array(z.string().min(20).max(200)).length(3),
+  encouragement: z.string(),
+});
+
+export type ValidationQuestions = z.infer<typeof ValidationQuestionsSchema>;
