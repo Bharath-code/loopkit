@@ -108,7 +108,7 @@ describe("POST /api/ai/init", () => {
     mockFetchQuery.mockImplementation(
       async (_api: unknown, _args: unknown, opts: { token?: string }) => {
         if (opts?.token === "test-token") {
-          return { tier: "free", _id: "user_123" };
+          return { tier: "pro", _id: "user_123" };
         }
         if (opts === undefined) {
           return { allowed: false, count: 10, limit: 10 };

@@ -279,6 +279,7 @@ export const ConfigSchema = z.object({
   activeProject: z.string().optional(),
   distinctId: z.string().optional(),
   encryptionSalt: z.string().optional(),
+  anthropicKey: z.string().optional(),
   auth: z
     .object({
       apiKey: z.string().optional(),

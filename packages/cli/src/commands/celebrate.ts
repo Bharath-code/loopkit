@@ -12,7 +12,7 @@ import {
   readPulseResponses,
 } from "../storage/local.js";
 import { computeLoopKitScore } from "../analytics/score.js";
-import { buildProofCard, buildTweetLine, copyToClipboard } from "../ui/proof-card.js";
+import { buildProofCard, buildTweetLine, copyToClipboard, buildTwitterIntentUrl, openUrl } from "../ui/proof-card.js";
 import { colors, header, box, pass, info } from "../ui/theme.js";
 import { getConvexProjectId } from "../storage/sync.js";
 
@@ -240,12 +240,27 @@ export async function celebrateCommand(
   console.log(header("Share"));
   console.log(colors.dim("  Copy this to share your progress:"));
   console.log(box(shareText));
-  console.log(colors.dim(`  Tweet: ${tweetLine}`));
 
-  // Auto-copy to clipboard on macOS
-  const copied = await copyToClipboard(tweetLine);
-  if (copied) {
-    console.log(pass("Tweet line copied to clipboard — paste and share!"));
+  const shareAction = await p.select({
+    message: "Share this week's win:",
+    options: [
+      { value: "twitter", label: "[t]weet on X — open twitter.com/intent/tweet" },
+      { value: "copy",    label: "[c]opy tweet line to clipboard" },
+      { value: "skip",   label: "[s]kip" },
+    ],
+  });
+
+  if (!p.isCancel(shareAction)) {
+    if (shareAction === "twitter") {
+      const copied = await copyToClipboard(tweetLine);
+      const twitterUrl = buildTwitterIntentUrl(tweetLine);
+      await openUrl(twitterUrl);
+      console.log(pass("Opened X/Twitter in browser!"));
+      if (copied) console.log(colors.dim("  (Also copied to clipboard as fallback.)"));
+    } else if (shareAction === "copy") {
+      const copied = await copyToClipboard(tweetLine);
+      if (copied) console.log(pass("Tweet line copied to clipboard — paste and share!"));
+    }
   }
 
   // ─── Share to public wins feed (if --share flag) ─────────────────

@@ -1,8 +1,10 @@
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { streamObject } from "ai";
 import { type ZodSchema } from "zod";
-import { readConfig } from "../storage/local.js";
+import * as p from "@clack/prompts";
+import { readConfig, writeConfig } from "../storage/local.js";
 import { getCachedResult, setCachedResult } from "../storage/cache.js";
+import { colors } from "../ui/theme.js";
 
 interface ResolvedAuth {
   anthropicKey: string | null;
@@ -12,7 +14,7 @@ interface ResolvedAuth {
 function resolveAuth(): ResolvedAuth {
   const config = readConfig();
   return {
-    anthropicKey: process.env.ANTHROPIC_API_KEY || null,
+    anthropicKey: process.env.ANTHROPIC_API_KEY || config.anthropicKey || null,
     token: config.auth?.apiKey || null,
   };
 }
@@ -108,6 +110,44 @@ export async function generateStructured<T extends object>(options: {
 
     if (res.status === 401) {
       throw new Error("Your session has expired. Please run `loopkit auth` to log in again.");
+    }
+
+    if (res.status === 402 || res.status === 403) {
+      console.log(`\n${colors.warning("⚠️  Hosted AI requires a Solo/Pro subscription.")}`);
+      console.log(colors.muted("You can upgrade your plan or Bring Your Own Key (BYOK) for free.\n"));
+
+      const useByok = await p.confirm({
+        message: "Would you like to configure your local Anthropic API Key?",
+        active: "Yes, enter key",
+        inactive: "No, cancel",
+      });
+
+      if (!p.isCancel(useByok) && useByok) {
+        const apiKey = await p.text({
+          message: "Enter your Anthropic API Key (starts with sk-ant-):",
+          placeholder: "sk-ant-...",
+          validate: (val) => {
+            if (!val.startsWith("sk-ant-")) {
+              return "Invalid key format. Key must start with 'sk-ant-'.";
+            }
+            if (val.length < 20) {
+              return "API key seems too short.";
+            }
+            return undefined;
+          },
+        });
+
+        if (!p.isCancel(apiKey) && apiKey) {
+          const config = readConfig();
+          config.anthropicKey = apiKey;
+          writeConfig(config);
+          console.log(colors.success("API key saved securely. Retrying request...\n"));
+
+          return generateStructured(options);
+        }
+      }
+      
+      throw new Error("Hosted AI is disabled on the free tier. Please upgrade or provide a local API key.");
     }
 
     const data = await res.json();

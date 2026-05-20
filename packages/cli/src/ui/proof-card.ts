@@ -128,6 +128,36 @@ export async function copyToClipboard(text: string): Promise<boolean> {
   }
 }
 
+// ─── Social Sharing ──────────────────────────────────────────────
+
+/**
+ * Build a Twitter/X intent URL from a tweet string (≤280 chars).
+ */
+export function buildTwitterIntentUrl(text: string): string {
+  return `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+}
+
+/**
+ * Open a URL in the system default browser.
+ * Cross-platform: macOS (open), Linux (xdg-open), Windows (start).
+ * Returns true if the command launched successfully.
+ */
+export async function openUrl(url: string): Promise<boolean> {
+  try {
+    const { spawnSync } = await import("node:child_process");
+    const cmd =
+      process.platform === "darwin"
+        ? "open"
+        : process.platform === "win32"
+          ? "start"
+          : "xdg-open";
+    const result = spawnSync(cmd, [url], { stdio: "ignore" });
+    return !result.error;
+  } catch {
+    return false;
+  }
+}
+
 // ─── Helpers ─────────────────────────────────────────────────────
 
 function formatMrr(mrr: number, currency: string): string {

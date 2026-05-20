@@ -1,7 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -31,6 +32,9 @@ import {
   Pause,
   Ship,
   Target,
+  Copy,
+  Share2,
+  Check,
 } from "lucide-react";
 import { SparkLine } from "@/components/charts";
 
@@ -487,6 +491,132 @@ export default function DashboardOverviewPage() {
         <ErrorBoundary>
           <CoachingWidget activeProject={activeProject} loopLogs={latestLoop} />
         </ErrorBoundary>
+
+        {/* Advisor Share (Phase 4) */}
+        <ErrorBoundary>
+          <AdvisorShareWidget activeProject={activeProject} user={user} />
+        </ErrorBoundary>
+      </div>
+    </div>
+  );
+}
+
+function AdvisorShareWidget({
+  activeProject,
+  user,
+}: {
+  activeProject: any;
+  user: any;
+}) {
+  const toggleShare = useMutation(api.projects.toggleShare);
+  const [copied, setCopied] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  if (!activeProject) return null;
+
+  const isPro = user?.tier === "pro";
+  const shareToken = activeProject.shareToken;
+  const isShared = !!activeProject.isShared && !!shareToken;
+
+  const shareUrl = typeof window !== "undefined"
+    ? `${window.location.origin}/share/${shareToken}`
+    : `/share/${shareToken}`;
+
+  const handleToggle = async () => {
+    if (!isPro) return;
+    setLoading(true);
+    setError(null);
+    try {
+      await toggleShare({ projectId: activeProject._id });
+    } catch (err: any) {
+      setError(err?.message || "Failed to update sharing settings.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      // fallback
+    }
+  };
+
+  return (
+    <div className="p-5 rounded-2xl border border-zinc-800 bg-zinc-900/20 flex flex-col justify-between">
+      <div>
+        <div className="flex items-center gap-2 mb-3">
+          <span className="w-8 h-8 rounded-lg bg-violet-500/10 text-violet-400 flex items-center justify-center">
+            <Share2 className="h-4 w-4" aria-hidden="true" />
+          </span>
+          <h2 className="text-base font-semibold text-white">
+            Advisor Share
+          </h2>
+        </div>
+        <p className="text-xs text-zinc-400 leading-relaxed mb-4">
+          Generate a secure, read-only dashboard link to share your weekly progress, loop logs, and metrics with advisors or investors.
+        </p>
+
+        {error && (
+          <p className="text-xs text-red-400 mb-3">{error}</p>
+        )}
+
+        {!isPro ? (
+          <div className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-4 text-center">
+            <p className="text-xs text-zinc-500 mb-3">
+              Advisor Share is a Pro feature. Upgrade your subscription to enable sharing.
+            </p>
+            <Link
+              href="/login?intent=upgrade&plan=pro&source=advisor_share"
+              className="inline-block px-3 py-1.5 bg-violet-600 hover:bg-violet-500 text-white text-xs font-medium rounded-lg transition-colors"
+            >
+              Upgrade to Pro
+            </Link>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-zinc-400">Share status</span>
+              <button
+                onClick={handleToggle}
+                disabled={loading}
+                className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                  isShared
+                    ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20"
+                    : "bg-zinc-800 text-zinc-400 border border-zinc-700 hover:bg-zinc-700"
+                }`}
+              >
+                {loading ? "Updating..." : isShared ? "Shared (Active)" : "Private (Disabled)"}
+              </button>
+            </div>
+
+            {isShared && (
+              <div className="mt-3 space-y-2">
+                <p className="text-[10px] text-zinc-500 uppercase font-mono tracking-wider">
+                  Advisor Dashboard Link
+                </p>
+                <div className="flex items-center gap-2 p-2 rounded-xl bg-zinc-950 border border-zinc-800 text-xs font-mono text-zinc-300">
+                  <span className="flex-1 truncate select-all">{shareUrl}</span>
+                  <button
+                    onClick={handleCopy}
+                    className="p-1 hover:text-white text-zinc-500 transition-colors"
+                    title="Copy Link"
+                  >
+                    {copied ? (
+                      <Check className="h-3.5 w-3.5 text-emerald-400" />
+                    ) : (
+                      <Copy className="h-3.5 w-3.5" />
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

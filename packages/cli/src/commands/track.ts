@@ -18,6 +18,8 @@ import {
   saveStandup,
   readStandup,
   getStandupStreak,
+  getLastShipDate,
+  getProjectCreationDate,
 } from "../storage/local.js";
 import { computeBenchmarks, renderBenchmarks } from "../analytics/benchmarks.js";
 import { getSnoozeWarning } from "../analytics/oracle.js";
@@ -59,9 +61,9 @@ export async function trackCommand(options?: {
   // ─── --add: Quick task add ────────────────────────────────────
   if (options?.add) {
     if (typeof options.add === "string") {
-      addTask(slug, options.add);
+      await addTask(slug, options.add);
     } else {
-      addTasksViaEditor(slug);
+      await addTasksViaEditor(slug);
     }
     return;
   }
@@ -118,6 +120,16 @@ export async function trackCommand(options?: {
 
   // ─── Board View ───────────────────────────────────────────────
   console.log(shortcutsHint());
+
+  const lastShip = getLastShipDate(slug);
+  const refDate = lastShip || getProjectCreationDate(slug);
+  const now = new Date();
+  const diffTime = now.getTime() - refDate.getTime();
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  if (diffDays > 14) {
+    console.log(colors.danger(`  ⚠️  SHIPPING BLOCK ACTIVE: You haven't shipped in ${diffDays} days! Task addition is locked unless overridden.\n`));
+  }
+
   console.log(header("This Week"));
 
   if (visibleOpen.length === 0 && done.length === 0 && snoozedActive.length === 0) {
@@ -390,9 +402,53 @@ function parseTasks(content: string): ParsedTask[] {
   return tasks;
 }
 
+async function handleShippingBlock(slug: string): Promise<boolean> {
+  const lastShip = getLastShipDate(slug);
+  const refDate = lastShip || getProjectCreationDate(slug);
+  const now = new Date();
+  
+  const diffTime = now.getTime() - refDate.getTime();
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  
+  if (diffDays > 14) {
+    console.log(colors.danger(`\n⚠️  SHIPPING BLOCK: You haven't shipped in ${diffDays} days!`));
+    console.log(colors.muted("To maintain momentum, you should ship at least once every 14 days.\n"));
+    
+    const override = await p.confirm({
+      message: "Do you want to override this block and add the task anyway?",
+      active: "Yes, override",
+      inactive: "No, cancel",
+    });
+    
+    if (p.isCancel(override) || !override) {
+      console.log(colors.warning("Task addition canceled. Run `loopkit ship` first."));
+      return false;
+    }
+    
+    const reason = await p.text({
+      message: "Please enter a reason for overriding this shipping block:",
+      placeholder: "e.g., waiting on third-party API approval",
+      validate: (value) => (value.trim().length < 5 ? "Reason must be at least 5 characters." : undefined),
+    });
+    
+    if (p.isCancel(reason) || !reason) {
+      console.log(colors.warning("Task addition canceled. Reason required."));
+      return false;
+    }
+    
+    console.log(colors.success(`Override registered. Reason: "${reason}"`));
+  }
+  return true;
+}
+
 // ─── Task Operations ─────────────────────────────────────────────
 
-function addTask(slug: string, title: string): void {
+async function addTask(slug: string, title: string, skipBlockCheck = false): Promise<void> {
+  if (!skipBlockCheck) {
+    const allowed = await handleShippingBlock(slug);
+    if (!allowed) return;
+  }
+
   let content = readTasksFile(slug);
   if (!content) {
     createTasksScaffold(slug, slug);
@@ -424,7 +480,10 @@ function addTask(slug: string, title: string): void {
   console.log(pass(`Added #${newId}: ${title}`));
 }
 
-function addTasksViaEditor(slug: string): void {
+async function addTasksViaEditor(slug: string): Promise<void> {
+  const allowed = await handleShippingBlock(slug);
+  if (!allowed) return;
+
   const editor =
     process.env.EDITOR ||
     process.env.VISUAL ||
@@ -460,7 +519,7 @@ function addTasksViaEditor(slug: string): void {
   }
 
   for (const title of lines) {
-    addTask(slug, title);
+    await addTask(slug, title, true);
   }
 }
 

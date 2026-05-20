@@ -11,9 +11,12 @@ export default defineSchema({
     slug: v.string(),
     description: v.optional(v.string()),
     createdAt: v.number(),
+    isShared: v.optional(v.boolean()),
+    shareToken: v.optional(v.string()),
   })
     .index("by_user", ["userId"])
-    .index("by_slug", ["slug"]),
+    .index("by_slug", ["slug"])
+    .index("by_share_token", ["shareToken"]),
 
   subscriptions: defineTable({
     userId: v.id("users"),

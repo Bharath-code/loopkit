@@ -28,7 +28,7 @@ import { predictSuccess, renderPrediction } from "../analytics/predictor.js";
 import { detectPatterns } from "../analytics/patterns.js";
 import { getPriorityMoment, recordMomentShown } from "../analytics/coach.js";
 import { computeLoopKitScore, renderLoopKitScore, readLoopKitScoreFromLog } from "../analytics/score.js";
-import { buildProofCard, buildTweetLine, copyToClipboard } from "../ui/proof-card.js";
+import { buildProofCard, buildTweetLine, copyToClipboard, buildTwitterIntentUrl, openUrl } from "../ui/proof-card.js";
 import { colors, header, box, pass, warn, info, nextStep, scoreBar, shortcutsHint, emptyState, patternCard, coachingCard } from "../ui/theme.js";
 
 interface LoopProof {
@@ -495,12 +495,26 @@ export async function loopCommand(options?: { revenue?: string; async?: boolean 
     );
 
     const postAction = await p.select({
-      message: "Post:",
+      message: "Share this post:",
       options: [
-        { value: "use", label: "[u]se as-is" },
-        { value: "skip", label: "[s]kip" },
+        { value: "twitter", label: "[t]weet on X  — open twitter.com/intent/tweet" },
+        { value: "copy",    label: "[c]opy to clipboard" },
+        { value: "skip",   label: "[s]kip" },
       ],
     });
+
+    if (!p.isCancel(postAction)) {
+      if (postAction === "twitter") {
+        const bipCopied = await copyToClipboard(synthesis.bipPost);
+        const twitterUrl = buildTwitterIntentUrl(synthesis.bipPost);
+        await openUrl(twitterUrl);
+        console.log(pass("Opened X/Twitter in browser."));
+        if (bipCopied) console.log(colors.dim("  (Also copied to clipboard as fallback.)"));
+      } else if (postAction === "copy") {
+        const bipCopied = await copyToClipboard(synthesis.bipPost);
+        if (bipCopied) console.log(pass("BIP post copied to clipboard."));
+      }
+    }
 
     // ─── Proof Card (GF-2) ───────────────────────────────────
     const latestMRR = getLatestMRR();
@@ -523,11 +537,24 @@ export async function loopCommand(options?: { revenue?: string; async?: boolean 
 
     console.log(header("Proof Card"));
     console.log(box(proofCardText, `Week ${weekNum} Card`));
-    console.log(colors.dim(`  Tweet: ${tweetLine}`));
 
-    const copied = await copyToClipboard(tweetLine);
-    if (copied) {
-      console.log(pass("Tweet line copied to clipboard — paste and share!"));
+    const cardCopied = await copyToClipboard(tweetLine);
+    if (cardCopied) {
+      console.log(pass("Tweet line copied to clipboard."));
+    }
+
+    const cardShareAction = await p.select({
+      message: "Share proof card:",
+      options: [
+        { value: "twitter", label: "[t]weet on X — open twitter.com/intent/tweet" },
+        { value: "skip",   label: "[s]kip" },
+      ],
+    });
+
+    if (!p.isCancel(cardShareAction) && cardShareAction === "twitter") {
+      const twitterUrl = buildTwitterIntentUrl(tweetLine);
+      await openUrl(twitterUrl);
+      console.log(pass("Opened X/Twitter in browser!"));
     }
 
 

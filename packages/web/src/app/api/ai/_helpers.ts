@@ -63,7 +63,7 @@ export function csrfCheckRelaxed(req: NextRequest): { error: string; status: num
   return null;
 }
 
-export async function verifyAndRateLimit(req: NextRequest) {
+export async function verifyAndRateLimit(req: NextRequest, options?: { gateFreeTier?: boolean }) {
   const token = req.headers.get("Authorization")?.replace("Bearer ", "");
   if (!token) {
     return { error: "Authentication required.", status: 401 };
@@ -76,6 +76,13 @@ export async function verifyAndRateLimit(req: NextRequest) {
     }
 
     const tier = (user.tier as string) || "free";
+    if (options?.gateFreeTier && tier === "free") {
+      return {
+        error: "Hosted AI is only available on Solo/Pro tiers. Add your local Anthropic API key to bypass, or upgrade your plan.",
+        status: 402,
+      };
+    }
+
     const limitCheck = await fetchQuery(
       api.rateLimits.checkLimit,
       { tier },

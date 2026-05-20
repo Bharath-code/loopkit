@@ -52,6 +52,8 @@ import {
   getStandupStreak,
   getStandupPath,
   getStandupDir,
+  getLastShipDate,
+  getProjectCreationDate,
 } from "../local";
 
 const TEST_BASE = fs.mkdtempSync(path.join(os.tmpdir(), "loopkit-test-"));
@@ -764,5 +766,53 @@ describe("Token Encryption", () => {
       const config = readConfig();
       expect(config.auth?.apiKey).toBe(key);
     }
+  });
+});
+
+describe("Ship and Project Creation Dates", () => {
+  beforeEach(() => {
+    cleanupTestDir();
+    fs.mkdirSync(TEST_BASE);
+    setCwdToTestDir();
+  });
+
+  afterEach(() => cleanupTestDir());
+
+  it("getLastShipDate returns null when no ship logs exist", () => {
+    ensureProjectDir("my-app");
+    expect(getLastShipDate("my-app")).toBeNull();
+  });
+
+  it("getLastShipDate returns correct date when matching ship logs exist", () => {
+    ensureProjectDir("my-app");
+    saveBrief("my-app", {
+      name: "CoolApp",
+      problem: "test",
+      icp: "test",
+      whyUnsolved: "test",
+      mvp: "test",
+    });
+
+    saveShipLog("**Product:** CoolApp\n**What shipped:** landing page", "2026-05-01");
+    saveShipLog("**Product:** CoolApp\n**What shipped:** payment gateway", "2026-05-10");
+    saveShipLog("**Product:** OtherApp\n**What shipped:** irrelevant stuff", "2026-05-15");
+
+    const lastShip = getLastShipDate("my-app");
+    expect(lastShip).not.toBeNull();
+    expect(lastShip?.toISOString().split("T")[0]).toBe("2026-05-10");
+  });
+
+  it("getProjectCreationDate falls back to file stats when brief.json is missing createdAt", () => {
+    ensureProjectDir("my-app");
+    saveBrief("my-app", {
+      name: "CoolApp",
+      problem: "test",
+      icp: "test",
+      whyUnsolved: "test",
+      mvp: "test",
+    });
+    
+    const creationDate = getProjectCreationDate("my-app");
+    expect(creationDate).toBeInstanceOf(Date);
   });
 });

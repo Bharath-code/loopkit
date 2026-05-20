@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: csrf.error }, { status: csrf.status });
     }
 
-    const auth = await verifyAndRateLimit(req);
+    const auth = await verifyAndRateLimit(req, { gateFreeTier: true });
     if ("error" in auth) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }

@@ -197,6 +197,15 @@ export function readConfig(): Config {
         delete config.auth.apiKey;
       }
     }
+    if (config.anthropicKey) {
+      const decrypted = decryptToken(config.anthropicKey, config);
+      if (decrypted) {
+        config.anthropicKey = decrypted;
+      } else {
+        console.warn("⚠ Failed to decrypt Anthropic key. Re-enter it.");
+        delete config.anthropicKey;
+      }
+    }
     return config;
   } catch {
     const defaults: Config = { version: 1 };
@@ -208,8 +217,14 @@ export function readConfig(): Config {
 export function writeConfig(config: Config): void {
   ensureLoopkitDir();
   const toWrite = { ...config };
+  if (toWrite.auth) {
+    toWrite.auth = { ...toWrite.auth };
+  }
   if (toWrite.auth?.apiKey && !toWrite.auth.apiKey.startsWith(ENCRYPTION_PREFIX)) {
     toWrite.auth.apiKey = encryptToken(toWrite.auth.apiKey, toWrite);
+  }
+  if (toWrite.anthropicKey && !toWrite.anthropicKey.startsWith(ENCRYPTION_PREFIX)) {
+    toWrite.anthropicKey = encryptToken(toWrite.anthropicKey, toWrite);
   }
   fs.writeFileSync(getConfigPath(), JSON.stringify(toWrite, null, 2));
 }
@@ -571,4 +586,46 @@ export function getStandupStreak(): number {
   }
 
   return streak;
+}
+
+export function getLastShipDate(slug: string): Date | null {
+  const brief = readBriefJson(slug);
+  const productName = brief?.answers?.name || slug;
+  const shipDir = getShipDir();
+  if (!fs.existsSync(shipDir)) return null;
+
+  const files = fs.readdirSync(shipDir).filter((f) => /^\d{4}-\d{2}-\d{2}\.md$/.test(f));
+  let latestDateStr: string | null = null;
+
+  for (const file of files) {
+    const filePath = path.join(shipDir, file);
+    try {
+      const content = fs.readFileSync(filePath, "utf-8");
+      const dateStr = file.replace(".md", "");
+      if (
+        content.includes(`**Product:** ${productName}`) ||
+        content.includes(`**Product:** ${slug}`)
+      ) {
+        if (!latestDateStr || dateStr > latestDateStr) {
+          latestDateStr = dateStr;
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  return latestDateStr ? new Date(latestDateStr) : null;
+}
+
+export function getProjectCreationDate(slug: string): Date {
+  const brief = readBriefJson(slug);
+  if (brief && (brief as any).createdAt) {
+    return new Date((brief as any).createdAt);
+  }
+  const briefPath = getBriefJsonPath(slug);
+  if (fs.existsSync(briefPath)) {
+    return fs.statSync(briefPath).birthtime;
+  }
+  return new Date();
 }

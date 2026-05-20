@@ -20,14 +20,33 @@ export const me = query({
       .filter((q) => q.eq(q.field("status"), "active"))
       .first();
 
-    const isPro =
+    const isActive =
       subscription &&
       subscription.currentPeriodEnd &&
       subscription.currentPeriodEnd > Date.now();
 
+    let tier: "free" | "solo" | "pro" = "free";
+    if (isActive) {
+      const priceId = subscription.polarPriceId || "";
+      const soloPriceId = process.env.POLAR_SOLO_PRICE_ID;
+      const proPriceId = process.env.POLAR_PRO_PRICE_ID;
+
+      if (proPriceId && priceId === proPriceId) {
+        tier = "pro";
+      } else if (soloPriceId && priceId === soloPriceId) {
+        tier = "solo";
+      } else if (priceId.toLowerCase().includes("pro")) {
+        tier = "pro";
+      } else if (priceId.toLowerCase().includes("solo")) {
+        tier = "solo";
+      } else {
+        tier = "pro"; // Default to pro for active unrecognized subscriptions
+      }
+    }
+
     return {
       ...user,
-      tier: isPro ? "pro" : "free",
+      tier,
     };
   },
 });
