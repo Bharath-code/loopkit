@@ -8,6 +8,9 @@
  * No side effects, no file reads.
  */
 
+import { token, sym } from "./tokens.js";
+import { box, progressBar, kvList, streakMini } from "./layout.js";
+
 // ─── Types ───────────────────────────────────────────────────────
 
 export interface ProofCardData {
@@ -23,6 +26,8 @@ export interface ProofCardData {
   tasksTotal: number;
   /** Consecutive week streak */
   streak: number;
+  /** Last N weeks of shipping history (true = shipped) */
+  streakHistory?: boolean[];
   /** Number of pulse feedback responses */
   feedbackResponses: number;
   /** LoopKit Score 0–100 (null if not enough data yet) */
@@ -38,72 +43,88 @@ export interface ProofCardData {
 // ─── Card Builder ─────────────────────────────────────────────────
 
 /**
- * Build the full terminal-boxed Proof Card.
- * Returns the multi-line box string (with ANSI codes for terminal).
+ * Build the full terminal-boxed Proof Card using design system primitives.
  */
 export function buildProofCard(data: ProofCardData): string {
   const lines: string[] = [];
 
-  // Title row
-  lines.push(`🚀 ${data.productName} — Week ${data.weekNum}`);
+  // Title
+  lines.push(
+    `${sym.rocket} ${token.heading(data.productName)}  ${token.dim(`Week ${data.weekNum}`)}`,
+  );
   lines.push("");
 
-  // Shipping
-  const taskRatio =
-    data.tasksTotal > 0
-      ? `${data.tasksCompleted}/${data.tasksTotal} tasks`
-      : "No tasks tracked";
-  lines.push(`  ✅ Shipped: ${taskRatio} (${data.shippingScore}%)`);
+  // Task progress bar
+  if (data.tasksTotal > 0) {
+    lines.push(progressBar(data.tasksCompleted, data.tasksTotal));
+  } else {
+    lines.push(token.dim("No tasks tracked this week"));
+  }
+  lines.push("");
 
-  // LoopKit Score (omit gracefully if not enough data)
+  // Core stats as aligned kv pairs
+  const pairs: Array<[string, string]> = [
+    ["Shipped", `${data.shippingScore}%`],
+  ];
+
   if (data.loopkitScore !== null) {
-    lines.push(`  📊 LoopKit Score: ${data.loopkitScore}/100`);
+    pairs.push(["Score", `${data.loopkitScore}/100`]);
   }
 
-  // Streak
   if (data.streak >= 1) {
-    const streakEmoji = data.streak >= 4 ? "🔥" : "📅";
-    lines.push(`  ${streakEmoji} Streak: ${data.streak} consecutive week${data.streak !== 1 ? "s" : ""}`);
+    const streakStr = `${data.streak} week${data.streak !== 1 ? "s" : ""}`;
+    pairs.push([
+      "Streak",
+      data.streak >= 4
+        ? token.energy(`${sym.fire} ${streakStr}`)
+        : token.success(streakStr),
+    ]);
   }
 
-  // Feedback
   if (data.feedbackResponses > 0) {
-    lines.push(`  💬 Feedback: ${data.feedbackResponses} response${data.feedbackResponses !== 1 ? "s" : ""} collected`);
+    pairs.push([
+      "Feedback",
+      `${data.feedbackResponses} response${data.feedbackResponses !== 1 ? "s" : ""}`,
+    ]);
   }
 
-  // Revenue (only when logged)
   if (data.mrr !== null && data.mrr > 0) {
-    const currency = data.currency ?? "USD";
-    lines.push(`  💰 MRR: ${formatMrr(data.mrr, currency)}`);
+    pairs.push(["MRR", token.successBold(formatMrr(data.mrr, data.currency ?? "USD"))]);
   }
 
+  lines.push(kvList(pairs, ""));
   lines.push("");
-  lines.push(`  Next: ${data.oneThing}`);
-  lines.push("");
-  lines.push("  Built with LoopKit · loopkit.dev");
 
-  return lines.join("\n");
+  // Streak history mini-bar
+  if (data.streakHistory && data.streakHistory.length > 0) {
+    lines.push(
+      `${token.dim(`Last ${data.streakHistory.length}w`)}  ${streakMini(data.streakHistory)}`,
+    );
+    lines.push("");
+  }
+
+  // Next week bet
+  lines.push(`${token.muted("Next:")} ${token.body(data.oneThing)}`);
+  lines.push("");
+  lines.push(token.dim("Built with LoopKit · loopkit.dev"));
+
+  return box(lines.join("\n"), `${sym.loop} Proof Card`, "success");
 }
 
 /**
  * Build the compact single-line tweet summary (≤ 280 chars).
- * Used as the "paste and tweet" version.
  */
 export function buildTweetLine(data: ProofCardData): string {
-  const parts: string[] = [
-    `Week ${data.weekNum}: shipped ${data.shippingScore}%`,
-  ];
+  const parts: string[] = [`Week ${data.weekNum}: shipped ${data.shippingScore}%`];
 
   if (data.streak >= 2) parts.push(`${data.streak}-week streak 🔥`);
   if (data.loopkitScore !== null) parts.push(`LoopKit Score: ${data.loopkitScore}/100`);
   if (data.mrr !== null && data.mrr > 0) {
     parts.push(`MRR: ${formatMrr(data.mrr, data.currency ?? "USD")}`);
   }
-
   parts.push("@loopkit");
 
   const line = parts.join(" · ");
-  // Hard-truncate at 280 with ellipsis if needed
   return line.length > 280 ? line.slice(0, 277) + "…" : line;
 }
 
@@ -112,16 +133,12 @@ export function buildTweetLine(data: ProofCardData): string {
 /**
  * Copy text to macOS clipboard via pbcopy.
  * Silently fails on non-macOS or when pbcopy is unavailable.
- * Returns true if successful.
  */
 export async function copyToClipboard(text: string): Promise<boolean> {
   if (process.platform !== "darwin") return false;
   try {
     const { spawnSync } = await import("node:child_process");
-    const result = spawnSync("pbcopy", [], {
-      input: text,
-      encoding: "utf-8",
-    });
+    const result = spawnSync("pbcopy", [], { input: text, encoding: "utf-8" });
     return !result.error && result.status === 0;
   } catch {
     return false;
@@ -130,27 +147,17 @@ export async function copyToClipboard(text: string): Promise<boolean> {
 
 // ─── Social Sharing ──────────────────────────────────────────────
 
-/**
- * Build a Twitter/X intent URL from a tweet string (≤280 chars).
- */
 export function buildTwitterIntentUrl(text: string): string {
   return `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
 }
 
-/**
- * Open a URL in the system default browser.
- * Cross-platform: macOS (open), Linux (xdg-open), Windows (start).
- * Returns true if the command launched successfully.
- */
 export async function openUrl(url: string): Promise<boolean> {
   try {
     const { spawnSync } = await import("node:child_process");
     const cmd =
-      process.platform === "darwin"
-        ? "open"
-        : process.platform === "win32"
-          ? "start"
-          : "xdg-open";
+      process.platform === "darwin" ? "open"
+      : process.platform === "win32" ? "start"
+      : "xdg-open";
     const result = spawnSync(cmd, [url], { stdio: "ignore" });
     return !result.error;
   } catch {
@@ -161,16 +168,16 @@ export async function openUrl(url: string): Promise<boolean> {
 // ─── Helpers ─────────────────────────────────────────────────────
 
 function formatMrr(mrr: number, currency: string): string {
-  // Use Intl.NumberFormat for currency formatting
   try {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency,
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(mrr) + "/mo";
+    return (
+      new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency,
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      }).format(mrr) + "/mo"
+    );
   } catch {
-    // Fallback for unknown currency codes
     return `${currency} ${mrr}/mo`;
   }
 }

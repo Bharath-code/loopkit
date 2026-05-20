@@ -1,105 +1,153 @@
-import chalk from "chalk";
+/**
+ * LoopKit CLI — Theme (Upgraded)
+ *
+ * This file is the primary public surface for all UI utilities.
+ * It re-exports everything from the design system modules so commands
+ * only need to import from one place:
+ *
+ *   import { colors, box, header, ... } from "../ui/theme.js";
+ *
+ * All new code should prefer importing directly from:
+ *   - ui/tokens.ts    — colors, symbols, spacing, typography
+ *   - ui/layout.ts    — box, table, kv, badge, divider, gradient, ...
+ *   - ui/ceremony.ts  — success, error, aiThinking, weekSummaryCard, ...
+ *   - ui/prompts.ts   — requireInput, steppedText, confirm, select, ...
+ */
 
-// ─── Brand Colors ───────────────────────────────────────────────
+import {
+  token,
+  sym,
+  space,
+  type,
+  palette,
+  stripAnsi,
+  termWidth,
+  type BoxVariant,
+} from "./tokens.js";
 
-export const colors = {
-  primary: chalk.hex("#7C3AED"), // violet-600
-  secondary: chalk.hex("#06B6D4"), // cyan-500
-  success: chalk.hex("#10B981"), // emerald-500
-  warning: chalk.hex("#F59E0B"), // amber-500
-  danger: chalk.hex("#EF4444"), // red-500
-  muted: chalk.hex("#6B7280"), // gray-500
-  pink: chalk.hex("#EC4899"), // pink-500
-  orange: chalk.hex("#F97316"), // orange-500
-  dim: chalk.dim,
-  bold: chalk.bold,
-  white: chalk.white,
+import {
+  box as layoutBox,
+  gradient,
+  divider,
+  badge,
+  kv,
+  kvList,
+  table,
+  tree,
+  timeline,
+  scoreBar,
+  progressBar,
+  section,
+  prose,
+  hint,
+  streakMini,
+} from "./layout.js";
+
+// ─── Re-exports ──────────────────────────────────────────────────
+
+export { token, sym, space, type, palette, stripAnsi, termWidth };
+export type { BoxVariant };
+
+export {
+  gradient,
+  divider,
+  badge,
+  kv,
+  kvList,
+  table,
+  tree,
+  timeline,
+  scoreBar,
+  progressBar,
+  section,
+  prose,
+  hint,
+  streakMini,
 };
 
-// ─── Score Visualization ────────────────────────────────────────
+export type { TableColumn, TreeNode, TimelineStep, StepStatus } from "./layout.js";
 
-export function scoreBar(score: number, max: number = 10): string {
-  const filled = Math.round((score / max) * 10);
-  const empty = 10 - filled;
-  const color =
-    score >= 8 ? colors.success : score >= 6 ? colors.warning : colors.danger;
-  return `${color("█".repeat(filled))}${colors.dim("░".repeat(empty))} ${color(`${score}/${max}`)}`;
+export {
+  aiThinking,
+  weekSummaryCard,
+  briefCard,
+  onboardingStep,
+  shipCelebration,
+} from "./ceremony.js";
+
+export {
+  requireInput,
+  shortcutsHint,
+  hintedText,
+  steppedText,
+  destructiveConfirm,
+  pauseHint,
+} from "./prompts.js";
+
+// ─── Backwards-compatible `colors` object ────────────────────────
+// Kept for all existing commands. Do not add new usages — use `token`.
+
+export const colors = {
+  primary:   token.brand,
+  secondary: token.accent,
+  success:   token.success,
+  warning:   token.warning,
+  danger:    token.error,
+  muted:     token.muted,
+  pink:      token.celebrate,
+  orange:    token.energy,
+  dim:       token.dim,
+  bold:      token.heading,
+  white:     token.body,
+} as const;
+
+// ─── Layout: backwards-compatible box ────────────────────────────
+
+/** Box with optional title and variant coloring */
+export function box(
+  content: string,
+  title?: string,
+  variant: BoxVariant = "default",
+): string {
+  return layoutBox(content, title, variant);
 }
 
-// ─── Section Headers ────────────────────────────────────────────
+// ─── Section Headers ─────────────────────────────────────────────
 
+/** Level-1 header — violet bold with leading newline */
 export function header(text: string): string {
-  return `\n${colors.primary.bold(text)}\n`;
+  return `\n${token.brandBold(text)}\n`;
 }
 
+/** Level-2 header — white bold */
 export function subheader(text: string): string {
-  return colors.white.bold(text);
+  return token.heading(text);
 }
 
-// ─── Status Indicators ──────────────────────────────────────────
+// ─── Status Indicators ───────────────────────────────────────────
 
 export function pass(text: string): string {
-  return `${colors.success("✓")} ${text}`;
+  return `${token.success(sym.check)} ${text}`;
 }
 
 export function fail(text: string): string {
-  return `${colors.danger("✗")} ${text}`;
+  return `${token.error(sym.cross)} ${text}`;
 }
 
 export function warn(text: string): string {
-  return `${colors.warning("⚠")} ${text}`;
+  return `${token.warning(sym.warn)} ${text}`;
 }
 
 export function info(text: string): string {
-  return `${colors.secondary("◆")} ${text}`;
+  return `${token.accent(sym.info)} ${text}`;
 }
 
-// ─── Box Renderer ───────────────────────────────────────────────
-
-export function box(content: string, title?: string): string {
-  const lines = content.split("\n");
-  const maxLen = Math.max(
-    ...lines.map((l) => stripAnsi(l).length),
-    title ? stripAnsi(title).length + 4 : 0,
-  );
-  const width = Math.min(maxLen + 4, 72);
-
-  const top = title
-    ? `┌─ ${colors.primary.bold(title)} ${"─".repeat(Math.max(0, width - stripAnsi(title).length - 5))}┐`
-    : `┌${"─".repeat(width - 2)}┐`;
-  const bottom = `└${"─".repeat(width - 2)}┘`;
-
-  const paddedLines = lines.map((line) => {
-    const visLen = stripAnsi(line).length;
-    const padding = Math.max(0, width - 4 - visLen);
-    return `│ ${line}${" ".repeat(padding)} │`;
-  });
-
-  return [top, ...paddedLines, bottom].join("\n");
-}
-
-// ─── Helpers ────────────────────────────────────────────────────
-
-function stripAnsi(str: string): string {
-  return str.replace(
-    // eslint-disable-next-line no-control-regex
-    /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g,
-    "",
-  );
-}
+// ─── Navigation Hints ────────────────────────────────────────────
 
 export function nextStep(command: string, hint?: string): string {
-  const note = hint ? ` ${colors.dim(`(${hint})`)}` : "";
-  return `\n${colors.muted("Next:")} ${colors.primary(`loopkit ${command}`)}${note}\n`;
+  const note = hint ? ` ${token.dim(`(${hint})`)}` : "";
+  return `\n${token.muted("Next:")} ${token.code(`loopkit ${command}`)}${note}\n`;
 }
-
-// ─── Keyboard Shortcuts Hint ────────────────────────────────────
-
-export function shortcutsHint(): string {
-  return colors.dim("  ? help · q quit · s skip · Enter confirm\n");
-}
-
-// ─── Empty State ────────────────────────────────────────────────
 
 export function emptyState(
   message: string,
@@ -107,14 +155,14 @@ export function emptyState(
   command: string,
 ): string {
   return [
-    colors.muted(`  ${message}`),
-    colors.muted(`  ${action}:`),
-    colors.primary(`  ${command}`),
+    token.muted(`  ${message}`),
+    token.muted(`  ${action}:`),
+    token.code(`  ${command}`),
     "",
   ].join("\n");
 }
 
-// ─── Coaching Card ──────────────────────────────────────────────
+// ─── Coaching Cards ───────────────────────────────────────────────
 
 export function coachingCard(moment: {
   id: string;
@@ -126,28 +174,33 @@ export function coachingCard(moment: {
 }): string {
   const emojiMap: Record<string, string> = {
     critical: "🚨",
-    warning: "⚠️",
-    info: "💡",
+    warning:  "⚠️",
+    info:     "💡",
   };
 
-  const color =
+  const colorFn =
     moment.priority === "critical"
-      ? colors.danger
+      ? token.errorBold
       : moment.priority === "warning"
-        ? colors.warning
-        : colors.secondary;
+        ? token.warningBold
+        : token.accentBold;
+
+  const variant: BoxVariant =
+    moment.priority === "critical" ? "error"
+    : moment.priority === "warning" ? "warning"
+    : "info";
 
   const lines: string[] = [];
-  lines.push(`${emojiMap[moment.priority]} ${color.bold(moment.title)}`);
+  lines.push(`${emojiMap[moment.priority]} ${colorFn(moment.title)}`);
   lines.push("");
   lines.push(moment.message);
   lines.push("");
-  lines.push(`${colors.muted("→")} ${color.bold(moment.action)}`);
+  lines.push(`${token.muted("→")} ${colorFn(moment.action)}`);
   if (moment.command) {
-    lines.push(colors.dim(`   Run: ${moment.command}`));
+    lines.push(token.dim(`   Run: ${moment.command}`));
   }
 
-  return box(lines.join("\n"), `${emojiMap[moment.priority]} Coach`);
+  return layoutBox(lines.join("\n"), `${emojiMap[moment.priority]} Coach`, variant);
 }
 
 export function coachingPlanCard(plan: {
@@ -162,16 +215,15 @@ export function coachingPlanCard(plan: {
   totalWeeks: number;
 }): string {
   if (plan.moments.length === 0) {
-    return box(
-      `${colors.success("✓")} No urgent coaching moments. You're on track.`,
+    return layoutBox(
+      `${token.success("✓")} No urgent coaching moments. You're on track.`,
       "💡 Coach",
+      "success",
     );
   }
 
   const lines: string[] = [];
-  lines.push(
-    colors.secondary.bold(`Coaching Plan — ${plan.totalWeeks} weeks tracked`),
-  );
+  lines.push(token.accentBold(`Coaching Plan — ${plan.totalWeeks} weeks tracked`));
   lines.push("");
 
   const priorityOrder = { critical: 0, warning: 1, info: 2 };
@@ -184,10 +236,8 @@ export function coachingPlanCard(plan: {
     lines.push("");
   }
 
-  return box(lines.join("\n"), "💡 Coach");
+  return layoutBox(lines.join("\n"), "💡 Coach", "info");
 }
-
-// ─── Pattern Interrupt Card ─────────────────────────────────────
 
 export function patternCard(
   patterns: Array<{
@@ -200,36 +250,35 @@ export function patternCard(
   totalWeeks: number,
 ): string {
   const emojiMap: Record<string, string> = {
-    overplanner: "📋",
-    snooze_loop: "⏸",
+    overplanner:  "📋",
+    snooze_loop:  "⏸",
     ship_avoider: "🚢",
-    icp_drift: "🎯",
-    scope_creep: "📈",
+    icp_drift:    "🎯",
+    scope_creep:  "📈",
   };
 
   const lines: string[] = [];
-  lines.push(
-    colors.secondary.bold(`Pattern Interrupt — ${totalWeeks} weeks of data`),
-  );
+  lines.push(token.accentBold(`Pattern Interrupt — ${totalWeeks} weeks of data`));
   lines.push("");
 
-  for (const p of patterns) {
-    const emoji = emojiMap[p.type] || "⚡";
-    const label = p.type.replace(/_/g, " ").toUpperCase();
-    const color = p.severity === "critical" ? colors.danger : colors.warning;
+  for (const pt of patterns) {
+    const emoji = emojiMap[pt.type] || "⚡";
+    const label = pt.type.replace(/_/g, " ").toUpperCase();
+    const colorFn = pt.severity === "critical" ? token.errorBold : token.warningBold;
 
-    lines.push(`${emoji} ${color.bold(label)} (${p.weeksObserved}w)`);
-    lines.push(`   ${p.message}`);
-    for (const s of p.suggestions) {
-      lines.push(`   ${colors.muted("→")} ${s}`);
+    lines.push(`${emoji} ${colorFn(label)} (${pt.weeksObserved}w)`);
+    lines.push(`   ${pt.message}`);
+    for (const s of pt.suggestions) {
+      lines.push(`   ${token.muted("→")} ${s}`);
     }
     lines.push("");
   }
 
-  return box(lines.join("\n"), "⚡ Pattern Interrupt");
-}
+  const variant: BoxVariant = patterns.some((p) => p.severity === "critical")
+    ? "error" : "warning";
 
-// ─── Standup Card (GF-3) ────────────────────────────────────────
+  return layoutBox(lines.join("\n"), "⚡ Pattern Interrupt", variant);
+}
 
 export function standupCard(data: {
   taskToday: string;
@@ -239,41 +288,38 @@ export function standupCard(data: {
 }): string {
   const lines: string[] = [];
 
-  lines.push(colors.success.bold("✓ Standup logged"));
+  lines.push(token.successBold("✓ Standup logged"));
   lines.push("");
-  lines.push(`${colors.white("Today's #1:")} ${data.taskToday}`);
+  lines.push(`${token.label("Today's #1:")} ${data.taskToday}`);
 
   if (data.openTasks.length > 0) {
     lines.push("");
-    lines.push(colors.white(`Open (${data.openTasks.length} tasks):`));
-    // Show up to 4 open tasks to keep the card compact
+    lines.push(token.body(`Open (${data.openTasks.length} tasks):`));
     const preview = data.openTasks.slice(0, 4);
     for (const t of preview) {
-      lines.push(`  ${colors.muted("○")} ${t}`);
+      lines.push(`  ${token.muted("○")} ${t}`);
     }
     if (data.openTasks.length > 4) {
-      lines.push(colors.dim(`  … and ${data.openTasks.length - 4} more`));
+      lines.push(token.dim(`  … and ${data.openTasks.length - 4} more`));
     }
   }
 
   if (data.standupStreak >= 2) {
     lines.push("");
     lines.push(
-      `${colors.warning("🔥 Standup streak:")} ${colors.warning.bold(`${data.standupStreak} days`)}`
+      `${token.energy("🔥 Standup streak:")} ${token.energy.bold(`${data.standupStreak} days`)}`,
     );
   }
 
   if (data.loopkitScore != null) {
     lines.push(
-      `${colors.secondary("◆ LoopKit Score:")} ${colors.secondary.bold(`${data.loopkitScore}/100`)}`
+      `${token.accent("◆ LoopKit Score:")} ${token.accentBold(`${data.loopkitScore}/100`)}`,
     );
   }
 
   const streakLabel = data.standupStreak >= 1 ? `Day ${data.standupStreak}` : "Day 1";
-  return box(lines.join("\n"), `📋 ${streakLabel}`);
+  return layoutBox(lines.join("\n"), `📋 ${streakLabel}`, "info");
 }
-
-// ─── Revenue Card (GF-4) ────────────────────────────────────────
 
 export function revenueCard(data: {
   mrr: number;
@@ -281,8 +327,6 @@ export function revenueCard(data: {
   currency: string;
   entriesLogged: number;
 }): string {
-  const lines: string[] = [];
-
   const fmt = (n: number) => {
     try {
       return new Intl.NumberFormat("en-US", {
@@ -296,22 +340,26 @@ export function revenueCard(data: {
     }
   };
 
-  lines.push(`${colors.white("MRR:")} ${colors.success.bold(fmt(data.mrr))}`);
-  lines.push(`${colors.white("ARR:")} ${colors.secondary(fmt(data.mrr * 12))}`);
+  const lines: string[] = [];
+  lines.push(`${token.label("MRR:")} ${token.successBold(fmt(data.mrr))}`);
+  lines.push(`${token.label("ARR:")} ${token.accent(fmt(data.mrr * 12))}`);
 
   if (data.delta !== null) {
     const deltaFormatted = fmt(Math.abs(data.delta));
     const deltaStr =
       data.delta > 0
-        ? colors.success(`↑ +${deltaFormatted} this entry`)
+        ? token.success(`↑ +${deltaFormatted} this entry`)
         : data.delta < 0
-          ? colors.danger(`↓ -${deltaFormatted} this entry`)
-          : colors.muted("→ No change");
-    lines.push(`${colors.white("Change:")} ${deltaStr}`);
+          ? token.error(`↓ -${deltaFormatted} this entry`)
+          : token.muted("→ No change");
+    lines.push(`${token.label("Change:")} ${deltaStr}`);
   }
 
-  lines.push(colors.dim(`${data.entriesLogged} revenue entr${data.entriesLogged === 1 ? "y" : "ies"} logged`));
+  lines.push(
+    token.dim(
+      `${data.entriesLogged} revenue entr${data.entriesLogged === 1 ? "y" : "ies"} logged`,
+    ),
+  );
 
-  return box(lines.join("\n"), "💰 Revenue");
+  return layoutBox(lines.join("\n"), "💰 Revenue", "success");
 }
-

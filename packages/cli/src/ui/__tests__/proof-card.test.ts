@@ -19,12 +19,22 @@ describe("Proof Card UI", () => {
       };
 
       const card = buildProofCard(data);
-      expect(card).toContain("TestApp — Week 42");
-      expect(card).toContain("4/5 tasks (85%)");
-      expect(card).toContain("LoopKit Score: 90/100");
-      expect(card).toContain("Streak: 3 consecutive weeks");
-      expect(card).toContain("Feedback: 2 responses collected");
-      expect(card).toContain("MRR: $1,500/mo");
+      // Title uses space separator, not em-dash
+      expect(card).toContain("TestApp");
+      expect(card).toContain("Week 42");
+      // Progress bar present
+      expect(card).toContain("4/5");
+      // Kv pairs present (new aligned format)
+      expect(card).toContain("Shipped");
+      expect(card).toContain("85%");
+      expect(card).toContain("Score");
+      expect(card).toContain("90/100");
+      expect(card).toContain("Streak");
+      expect(card).toContain("3 weeks");
+      expect(card).toContain("Feedback");
+      expect(card).toContain("2 responses");
+      expect(card).toContain("MRR");
+      expect(card).toContain("$1,500/mo");
       expect(card).toContain("Next: Ship auth");
     });
 
@@ -43,8 +53,9 @@ describe("Proof Card UI", () => {
       };
 
       const card = buildProofCard(data);
-      expect(card).toContain("No tasks tracked (0%)");
-      expect(card).not.toContain("LoopKit Score");
+      // New empty state text
+      expect(card).toContain("No tasks tracked this week");
+      expect(card).not.toContain("Score");
       expect(card).not.toContain("Streak");
       expect(card).not.toContain("Feedback");
       expect(card).not.toContain("MRR");

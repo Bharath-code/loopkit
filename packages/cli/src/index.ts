@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { Command } from "commander";
+import { applyHelpOverride } from "./ui/help.js";
 import { initCommand } from "./commands/init.js";
 import { trackCommand } from "./commands/track.js";
 import { shipCommand } from "./commands/ship.js";
@@ -21,27 +22,13 @@ const program = new Command();
 
 program
   .name("loopkit")
-  .description(
-    "The CLI for solo technical founders shipping weekly"
-  )
+  .description("The CLI for solo technical founders shipping weekly")
   .version("0.1.0");
 
-program.addHelpText(
-  "beforeAll",
-  `The weekly loop:
-  loopkit init     Define the bet
-  loopkit track    Build against it
-  loopkit ship     Put it in public
-  loopkit pulse    Capture feedback
-  loopkit loop     Close the week
-  loopkit revenue  Track your MRR
+// Apply branded --help renderer (replaces Commander's default output)
+applyHelpOverride(program);
 
-Daily habit:
-  loopkit track --stand   60-second morning standup
-
-Secondary add-ons: radar, keywords, timing, coach, celebrate, telemetry, auth
-`,
-);
+// Help text is now handled by ui/help.ts (applyHelpOverride above)
 
 program
   .command("init [name]")

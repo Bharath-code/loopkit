@@ -35,6 +35,8 @@ import {
   nextStep,
   info,
   shortcutsHint,
+  ceremonyIntro,
+  ceremonyOutro,
 } from "../ui/theme.js";
 import {
   recordBriefCategories,
@@ -62,9 +64,10 @@ export async function initCommand(
 
   ensureLoopkitDir();
 
-  p.intro(colors.primary.bold("LoopKit — Define your weekly shipping bet"));
+  ceremonyIntro("Define your weekly shipping bet", {
+    tagline: "This takes under 5 minutes. Be honest, not optimistic.",
+  });
   console.log(shortcutsHint());
-  console.log(colors.muted("This takes under 5 minutes. Be honest, not optimistic.\n"));
 
   // ─── Template selection ───────────────────────────────────────
   let selectedTemplate = options?.template
@@ -98,7 +101,7 @@ export async function initCommand(
       });
 
       if (p.isCancel(resume)) {
-        p.cancel("Session cancelled.");
+    ceremonyOutro("Session cancelled.");
         process.exit(0);
       }
 
@@ -119,7 +122,7 @@ export async function initCommand(
       });
 
       if (p.isCancel(action)) {
-        p.cancel("Session cancelled.");
+    ceremonyOutro("Session cancelled.");
         process.exit(0);
       }
 
@@ -416,7 +419,7 @@ export async function initCommand(
       `     Or cron: 0 18 * * 0 cd ${process.cwd()} && loopkit loop\n`
     )
   );
-  p.outro(colors.muted("Brief saved. Now build against it."));
+  ceremonyOutro("Brief saved. Now build against it.");
 
   // ─── Install cron job if --cron flag is set ───────────────────────
   if (options?.cron) {
