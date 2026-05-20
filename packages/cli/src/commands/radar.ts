@@ -7,6 +7,8 @@ import {
   pass,
   fail,
   shortcutsHint,
+  ceremonyIntro,
+  ceremonyOutro,
 } from "../ui/theme.js";
 import {
   scanCompetitors,
@@ -19,7 +21,7 @@ export async function radarCommand(options?: {
   category?: string;
   project?: string;
 }): Promise<void> {
-  p.intro(colors.primary.bold("LoopKit — Competitor Ship Radar"));
+  ceremonyIntro("Competitor Ship Radar");
   console.log(shortcutsHint());
 
   let category = options?.category;
@@ -57,7 +59,7 @@ export async function radarCommand(options?: {
         });
 
         if (p.isCancel(selected)) {
-          p.cancel("Scan cancelled.");
+          ceremonyOutro("Scan cancelled.");
           return;
         }
 
@@ -77,7 +79,7 @@ export async function radarCommand(options?: {
       });
 
       if (p.isCancel(input)) {
-        p.cancel("Scan cancelled.");
+        ceremonyOutro("Scan cancelled.");
         return;
       }
 
@@ -173,7 +175,7 @@ export async function radarCommand(options?: {
     }
   }
 
-  p.outro(colors.muted("Stay aware. Build different."));
+  ceremonyOutro("Stay aware. Build different.");
 }
 
 function formatDate(dateStr: string): string {

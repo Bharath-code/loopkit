@@ -1,6 +1,6 @@
 import * as p from "@clack/prompts";
 import { readConfig, readBriefJson, listProjects } from "../storage/local.js";
-import { colors, header, info, shortcutsHint } from "../ui/theme.js";
+import { colors, header, info, shortcutsHint, ceremonyIntro, ceremonyOutro } from "../ui/theme.js";
 import { analyzeMarket } from "../analytics/marketTiming.js";
 import { detectProjectCategory } from "@loopkit/shared";
 import { pushTimingToConvex } from "../storage/sync.js";
@@ -9,7 +9,7 @@ export async function timingCommand(options?: {
   category?: string;
   project?: string;
 }): Promise<void> {
-  p.intro(colors.primary.bold("LoopKit — Market Timing Signal"));
+  ceremonyIntro("Market Timing Signal");
   console.log(shortcutsHint());
 
   try {
@@ -41,7 +41,7 @@ export async function timingCommand(options?: {
       });
 
       if (p.isCancel(input)) {
-        p.outro(colors.muted("Cancelled."));
+        ceremonyOutro("Cancelled.");
         return;
       }
 
@@ -141,5 +141,5 @@ export async function timingCommand(options?: {
     }
   }
 
-  p.outro(colors.muted("Stay aware. Build different."));
+  ceremonyOutro("Stay aware. Build different.");
 }

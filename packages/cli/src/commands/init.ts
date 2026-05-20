@@ -37,6 +37,9 @@ import {
   shortcutsHint,
   ceremonyIntro,
   ceremonyOutro,
+  clog,
+  note,
+  tasks,
 } from "../ui/theme.js";
 import {
   recordBriefCategories,
@@ -75,15 +78,11 @@ export async function initCommand(
     : undefined;
 
   if (options?.template && !selectedTemplate) {
-    console.log(
-      colors.warning(
-        `Template "${options.template}" not found. Available templates:`,
-      ),
-    );
+    clog.warn(`Template "${options.template}" not found. Available templates:`);
     for (const t of getTemplateList()) {
-      console.log(colors.dim(`  • ${t.id}: ${t.name} — ${t.description}`));
+      clog.message(`  • ${t.id}: ${t.name} — ${t.description}`);
     }
-    console.log(colors.muted("  Continuing without a template...\n"));
+    clog.message("Continuing without a template...");
   }
 
   // ─── Check for resume ────────────────────────────────────────
@@ -101,16 +100,19 @@ export async function initCommand(
       });
 
       if (p.isCancel(resume)) {
-    ceremonyOutro("Session cancelled.");
+        if (answers.name || slug) {
+          const currentSlug =
+            slug || slugify((answers.name as string) || "untitled");
+          saveDraft(currentSlug, answers, startQuestion);
+          clog.message(`Session paused. Run \`loopkit init ${currentSlug}\` to resume.`);
+        }
         process.exit(0);
       }
 
       if (resume) {
         answers = draft.partialAnswers;
         startQuestion = draft.lastQuestion;
-        console.log(
-          colors.muted(`  Resuming from question ${startQuestion + 1}/5\n`),
-        );
+        clog.message(`Resuming from question ${startQuestion + 1}/5`);
       }
     } else if (projectExists(slug)) {
       const action = await p.select({
@@ -199,9 +201,7 @@ export async function initCommand(
         const currentSlug =
           slug || slugify((answers.name as string) || "untitled");
         saveDraft(currentSlug, answers, i);
-        console.log(
-          `\n${colors.muted(`Session paused. Run`)} ${colors.primary(`loopkit init ${currentSlug}`)} ${colors.muted("to resume.")}`,
-        );
+        clog.message(`Session paused. Run \`loopkit init ${currentSlug}\` to resume.`);
       }
       process.exit(0);
     }
@@ -231,22 +231,24 @@ export async function initCommand(
 
   const finalAnswers = answers as InitAnswers;
 
-  // ─── AI Analysis ─────────────────────────────────────────────
-
-  const s = p.spinner();
-  s.start("Analyzing your brief...");
-
+  let brief: any = null;
   try {
-    const brief = await generateStructured({
-      command: "init",
-      system: INIT_SYSTEM_PROMPT,
-      prompt: buildInitPrompt(finalAnswers),
-      schema: BriefSchema,
-      tier: "fast",
-      temperature: 0.3,
-    });
-
-    s.stop("Analysis complete.");
+    await tasks([
+      {
+        title: "Analyzing your brief with AI",
+        task: async () => {
+          brief = await generateStructured({
+            command: "init",
+            system: INIT_SYSTEM_PROMPT,
+            prompt: buildInitPrompt(finalAnswers),
+            schema: BriefSchema,
+            tier: "fast",
+            temperature: 0.3,
+          });
+          return "done";
+        },
+      },
+    ]);
 
     // Save
     saveBrief(slug, finalAnswers, brief);
@@ -342,11 +344,7 @@ export async function initCommand(
         `## Backlog\n${scaffoldTasks}\n`,
       );
       writeTasksFile(slug, updated);
-      console.log(
-        info(
-          `Template "${selectedTemplate.name}" applied — ${taskList.length} tasks added to backlog.`,
-        ),
-      );
+      clog.success(`Template "${selectedTemplate.name}" applied — ${taskList.length} tasks added to backlog.`);
     }
 
     // Show trend hint (IE-8.4)
@@ -354,56 +352,55 @@ export async function initCommand(
 
     // ─── Validation mode (if --validate flag is set) ─────────────────
     if (options?.validate) {
-      const vSpinner = p.spinner();
-      vSpinner.start("Running devil's advocate validation...");
-
+      let validation: any = null;
       try {
-        const validation = await generateStructured({
-          command: "init",
-          system: VALIDATION_SYSTEM_PROMPT,
-          prompt: buildValidationPrompt({
-            productName: finalAnswers.name,
-            problem: finalAnswers.problem,
-            icp: finalAnswers.icp,
-            bet: brief.bet,
-            riskiestAssumption: brief.riskiestAssumption,
-            mvpPlainEnglish: brief.mvpPlainEnglish,
-          }),
-          schema: ValidationQuestionsSchema,
-          tier: "fast",
-          temperature: 0.4,
-        });
+        await tasks([
+          {
+            title: "Running devil's advocate validation",
+            task: async () => {
+              validation = await generateStructured({
+                command: "init",
+                system: VALIDATION_SYSTEM_PROMPT,
+                prompt: buildValidationPrompt({
+                  productName: finalAnswers.name,
+                  problem: finalAnswers.problem,
+                  icp: finalAnswers.icp,
+                  bet: brief.bet,
+                  riskiestAssumption: brief.riskiestAssumption,
+                  mvpPlainEnglish: brief.mvpPlainEnglish,
+                }),
+                schema: ValidationQuestionsSchema,
+                tier: "fast",
+                temperature: 0.4,
+              });
+              return "done";
+            },
+          },
+        ]);
 
-        vSpinner.stop("Validation complete.");
-
-        console.log(header("🎯 Devil's Advocate Questions"));
-        console.log(box(validation.questions.map((q, i) => `${i + 1}. ${q}`).join("\n")));
-        console.log(colors.dim(validation.encouragement));
+        clog.step("🎯 Devil's Advocate Questions");
+        console.log(box(validation.questions.map((q: string, i: number) => `${i + 1}. ${q}`).join("\n")));
+        clog.message(validation.encouragement);
 
         const wantIterate = await p.confirm({
           message: "Want to iterate on your brief based on these questions?",
         });
 
         if (!p.isCancel(wantIterate) && wantIterate) {
-          console.log(info("Run `loopkit init --analyze <name>` to update your brief."));
+          clog.info("Run `loopkit init --analyze <name>` to update your brief.");
         }
       } catch {
-        vSpinner.stop("Validation failed.");
-        console.log(colors.warning("AI unavailable — skipping validation."));
+        clog.warn("AI unavailable — skipping validation.");
       }
     }
   } catch (error) {
-    s.stop("AI analysis unavailable.");
+    clog.error("AI analysis unavailable.");
 
     // Save without scores
     saveBrief(slug, finalAnswers);
     deleteDraft(slug);
 
-    console.log(
-      colors.warning(
-        `\n  Saved answers without scoring. Run ${colors.primary(`loopkit init --analyze ${slug}`)} when online.\n`,
-      ),
-    );
+    clog.warn(`Saved answers without scoring. Run \`loopkit init --analyze ${slug}\` when online.`);
 
     const config = readConfig();
     config.activeProject = slug;
@@ -502,6 +499,7 @@ function renderBrief(
   );
 
   console.log(`\n${info(`Saved → .loopkit/projects/${slug}/brief.md`)}`);
+  note("Run loopkit track to plan your first week's tasks.", "Next Step");
 }
 
 // ─── Analyze Existing ───────────────────────────────────────────
@@ -512,40 +510,38 @@ async function analyzeExisting(name: string): Promise<void> {
   const data = readBriefJson(slug);
 
   if (!data) {
-    console.log(
-      colors.danger(`No brief found for "${name}". Run loopkit init first.`),
-    );
+    clog.error(`No brief found for "${name}". Run loopkit init first.`);
     process.exit(1);
   }
 
   if (data.brief) {
-    console.log(
-      colors.warning(
-        `"${name}" already has AI analysis. Run loopkit init to overwrite.`,
-      ),
-    );
+    clog.warn(`"${name}" already has AI analysis. Run loopkit init to overwrite.`);
     return;
   }
 
-  const s = p.spinner();
-  s.start("Running AI analysis on saved answers...");
-
+  let brief: any = null;
   try {
-    const brief = await generateStructured({
-      command: "init",
-      system: INIT_SYSTEM_PROMPT,
-      prompt: buildInitPrompt(data.answers),
-      schema: BriefSchema,
-      tier: "fast",
-      temperature: 0.3,
-    });
+    await tasks([
+      {
+        title: "Running AI analysis on saved answers",
+        task: async () => {
+          brief = await generateStructured({
+            command: "init",
+            system: INIT_SYSTEM_PROMPT,
+            prompt: buildInitPrompt(data.answers),
+            schema: BriefSchema,
+            tier: "fast",
+            temperature: 0.3,
+          });
+          return "done";
+        },
+      },
+    ]);
 
-    s.stop("Analysis complete.");
     saveBrief(slug, data.answers, brief);
     renderBrief(data.answers, brief, slug);
   } catch (error) {
-    s.stop("Analysis failed.");
-    console.log(colors.danger("Could not reach AI. Try again later."));
+    clog.error("Could not reach AI. Try again later.");
   }
 }
 

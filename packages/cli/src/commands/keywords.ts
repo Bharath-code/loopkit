@@ -1,11 +1,11 @@
 import * as p from "@clack/prompts";
 import { readConfig, readBriefJson, listProjects } from "../storage/local.js";
-import { colors, shortcutsHint } from "../ui/theme.js";
+import { colors, shortcutsHint, ceremonyIntro, ceremonyOutro } from "../ui/theme.js";
 import { findKeywords } from "../analytics/keywordFinder.js";
 import { categorizeICP, categorizeProblem } from "../analytics/competitorRadar.js";
 
 export async function keywordsCommand(options?: { category?: string; project?: string }): Promise<void> {
-  p.intro(colors.primary.bold("LoopKit — Keyword Opportunity Finder"));
+  ceremonyIntro("Keyword Opportunity Finder");
   console.log(shortcutsHint());
 
   let category = options?.category;
@@ -41,7 +41,7 @@ export async function keywordsCommand(options?: { category?: string; project?: s
         });
 
         if (p.isCancel(selected)) {
-          p.cancel("Search cancelled.");
+          ceremonyOutro("Search cancelled.");
           return;
         }
 
@@ -60,7 +60,7 @@ export async function keywordsCommand(options?: { category?: string; project?: s
       });
 
       if (p.isCancel(input)) {
-        p.cancel("Search cancelled.");
+        ceremonyOutro("Search cancelled.");
         return;
       }
 
@@ -121,5 +121,5 @@ export async function keywordsCommand(options?: { category?: string; project?: s
     console.log(colors.danger("  Could not fetch keyword data. Check your internet connection."));
   }
 
-  p.outro(colors.muted("Create content that ranks."));
+  ceremonyOutro("Create content that ranks.");
 }

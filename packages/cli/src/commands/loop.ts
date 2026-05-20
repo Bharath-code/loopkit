@@ -29,7 +29,7 @@ import { detectPatterns } from "../analytics/patterns.js";
 import { getPriorityMoment, recordMomentShown } from "../analytics/coach.js";
 import { computeLoopKitScore, renderLoopKitScore, readLoopKitScoreFromLog } from "../analytics/score.js";
 import { buildProofCard, buildTweetLine, copyToClipboard, buildTwitterIntentUrl, openUrl } from "../ui/proof-card.js";
-import { colors, header, box, pass, warn, info, nextStep, scoreBar, shortcutsHint, emptyState, patternCard, coachingCard } from "../ui/theme.js";
+import { colors, header, box, pass, warn, info, nextStep, scoreBar, shortcutsHint, emptyState, patternCard, coachingCard, ceremonyIntro, ceremonyOutro, clog, note, tasks } from "../ui/theme.js";
 
 interface LoopProof {
   previousScore: number;
@@ -53,7 +53,7 @@ export async function loopCommand(options?: { revenue?: string; async?: boolean 
   // ─── --revenue flag: direct MRR save ─────────────────────────
   // Usage: loopkit loop --revenue 240
   if (options?.revenue !== undefined) {
-    p.intro(colors.primary.bold("LoopKit — Revenue Update"));
+    ceremonyIntro("Revenue Update");
     const parsed = parseFloat(String(options.revenue).replace(/[^0-9.]/g, ""));
     if (Number.isNaN(parsed) || parsed < 0) {
       console.log(colors.danger(`Invalid amount: "${options.revenue}". Use a number like --revenue 240`));
@@ -81,7 +81,7 @@ export async function loopCommand(options?: { revenue?: string; async?: boolean 
           : "";
       console.log(pass(`MRR logged: $${parsed}${deltaStr}`));
     }
-    p.outro(colors.success.bold("Revenue saved. Keep shipping. 🚀"));
+    ceremonyOutro("Revenue saved. Keep shipping. 🚀");
     return;
   }
 
@@ -91,7 +91,7 @@ export async function loopCommand(options?: { revenue?: string; async?: boolean 
   const isSunday = dayOfWeek === 0;
   const isAsync = options?.async;
 
-  p.intro(colors.primary.bold(`LoopKit — Week ${weekNum} Review${isAsync ? " (Async Mode)" : ""}`));
+  ceremonyIntro(isAsync ? `Week ${weekNum} Review (Async Mode)` : `Week ${weekNum} Review`);
 
   console.log(shortcutsHint());
 
@@ -116,7 +116,7 @@ export async function loopCommand(options?: { revenue?: string; async?: boolean 
         saveAutoLoopDraft(slug, autoDraft);
         console.log(pass(`Week ${autoDraft.weekNumber} auto-loop saved.`));
         console.log(colors.dim("  Run `loopkit loop` again for full AI synthesis."));
-        p.outro(colors.muted("Auto-loop complete. See you next Sunday."));
+        ceremonyOutro("Auto-loop complete. See you next Sunday.");
         return;
       } else {
         console.log(info("Skipping auto-loop. Running full loop instead."));
@@ -277,7 +277,7 @@ export async function loopCommand(options?: { revenue?: string; async?: boolean 
       }
     }
 
-    p.outro(colors.muted(`Week ${weekNum} baseline set. See you next Sunday.`));
+    ceremonyOutro(`Week ${weekNum} baseline set. See you next Sunday.`);
     return;
   }
 
@@ -353,7 +353,7 @@ export async function loopCommand(options?: { revenue?: string; async?: boolean 
     });
 
     if (p.isCancel(runFull) || !runFull) {
-      p.outro(colors.muted("Check back Sunday for full loop."));
+      ceremonyOutro("Check back Sunday for full loop.");
       return;
     }
   }
@@ -369,45 +369,127 @@ export async function loopCommand(options?: { revenue?: string; async?: boolean 
         if (dateMatch) {
           const lastLogDate = new Date(dateMatch[1]);
           const daysSinceLastLoop = Math.floor((today.getTime() - lastLogDate.getTime()) / (1000 * 60 * 60 * 24));
-
           if (daysSinceLastLoop > 7) {
-            console.log(colors.warning(`\n  Warning: It's been ${daysSinceLastLoop} days since your last loop.`));
-            console.log(colors.dim("  Async mode allows up to 7 days. Your streak may be affected.\n"));
+            clog.warn(`It's been ${daysSinceLastLoop} days since your last loop. Async mode allows up to 7 days. Your streak may be affected.`);
           }
         }
       }
     }
   }
 
-  // ─── AI Synthesis ────────────────────────────────────────────
-  const s = p.spinner();
-  s.start("Synthesizing your week...");
+  // ─── AI Synthesis via p.tasks() ───────────────────────────
+  // Three clearly-labelled stages keep the user informed the whole time.
+  // Each task captures its result into the outer scope so we can render below.
+  let synthesis: Awaited<ReturnType<typeof generateStructured>> | null = null;
+  let synthesisError: unknown = null;
 
-  try {
-    const synthesis = await generateStructured({
-      command: "loop",
-      system: LOOP_SYSTEM_PROMPT,
-      prompt: buildLoopPrompt({
-        productName: briefData?.answers.name || slug,
+  await tasks([
+    {
+      title: "Reading your week’s data",
+      task: async (_message) => {
+        // Data has already been read above — this stage shows the user we’re
+        // loading context before sending to the AI.
+        await new Promise((r) => setTimeout(r, 120));
+        return `${tasksCompleted.length} completed, ${tasksOpen.length} open`;
+      },
+    },
+    {
+      title: "Synthesising with AI",
+      task: async () => {
+        try {
+          synthesis = await generateStructured({
+            command: "loop",
+            system: LOOP_SYSTEM_PROMPT,
+            prompt: buildLoopPrompt({
+              productName: briefData?.answers.name || slug,
+              weekNumber: weekNum,
+              bet: briefData?.brief?.bet,
+              riskiestAssumption: briefData?.brief?.riskiestAssumption,
+              tasksCompleted,
+              tasksOpen,
+              shipLog: shipLog || undefined,
+              pulseData,
+              previousWeeks: previousWeeks.length > 0 ? previousWeeks : undefined,
+            }),
+            schema: LoopSynthesisSchema,
+            tier: "fast",
+            temperature: 0.3,
+          });
+          return "done";
+        } catch (err) {
+          synthesisError = err;
+          return "failed";
+        }
+      },
+    },
+    {
+      title: "Saving loop log",
+      task: async () => {
+        if (!synthesis) return "skipped (synthesis failed)";
+        const logContent = [
+          `# Week ${weekNum} — ${formatDate()} | project:${slug}`,
+          "",
+          "## Summary",
+          `- Tasks completed: ${tasksCompleted.length}`,
+          `- Tasks open: ${tasksOpen.length}`,
+          `- Shipping score: ${shippingScore}%`,
+          `- Shipped Friday: ${shipLog ? "Yes" : "No"}`,
+          `- Score delta: ${formatScoreDelta(proof.scoreDelta)}`,
+          `- Weeks active: ${proof.weeksActive}`,
+          `- Decisions made: ${proof.decisionsMade}`,
+          `- Feedback responses: ${proof.feedbackResponses}`,
+          `- Feedback acted on: ${proof.feedbackActedOn ? "Yes" : "No"}`,
+        ].join("\n");
+        // Full log is saved later after synthesis is confirmed below
+        void logContent;
+        return `week-${weekNum}.md ready`;
+      },
+    },
+  ]);
+
+  if (synthesisError || !synthesis) {
+    // Fallback path
+    clog.error("AI unavailable. Saving week data without synthesis.");
+    const logContent = [
+      `# Week ${weekNum} — ${formatDate()} | project:${slug}`,
+      "",
+      `- Tasks completed: ${tasksCompleted.length}`,
+      `- Tasks open: ${tasksOpen.length}`,
+      `- Shipping score: ${shippingScore}%`,
+      `- Feedback acted on: ${proof.feedbackActedOn ? "Yes" : "No"}`,
+      "",
+      "_AI synthesis unavailable._",
+    ].join("\n");
+
+    saveLoopLog(weekNum, logContent);
+    clog.info(`Fallback log saved → .loopkit/logs/week-${weekNum}.md`);
+
+    const convexProjectId3 = getConvexProjectId(slug);
+    if (convexProjectId3) {
+      await pushLoopLogToConvex({
+        projectId: convexProjectId3,
         weekNumber: weekNum,
-        bet: briefData?.brief?.bet,
-        riskiestAssumption: briefData?.brief?.riskiestAssumption,
-        tasksCompleted,
-        tasksOpen,
-        shipLog: shipLog || undefined,
-        pulseData,
-        previousWeeks: previousWeeks.length > 0 ? previousWeeks : undefined,
-      }),
-      schema: LoopSynthesisSchema,
-      tier: "fast",
-      temperature: 0.3,
-    });
+        date: formatDate(),
+        tasksCompleted: tasksCompleted.length,
+        tasksTotal: totalTasks,
+        shippingScore,
+        proof,
+        overridden: false,
+      });
+    }
 
-    s.stop("Synthesis complete.");
-
+    // Still show pattern interrupt even when AI is down
+    const patternResultOffline = detectPatterns(slug);
+    if (patternResultOffline) {
+      console.log(patternCard(patternResultOffline.patterns, patternResultOffline.totalWeeks));
+    }
+  } else {
     // ─── Show week reward + proof ────────────────────────────────
-    console.log(header("What Moved Forward"));
-    console.log(box([synthesis.weekWin, "", colors.dim(synthesis.founderNote)].join("\n"), `Week ${weekNum}`));
+    clog.step("What Moved Forward");
+    note(
+      [synthesis.weekWin, "", colors.dim(synthesis.founderNote)].join("\n"),
+      `Week ${weekNum}`
+    );
     renderProof(proof);
 
     // ─── LoopKit Score™ (GF-1) ──────────────────────────────────
@@ -481,18 +563,16 @@ export async function loopCommand(options?: { revenue?: string; async?: boolean 
         }
         const { writeTasksFile } = await import("../storage/local.js");
         writeTasksFile(slug, updated);
-        console.log(pass(`Set as next week's #1: "${finalOneThing}"`));
+        clog.success(`Set as next week's #1: "${finalOneThing}"`);
       }
     }
 
     // ─── BIP Post ───────────────────────────────────────────────
-    console.log(header("Build-in-Public Post"));
-    console.log(box(synthesis.bipPost));
+    clog.step("Build-in-Public Post");
+    note(synthesis.bipPost, "Copy → paste → tweet");
 
     const charCount = synthesis.bipPost.length;
-    console.log(
-      colors.dim(`  ${charCount}/280 characters${charCount > 280 ? colors.warning(" ⚠ over limit") : ""}`)
-    );
+    clog.message(`${charCount}/280 characters${charCount > 280 ? " ⚠ over limit" : ""}`);
 
     const postAction = await p.select({
       message: "Share this post:",
@@ -508,11 +588,11 @@ export async function loopCommand(options?: { revenue?: string; async?: boolean 
         const bipCopied = await copyToClipboard(synthesis.bipPost);
         const twitterUrl = buildTwitterIntentUrl(synthesis.bipPost);
         await openUrl(twitterUrl);
-        console.log(pass("Opened X/Twitter in browser."));
-        if (bipCopied) console.log(colors.dim("  (Also copied to clipboard as fallback.)"));
+        clog.success("Opened X/Twitter in browser.");
+        if (bipCopied) clog.message("(Also copied to clipboard as fallback.)");
       } else if (postAction === "copy") {
         const bipCopied = await copyToClipboard(synthesis.bipPost);
-        if (bipCopied) console.log(pass("BIP post copied to clipboard."));
+        if (bipCopied) clog.success("BIP post copied to clipboard.");
       }
     }
 
@@ -535,12 +615,12 @@ export async function loopCommand(options?: { revenue?: string; async?: boolean 
     const proofCardText = buildProofCard(proofCardData);
     const tweetLine = buildTweetLine(proofCardData);
 
-    console.log(header("Proof Card"));
+    clog.step("Proof Card");
     console.log(box(proofCardText, `Week ${weekNum} Card`));
 
     const cardCopied = await copyToClipboard(tweetLine);
     if (cardCopied) {
-      console.log(pass("Tweet line copied to clipboard."));
+      clog.success("Tweet line copied to clipboard.");
     }
 
     const cardShareAction = await p.select({
@@ -554,11 +634,11 @@ export async function loopCommand(options?: { revenue?: string; async?: boolean 
     if (!p.isCancel(cardShareAction) && cardShareAction === "twitter") {
       const twitterUrl = buildTwitterIntentUrl(tweetLine);
       await openUrl(twitterUrl);
-      console.log(pass("Opened X/Twitter in browser!"));
+      clog.success("Opened X/Twitter in browser!");
     }
 
 
-    // ─── Save loop log ──────────────────────────────────────────
+    // ─── Save full loop log ────────────────────────────────────
     const logContent = [
       `# Week ${weekNum} — ${formatDate()} | project:${slug}`,
       "",
@@ -593,7 +673,7 @@ export async function loopCommand(options?: { revenue?: string; async?: boolean 
     ].join("\n");
 
     saveLoopLog(weekNum, logContent);
-    console.log(info(`Loop log saved → .loopkit/logs/week-${weekNum}.md`));
+    clog.success(`Loop log saved → .loopkit/logs/week-${weekNum}.md`);
 
     const convexProjectId2 = getConvexProjectId(slug);
     if (convexProjectId2) {
@@ -664,11 +744,8 @@ export async function loopCommand(options?: { revenue?: string; async?: boolean 
         });
 
         if (!p.isCancel(wantReferral) && wantReferral) {
-          // Generate referral code and show it
           const referralCode = generateReferralCode();
-          console.log(info(`Your referral link: loopkit.dev/r/${referralCode}`));
-          console.log(colors.dim("Share this link — when a friend signs up, you both get 1 month free."));
-          
+          note(`loopkit.dev/r/${referralCode}\n\nShare this link — when a friend signs up, you both get 1 month free.`, "Your Referral Link 🎁");
           config.referralShown = true;
           config.referralCode = referralCode;
           const { writeConfig } = await import("../storage/local.js");
@@ -694,50 +771,10 @@ export async function loopCommand(options?: { revenue?: string; async?: boolean 
     });
 
     await maybeShowUpgradeIntent(proof);
-  } catch (error) {
-    s.stop("Synthesis failed.");
-    console.log(colors.danger("AI unavailable. Saving week data without synthesis."));
-
-    const logContent = [
-      `# Week ${weekNum} — ${formatDate()} | project:${slug}`,
-      "",
-      `- Tasks completed: ${tasksCompleted.length}`,
-      `- Tasks open: ${tasksOpen.length}`,
-      `- Shipping score: ${shippingScore}%`,
-      `- Score delta: ${formatScoreDelta(proof.scoreDelta)}`,
-      `- Weeks active: ${proof.weeksActive}`,
-      `- Decisions made: ${proof.decisionsMade}`,
-      `- Feedback responses: ${proof.feedbackResponses}`,
-      `- Feedback acted on: ${proof.feedbackActedOn ? "Yes" : "No"}`,
-      "",
-      "_AI synthesis unavailable._",
-    ].join("\n");
-
-    saveLoopLog(weekNum, logContent);
-
-    const convexProjectId3 = getConvexProjectId(slug);
-    if (convexProjectId3) {
-      await pushLoopLogToConvex({
-        projectId: convexProjectId3,
-        weekNumber: weekNum,
-        date: formatDate(),
-        tasksCompleted: tasksCompleted.length,
-        tasksTotal: totalTasks,
-        shippingScore,
-        proof,
-        overridden: false,
-      });
-    }
-
-    // Still show pattern interrupt even when AI is down
-    const patternResultOffline = detectPatterns(slug);
-    if (patternResultOffline) {
-      console.log(patternCard(patternResultOffline.patterns, patternResultOffline.totalWeeks));
-    }
   }
 
   console.log(nextStep("track"));
-  p.outro(colors.muted(`Week ${weekNum} closed. You made the next move visible.`));
+  ceremonyOutro(`Week ${weekNum} closed. You made the next move visible.`);
 }
 
 // ─── Proof Loop Helpers ──────────────────────────────────────────

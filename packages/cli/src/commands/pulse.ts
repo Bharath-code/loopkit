@@ -20,6 +20,8 @@ import {
   nextStep,
   shortcutsHint,
   emptyState,
+  ceremonyIntro,
+  ceremonyOutro,
 } from "../ui/theme.js";
 
 interface PulseOptions {
@@ -152,7 +154,7 @@ export async function pulseCommand(options: PulseOptions): Promise<void> {
 
   // ─── --setup: Explain how to collect feedback ─────────────────
   if (options.setup) {
-    p.intro(colors.primary.bold("LoopKit — Pulse Setup"));
+    ceremonyIntro("Pulse Setup");
 
     if (!slug) {
       console.log(
@@ -178,11 +180,11 @@ export async function pulseCommand(options: PulseOptions): Promise<void> {
       ),
     );
 
-    p.outro(colors.muted("Collect at least 5 responses for AI clustering."));
+    ceremonyOutro("Collect at least 5 responses for AI clustering.");
     return;
   }
 
-  p.intro(colors.primary.bold("LoopKit — Pulse"));
+  ceremonyIntro("Pulse");
   console.log(shortcutsHint());
 
   // ─── Read responses ───────────────────────────────────────────
@@ -201,7 +203,7 @@ export async function pulseCommand(options: PulseOptions): Promise<void> {
         "  After 7 days with 0 responses: is your feedback channel visible?\n",
       ),
     );
-    p.outro("");
+    ceremonyOutro("");
     return;
   }
 
@@ -225,7 +227,7 @@ export async function pulseCommand(options: PulseOptions): Promise<void> {
         "\n  Tip: Your feedback channel may need better placement.\n",
       ),
     );
-    p.outro("");
+    ceremonyOutro("");
     return;
   }
 
@@ -297,5 +299,5 @@ export async function pulseCommand(options: PulseOptions): Promise<void> {
   }
 
   console.log(nextStep("loop"));
-  p.outro("");
+  ceremonyOutro("");
 }

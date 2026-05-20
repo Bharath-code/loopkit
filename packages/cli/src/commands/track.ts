@@ -25,7 +25,7 @@ import { computeBenchmarks, renderBenchmarks } from "../analytics/benchmarks.js"
 import { getSnoozeWarning } from "../analytics/oracle.js";
 import { getPriorityMoment, recordMomentShown } from "../analytics/coach.js";
 import { computeLoopKitScore } from "../analytics/score.js";
-import { colors, header, pass, warn, info, nextStep, shortcutsHint, emptyState, coachingCard, standupCard } from "../ui/theme.js";
+import { colors, header, pass, warn, info, clog, nextStep, shortcutsHint, emptyState, coachingCard, standupCard, ceremonyIntro, ceremonyOutro } from "../ui/theme.js";
 
 export async function trackCommand(options?: {
   add?: string;
@@ -40,21 +40,21 @@ export async function trackCommand(options?: {
   if (options?.project) {
     const newProject = slugify(options.project);
     if (!projectExists(newProject)) {
-      console.log(colors.danger(`Project "${options.project}" does not exist.`));
+      clog.error(`Project "${options.project}" does not exist.`);
       process.exit(1);
     }
     
     config.activeProject = newProject;
     const { writeConfig } = await import("../storage/local.js");
     writeConfig(config);
-    console.log(colors.success(`Switched active project to: ${colors.primary(options.project)}`));
+    clog.success(`Switched active project to: ${colors.primary(options.project)}`);
     // Continue running track for the new project
   }
 
   const slug = config.activeProject;
 
   if (!slug) {
-    console.log(colors.danger("No active project. Run `loopkit init` first."));
+    clog.error("No active project. Run `loopkit init` first.");
     process.exit(1);
   }
 
@@ -85,7 +85,7 @@ export async function trackCommand(options?: {
   if (!content) {
     createTasksScaffold(slug, slug);
     content = readTasksFile(slug)!;
-    console.log(info("Created tasks.md — add your first task."));
+    clog.info("Created tasks.md — add your first task.");
   }
 
   // ─── Install git hook if needed ───────────────────────────────
@@ -127,10 +127,10 @@ export async function trackCommand(options?: {
   const diffTime = now.getTime() - refDate.getTime();
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
   if (diffDays > 14) {
-    console.log(colors.danger(`  ⚠️  SHIPPING BLOCK ACTIVE: You haven't shipped in ${diffDays} days! Task addition is locked unless overridden.\n`));
+    clog.error(`  ⚠️  SHIPPING BLOCK ACTIVE: You haven't shipped in ${diffDays} days! Task addition is locked unless overridden.`);
   }
 
-  console.log(header("This Week"));
+  clog.step("This Week");
 
   if (visibleOpen.length === 0 && done.length === 0 && snoozedActive.length === 0) {
     console.log(
@@ -156,14 +156,14 @@ export async function trackCommand(options?: {
 
   // ─── Resurfaced tasks (snooze expired) ───────────────────────
   if (resurfaced.length > 0) {
-    console.log(colors.warning(`\n  ↑ ${resurfaced.length} snoozed task(s) resurfaced today:`));
+    clog.warn(`↑ ${resurfaced.length} snoozed task(s) resurfaced today:`);
     for (const task of resurfaced) {
       console.log(`    ${colors.warning("○")} #${task.id} ${task.title}`);
     }
   }
 
   if (backlogTasks.length > 0) {
-    console.log(header("Backlog"));
+    clog.step("Backlog");
     for (const task of backlogTasks) {
       const status = task.done ? pass("") : colors.muted("○");
       console.log(`  ${status} #${task.id} ${task.title}`);
@@ -198,9 +198,9 @@ export async function trackCommand(options?: {
   if (shippingScore >= 50 && shippingScore <= 70 && visibleOpen.length === 2) {
     const tasksLeft = visibleOpen.length;
     const potentialScore = Math.round(((done.length + tasksLeft) / weekTasks.length) * 100);
-    console.log(colors.warning(`\n  Almost there — ${tasksLeft} tasks left to hit ${potentialScore}%.`));
-    console.log(colors.dim(`  → loopkit track #${visibleOpen[0].id} --done  (if you finished it)`));
-    console.log(colors.dim(`  → loopkit track #${visibleOpen[0].id} --snooze tomorrow`));
+    clog.warn(`Almost there — ${tasksLeft} tasks left to hit ${potentialScore}%.`);
+    clog.message(`  → loopkit track #${visibleOpen[0].id} --done  (if you finished it)`);
+    clog.message(`  → loopkit track #${visibleOpen[0].id} --snooze tomorrow`);
   }
 
   // ─── LoopKit Score™ (GF-1) ─────────────────────────────────
@@ -223,7 +223,7 @@ export async function trackCommand(options?: {
   // ─── Smart Benchmarks ──────────────────────────────────────────
   const benchmarks = computeBenchmarks();
   if (benchmarks && benchmarks.metrics.totalWeeks >= 4) {
-    console.log(header("Benchmarks"));
+    clog.step("Benchmarks");
     console.log(renderBenchmarks(benchmarks));
   }
 
@@ -247,7 +247,7 @@ export async function trackCommand(options?: {
           snoozeTask(slug, task.id, 3, today);
           const oracleWarning = getSnoozeWarning();
           if (oracleWarning) {
-            console.log(colors.dim(`\n  🔮 Snooze Oracle: ${oracleWarning}`));
+            clog.message(`🔮 Snooze Oracle: ${oracleWarning}`);
           }
         }
       }
@@ -260,16 +260,16 @@ export async function trackCommand(options?: {
 // ─── GF-3: Daily Standup Flow ────────────────────────────────────────
 
 async function runStandupFlow(slug: string): Promise<void> {
-  p.intro(colors.primary.bold("LoopKit — Daily Standup"));
+  ceremonyIntro("Daily Standup");
 
   const today = formatDate();
 
   // ── Guard: already checked in today ────────────────────────────
   const existing = readStandup(today);
   if (existing) {
-    console.log(pass(`Already checked in today (${today}).`));
-    console.log(colors.muted(`  Today's #1: "${existing.taskToday}"`));
-    p.outro(colors.muted("Come back tomorrow. You're building a habit."));
+    clog.success(`Already checked in today (${today}).`);
+    clog.message(`Today's #1: "${existing.taskToday}"`);
+    ceremonyOutro("Come back tomorrow. You're building a habit.");
     return;
   }
 
@@ -292,14 +292,14 @@ async function runStandupFlow(slug: string): Promise<void> {
 
   // ── Show context ────────────────────────────────────────
   if (openTasks.length > 0) {
-    console.log(colors.muted(`\n  ${openTasks.length} open task${openTasks.length !== 1 ? "s" : ""} this week:`));
-    openTasks.slice(0, 5).forEach((t) => console.log(`    ${colors.muted("○")} ${t}`));
+    clog.message(`${openTasks.length} open task${openTasks.length !== 1 ? "s" : ""} this week:`);
+    openTasks.slice(0, 5).forEach((t) => clog.log(`    ${colors.muted("○")} ${t}`));
     if (openTasks.length > 5) {
-      console.log(colors.dim(`    … and ${openTasks.length - 5} more`));
+      clog.message(`  … and ${openTasks.length - 5} more`);
     }
-    console.log("");
+    clog.log("");
   } else {
-    console.log(info("No open tasks yet. Add some with `loopkit track --add “task”`"));
+    clog.info("No open tasks yet. Add some with `loopkit track --add “task”`");
   }
 
   // ── The one question that matters ────────────────────────────
@@ -312,7 +312,7 @@ async function runStandupFlow(slug: string): Promise<void> {
   });
 
   if (p.isCancel(taskToday)) {
-    p.outro(colors.muted("Standup cancelled. Come back when ready."));
+    ceremonyOutro("Standup cancelled. Come back when ready.");
     return;
   }
 
@@ -337,7 +337,7 @@ async function runStandupFlow(slug: string): Promise<void> {
     loopkitScore: scoreBreakdown?.score ?? null,
   }));
 
-  p.outro(colors.success.bold("Standup locked in. Go build. 🚀"));
+  ceremonyOutro("Standup locked in. Go build. 🚀");
 }
 
 // ─── Task Parser ─────────────────────────────────────────────────
@@ -411,8 +411,8 @@ async function handleShippingBlock(slug: string): Promise<boolean> {
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
   
   if (diffDays > 14) {
-    console.log(colors.danger(`\n⚠️  SHIPPING BLOCK: You haven't shipped in ${diffDays} days!`));
-    console.log(colors.muted("To maintain momentum, you should ship at least once every 14 days.\n"));
+    clog.error(`⚠️  SHIPPING BLOCK: You haven't shipped in ${diffDays} days!`);
+    clog.message("To maintain momentum, you should ship at least once every 14 days.");
     
     const override = await p.confirm({
       message: "Do you want to override this block and add the task anyway?",
@@ -421,7 +421,7 @@ async function handleShippingBlock(slug: string): Promise<boolean> {
     });
     
     if (p.isCancel(override) || !override) {
-      console.log(colors.warning("Task addition canceled. Run `loopkit ship` first."));
+      clog.warn("Task addition canceled. Run `loopkit ship` first.");
       return false;
     }
     
@@ -432,11 +432,11 @@ async function handleShippingBlock(slug: string): Promise<boolean> {
     });
     
     if (p.isCancel(reason) || !reason) {
-      console.log(colors.warning("Task addition canceled. Reason required."));
+      clog.warn("Task addition canceled. Reason required.");
       return false;
     }
     
-    console.log(colors.success(`Override registered. Reason: "${reason}"`));
+    clog.success(`Override registered. Reason: "${reason}"`);
   }
   return true;
 }
@@ -477,7 +477,7 @@ async function addTask(slug: string, title: string, skipBlockCheck = false): Pro
   // Store createdAt in metadata so age tracking works across runs
   lines.splice(insertIndex, 0, `- [ ] #${newId} ${title} — created:${today}`);
   writeTasksFile(slug, lines.join("\n"));
-  console.log(pass(`Added #${newId}: ${title}`));
+  clog.success(`Added #${newId}: ${title}`);
 }
 
 async function addTasksViaEditor(slug: string): Promise<void> {
@@ -501,7 +501,7 @@ async function addTasksViaEditor(slug: string): Promise<void> {
   const result = spawnSync(editor, [tmpFile], { stdio: "inherit" });
 
   if (result.error) {
-    console.log(colors.danger(`Could not open ${editor}: ${result.error.message}`));
+    clog.error(`Could not open ${editor}: ${result.error.message}`);
     try { fs.unlinkSync(tmpFile); } catch { /* ignore */ }
     return;
   }
@@ -514,7 +514,7 @@ async function addTasksViaEditor(slug: string): Promise<void> {
     .filter((l) => l.length > 0 && !l.startsWith("#"));
 
   if (lines.length === 0) {
-    console.log(colors.muted("No tasks entered."));
+    clog.message("No tasks entered.");
     return;
   }
 
@@ -546,7 +546,7 @@ function cutTask(slug: string, taskId: number, taskTitle: string, today: string)
   // Write to cut.md archive first (data safety before deletion)
   appendToCut(slug, archivedLine || `#${taskId} ${taskTitle}`, today);
   writeTasksFile(slug, updated.join("\n"));
-  console.log(warn(`#${taskId} cut → archived to .loopkit/projects/${slug}/cut.md`));
+  clog.warn(`#${taskId} cut → archived to .loopkit/projects/${slug}/cut.md`);
 }
 
 /**
@@ -576,13 +576,13 @@ function snoozeTask(slug: string, taskId: number, days: number, today: string): 
   });
 
   writeTasksFile(slug, lines.join("\n"));
-  console.log(info(`#${taskId} snoozed until ${snoozedUntil}`));
+  clog.info(`#${taskId} snoozed until ${snoozedUntil}`);
 }
 
 function repairTasks(slug: string): void {
   const content = readTasksFile(slug);
   if (!content) {
-    console.log(colors.muted("No tasks.md to repair."));
+    clog.message("No tasks.md to repair.");
     return;
   }
 
@@ -597,7 +597,7 @@ function repairTasks(slug: string): void {
   });
 
   writeTasksFile(slug, repaired.join("\n"));
-  console.log(pass(`Repaired tasks.md — ${nextId - 1} tasks re-numbered.`));
+  clog.success(`Repaired tasks.md — ${nextId - 1} tasks re-numbered.`);
 }
 
 // ─── Git Hook ────────────────────────────────────────────────────
@@ -605,8 +605,8 @@ function repairTasks(slug: string): void {
 function installGitHook(): void {
   const gitDir = path.join(process.cwd(), ".git");
   if (!fs.existsSync(gitDir)) {
-    console.log(warn("No git repo — auto-close from commits disabled."));
-    console.log(colors.muted("  Run `git init` to enable commit-to-task sync.\n"));
+    clog.warn("No git repo — auto-close from commits disabled.");
+    clog.message("Run `git init` to enable commit-to-task sync.");
     return;
   }
 
@@ -700,7 +700,7 @@ function renderWeekSummary(
   const done = weekTasks.filter((t) => t.done);
   const open = weekTasks.filter((t) => !t.done);
 
-  console.log(header(`Week Summary — ${slug}`));
+  clog.step(`Week Summary — ${slug}`);
   console.log(`  ${colors.white("Planned:")} ${weekTasks.length}`);
   console.log(`  ${colors.success("Completed:")} ${done.length}`);
   console.log(`  ${colors.warning("Open:")} ${open.length}`);
@@ -712,14 +712,14 @@ function renderWeekSummary(
   // Benchmarks in week summary
   const weekBenchmarks = computeBenchmarks();
   if (weekBenchmarks && weekBenchmarks.metrics.totalWeeks >= 4) {
-    console.log(header("Benchmarks"));
+    clog.step("Benchmarks");
     console.log(renderBenchmarks(weekBenchmarks));
   }
 
   if (done.length > 0) {
-    console.log(header("Completed"));
+    clog.step("Completed");
     for (const task of done) {
-      console.log(`  ${pass(`#${task.id} ${task.title}`)}`);
+      clog.success(`#${task.id} ${task.title}`);
     }
   }
 

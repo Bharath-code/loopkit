@@ -5,14 +5,24 @@
  * It re-exports everything from the design system modules so commands
  * only need to import from one place:
  *
- *   import { colors, box, header, ... } from "../ui/theme.js";
+ *   import { colors, box, header, clog, ... } from "../ui/theme.js";
  *
  * All new code should prefer importing directly from:
  *   - ui/tokens.ts    — colors, symbols, spacing, typography
  *   - ui/layout.ts    — box, table, kv, badge, divider, gradient, ...
  *   - ui/ceremony.ts  — success, error, aiThinking, weekSummaryCard, ...
  *   - ui/prompts.ts   — requireInput, steppedText, confirm, select, ...
+ *
+ * clack primitives re-exported for direct use in commands:
+ *   - clog            — p.log.* (keep all output inside the frame)
+ *   - note            — p.note() (info panel)
+ *   - tasks           — p.tasks() (Vercel-style task list)
+ *   - group           — p.group() (Linear-style grouped prompts)
+ *   - multiselect     — p.multiselect() (checkbox multi-pick)
+ *   - password        — p.password() (masked secure input)
  */
+
+import * as p from "@clack/prompts";
 
 import {
   token,
@@ -73,6 +83,9 @@ export {
   briefCard,
   onboardingStep,
   shipCelebration,
+  // Named aliases so commands import from one place
+  intro as ceremonyIntro,
+  outro as ceremonyOutro,
 } from "./ceremony.js";
 
 export {
@@ -114,10 +127,63 @@ export function box(
 
 // ─── Section Headers ─────────────────────────────────────────────
 
-/** Level-1 header — violet bold with leading newline */
+/** Level-1 section header — rendered as a clack `step` inside a ceremony frame. */
 export function header(text: string): string {
   return `\n${token.brandBold(text)}\n`;
 }
+
+// ─── p.log.* Facade — keep ALL output inside the clack frame ─────
+//
+// Never use raw console.log inside a ceremony. Use clog.*  instead.
+// These map 1-to-1 to @clack/prompts log methods so output stays
+// indented and framed between intro/outro.
+//
+// Usage:
+//   clog.success("Project created!")     ← green ✓
+//   clog.info("Connecting to API…")      ← blue ℹ
+//   clog.warn("No tasks found.")         ← yellow ⚠
+//   clog.error("Auth failed.")           ← red ✗
+//   clog.step("Setting up git hook…")    ← bold section label
+//   clog.message("Some dimmed detail")   ← neutral, no symbol
+
+export const clog = {
+  /** Green ✓  — task completed, file saved, action done */
+  success: (msg: string): void => p.log.success(msg),
+  /** Blue ℹ  — neutral status, counts, context */
+  info:    (msg: string): void => p.log.info(msg),
+  /** Yellow ⚠ — degraded state, soft warning, non-blocking */
+  warn:    (msg: string): void => p.log.warn(msg),
+  /** Red ✗   — failure, missing data, blocking error */
+  error:   (msg: string): void => p.log.error(msg),
+  /** Bold label — section header inside a running command */
+  step:    (msg: string): void => p.log.step(msg),
+  /** Neutral — decorative line, dim detail, no symbol */
+  message: (msg: string): void => p.log.message(msg),
+} as const;
+
+// ─── clack primitive re-exports ──────────────────────────────────
+// Import these in commands instead of `import * as p`.
+
+/** Structured info panel — Stripe CLI "here's your key" moment */
+export const note = p.note;
+
+/** Vercel-style task list with ticks — multi-step async flow */
+export const tasks = p.tasks;
+
+/** Linear-style grouped prompts — collect all inputs then submit */
+export const group = p.group;
+
+/** Checkbox multi-pick — platform selection, tag selection, etc. */
+export const multiselect = p.multiselect;
+
+/** Masked secure input — API keys, tokens, passwords */
+export const password = p.password;
+
+/** Low-level spinner — for fine-grained async control */
+export const spinner = p.spinner;
+
+/** Cancel sentinel check */
+export const isCancel = p.isCancel;
 
 /** Level-2 header — white bold */
 export function subheader(text: string): string {

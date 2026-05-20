@@ -1,13 +1,13 @@
 import { Command } from "commander";
 import * as p from "@clack/prompts";
-import { colors } from "../ui/theme";
+import { colors, ceremonyIntro, ceremonyOutro } from "../ui/theme.js";
 import { readConfig, writeConfig } from "../storage/local";
 
 export const authCommand = new Command("auth")
   .description("Authenticate LoopKit CLI with your web account")
   .action(async () => {
     console.clear();
-    p.intro(colors.primary(" LoopKit Auth "));
+    ceremonyIntro("Auth");
 
     try {
       const s = p.spinner();
@@ -57,7 +57,7 @@ export const authCommand = new Command("auth")
 
       if (!token) {
         s.stop("Authentication timed out.");
-        p.cancel("Please try running loopkit auth again.");
+        ceremonyOutro("Authentication timed out. Please try running loopkit auth again.");
         process.exit(1);
       }
 
@@ -68,10 +68,10 @@ export const authCommand = new Command("auth")
       config.auth = { apiKey: token };
       writeConfig(config);
 
-      p.outro(colors.success("You are now logged in and ready to ship."));
+      ceremonyOutro("You are now logged in and ready to ship.");
 
     } catch (err) {
-      p.cancel(`Authentication failed: ${err instanceof Error ? err.message : "Unknown error"}`);
+      ceremonyOutro(`Authentication failed: ${err instanceof Error ? err.message : "Unknown error"}`);
       process.exit(1);
     }
   });

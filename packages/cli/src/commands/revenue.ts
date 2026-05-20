@@ -14,7 +14,7 @@ import {
   readRevenueHistory,
   getLatestMRR,
 } from "../storage/local.js";
-import { colors, header, box, pass, info } from "../ui/theme.js";
+import { colors, header, box, pass, info, ceremonyIntro, ceremonyOutro } from "../ui/theme.js";
 
 // ─── Command ────────────────────────────────────────────────────
 
@@ -34,12 +34,12 @@ export async function revenueCommand(options?: RevenueOptions): Promise<void> {
     process.exit(1);
   }
 
-  p.intro(colors.primary.bold("LoopKit — Revenue Tracker"));
+  ceremonyIntro("Revenue Tracker");
 
   // ── Show log ─────────────────────────────────────────────────
   if (options?.log) {
     renderRevenueHistory();
-    p.outro(colors.muted("Revenue log complete."));
+    ceremonyOutro("Revenue log complete.");
     return;
   }
 
@@ -51,7 +51,7 @@ export async function revenueCommand(options?: RevenueOptions): Promise<void> {
       process.exit(1);
     }
     await saveRevenueEntry(parsed, slug);
-    p.outro(colors.success.bold("Revenue logged. Keep shipping. 🚀"));
+    ceremonyOutro("Revenue logged. Keep shipping. 🚀");
     return;
   }
 
@@ -71,7 +71,7 @@ export async function revenueCommand(options?: RevenueOptions): Promise<void> {
   });
 
   if (p.isCancel(amountStr)) {
-    p.outro(colors.muted("Cancelled."));
+    ceremonyOutro("Cancelled.");
     return;
   }
 
@@ -90,7 +90,7 @@ export async function revenueCommand(options?: RevenueOptions): Promise<void> {
   });
 
   if (p.isCancel(source)) {
-    p.outro(colors.muted("Cancelled."));
+    ceremonyOutro("Cancelled.");
     return;
   }
 
@@ -100,7 +100,7 @@ export async function revenueCommand(options?: RevenueOptions): Promise<void> {
   });
 
   if (p.isCancel(noteRaw)) {
-    p.outro(colors.muted("Cancelled."));
+    ceremonyOutro("Cancelled.");
     return;
   }
 
@@ -111,7 +111,7 @@ export async function revenueCommand(options?: RevenueOptions): Promise<void> {
     note,
   });
 
-  p.outro(colors.success.bold("Revenue logged. Keep shipping. 🚀"));
+  ceremonyOutro("Revenue logged. Keep shipping. 🚀");
 }
 
 // ─── Internal helpers ─────────────────────────────────────────────

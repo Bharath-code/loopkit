@@ -13,7 +13,7 @@ import {
 } from "../storage/local.js";
 import { computeLoopKitScore } from "../analytics/score.js";
 import { buildProofCard, buildTweetLine, copyToClipboard, buildTwitterIntentUrl, openUrl } from "../ui/proof-card.js";
-import { colors, header, box, pass, info } from "../ui/theme.js";
+import { colors, header, box, pass, info, ceremonyIntro, ceremonyOutro } from "../ui/theme.js";
 import { getConvexProjectId } from "../storage/sync.js";
 
 // ─── ASCII Confetti ─────────────────────────────────────────────
@@ -149,7 +149,7 @@ export async function celebrateCommand(
   const slug = config.activeProject;
 
   if (standalone) {
-    p.intro(colors.primary.bold("LoopKit — Celebrate"));
+    ceremonyIntro("Celebrate");
   }
 
   if (!slug) {
@@ -300,6 +300,6 @@ export async function celebrateCommand(
   console.log(info("Or `loopkit track` to plan next week's tasks"));
 
   if (standalone) {
-    p.outro(colors.success.bold("Keep shipping. 🚀"));
+    ceremonyOutro("Keep shipping. 🚀");
   }
 }

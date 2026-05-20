@@ -3,10 +3,12 @@ import { readConfig, writeConfig } from "../storage/local.js";
 import { getCoachingPlan, recordMomentShown } from "../analytics/coach.js";
 import {
   colors,
-  header,
+  clog,
   coachingPlanCard,
   nextStep,
   shortcutsHint,
+  ceremonyIntro,
+  ceremonyOutro,
 } from "../ui/theme.js";
 
 export async function coachCommand(options?: {
@@ -20,31 +22,27 @@ export async function coachCommand(options?: {
   if (options?.off) {
     config.coaching = { ...config.coaching, enabled: false };
     writeConfig(config);
-    console.log(
-      colors.muted("Coaching disabled. Run `loopkit coach --on` to re-enable."),
-    );
+    clog.message("Coaching disabled. Run `loopkit coach --on` to re-enable.");
     return;
   }
 
   if (options?.on) {
     config.coaching = { ...config.coaching, enabled: true };
     writeConfig(config);
-    console.log(colors.success("Coaching enabled."));
+    clog.success("Coaching enabled.");
   }
 
   if (!slug) {
-    console.log(colors.danger("No active project. Run `loopkit init` first."));
+    clog.error("No active project. Run `loopkit init` first.");
     process.exit(1);
   }
 
   if (config.coaching?.enabled === false) {
-    console.log(
-      colors.muted("Coaching is disabled. Run `loopkit coach --on` to enable."),
-    );
+    clog.message("Coaching is disabled. Run `loopkit coach --on` to enable.");
     return;
   }
 
-  p.intro(colors.primary.bold("LoopKit — AI Coach"));
+  ceremonyIntro("AI Coach");
   console.log(shortcutsHint());
 
   // ─── Generate coaching plan ───────────────────────────────────
@@ -56,19 +54,13 @@ export async function coachCommand(options?: {
   s.stop("Analysis complete.");
 
   if (!plan || plan.moments.length === 0) {
-    console.log(header("Not Enough Data Yet"));
-    console.log(
-      colors.muted("  Coaching needs at least 2 weeks of loop data."),
-    );
-    console.log(
-      colors.muted(
-        "  Run `loopkit loop` for a few weeks to unlock personalized coaching.",
-      ),
+    clog.step("Not Enough Data Yet");
+    clog.message("  Coaching needs at least 2 weeks of loop data.");
+    clog.message(
+      "  Run `loopkit loop` for a few weeks to unlock personalized coaching.",
     );
     console.log(nextStep("loop"));
-    p.outro(
-      colors.muted("Keep shipping. Coaching will get smarter every week."),
-    );
+    ceremonyOutro("Keep shipping. Coaching will get smarter every week.");
     return;
   }
 
@@ -82,16 +74,16 @@ export async function coachCommand(options?: {
     });
 
     if (p.isCancel(ack)) {
-      p.outro(colors.muted("Coaching cancelled."));
+      ceremonyOutro("Coaching cancelled.");
       return;
     }
 
     if (ack) {
       recordMomentShown(moment.id);
-      console.log(colors.success(`  ✓ Marked as seen`));
+      clog.success(`  ✓ Marked as seen`);
     }
   }
 
   console.log(nextStep("loop"));
-  p.outro(colors.muted("Coaching complete. See you next week."));
+  ceremonyOutro("Coaching complete. See you next week.");
 }

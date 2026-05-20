@@ -1,6 +1,6 @@
 import * as p from "@clack/prompts";
 import { readConfig, readTasksFile } from "../storage/local.js";
-import { colors, box } from "../ui/theme.js";
+import { colors, box, clog } from "../ui/theme.js";
 import { sendTerminalNotification } from "../notifications/terminal.js";
 
 export async function remindFridayCommand(): Promise<void> {
@@ -8,7 +8,7 @@ export async function remindFridayCommand(): Promise<void> {
   const slug = config.activeProject;
 
   if (!slug) {
-    console.log(colors.danger("No active project. Run `loopkit init` first."));
+    clog.error("No active project. Run `loopkit init` first.");
     process.exit(1);
   }
 

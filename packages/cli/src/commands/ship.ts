@@ -14,7 +14,7 @@ import {
   shipLogExists,
 } from "../storage/local.js";
 import { pushShipLogToConvex, getConvexProjectId } from "../storage/sync.js";
-import { colors, header, pass, fail, warn, box, nextStep, info, shortcutsHint, emptyState, coachingCard } from "../ui/theme.js";
+import { colors, header, pass, fail, warn, box, nextStep, info, shortcutsHint, emptyState, coachingCard, ceremonyIntro, ceremonyOutro } from "../ui/theme.js";
 import { celebrateCommand } from "./celebrate.js";
 import { fetchPeerShips, recordPeerShip, renderPeerInspiration } from "../analytics/peers.js";
 import { getPriorityMoment, recordMomentShown } from "../analytics/coach.js";
@@ -96,7 +96,7 @@ export async function shipCommand(): Promise<void> {
   const config = readConfig();
   const slug = config.activeProject;
 
-  p.intro(colors.primary.bold("LoopKit — Ship it"));
+  ceremonyIntro("Ship it");
   console.log(shortcutsHint());
 
   // ─── Gather context ──────────────────────────────────────────
@@ -183,7 +183,7 @@ export async function shipCommand(): Promise<void> {
       ],
     });
     if (p.isCancel(overwrite) || overwrite === "skip") {
-      p.outro("Skipped.");
+      ceremonyOutro("Skipped.");
       return;
     }
   }
@@ -248,7 +248,7 @@ export async function shipCommand(): Promise<void> {
 
     console.log(info(`Ship log saved → .loopkit/ships/${today}.md`));
     console.log(nextStep("loop", "Close your week Sunday"));
-    p.outro(colors.muted("Shipped. Now close the loop Sunday."));
+    ceremonyOutro("Shipped. Now close the loop Sunday.");
     return;
   }
 
@@ -390,7 +390,7 @@ export async function shipCommand(): Promise<void> {
     await celebrateCommand();
   } else {
     console.log(nextStep("loop", "Close your week Sunday"));
-    p.outro(colors.muted("Shipped. Now close the loop Sunday."));
+    ceremonyOutro("Shipped. Now close the loop Sunday.");
   }
 }
 
