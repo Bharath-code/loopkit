@@ -26,13 +26,20 @@ import { getPriorityMoment, recordMomentShown } from "../analytics/coach.js";
 import { computeLoopKitScore } from "../analytics/score.js";
 import { colors, header, pass, warn, info, clog, nextStep, shortcutsHint, emptyState, coachingCard, standupCard, ceremonyIntro, ceremonyOutro, select, isCancel, text, confirm } from "../ui/theme.js";
 
-export async function trackCommand(options?: {
-  add?: string;
-  week?: boolean;
-  repair?: boolean;
-  project?: string;
-  stand?: boolean;
-}): Promise<void> {
+export async function trackCommand(
+  id?: string,
+  options?: {
+    add?: string;
+    week?: boolean;
+    repair?: boolean;
+    project?: string;
+    stand?: boolean;
+    interactive?: boolean;
+    done?: boolean;
+    snooze?: string | boolean;
+    cut?: boolean;
+  }
+): Promise<void> {
   const config = readConfig();
 
   // Handle project switcher
@@ -57,6 +64,47 @@ export async function trackCommand(options?: {
     process.exit(1);
   }
 
+  const today = formatDate();
+
+  // ─── If ID is specified, run inline action or single-task interactive prompt ─────────────────────────
+  if (id) {
+    const taskId = parseInt(id.replace(/^#/, ""), 10);
+    if (isNaN(taskId)) {
+      clog.error(`Invalid task ID: "${id}". ID must be a number.`);
+      process.exit(1);
+    }
+
+    if (options?.done) {
+      completeTask(slug, taskId, today);
+      return;
+    }
+
+    if (options?.snooze) {
+      let days = 3;
+      if (typeof options.snooze === "string") {
+        const parsedDays = parseInt(options.snooze, 10);
+        if (!isNaN(parsedDays)) {
+          days = parsedDays;
+        }
+      }
+      snoozeTask(slug, taskId, days, today);
+      const oracleWarning = getSnoozeWarning();
+      if (oracleWarning) {
+        clog.message(`🔮 Snooze Oracle: ${oracleWarning}`);
+      }
+      return;
+    }
+
+    if (options?.cut) {
+      cutTask(slug, taskId, undefined, today);
+      return;
+    }
+
+    // Single-task interactive prompt if no action flag is passed but ID is present
+    await runSingleTaskMenu(slug, taskId, today);
+    return;
+  }
+
   // ─── --add: Quick task add ────────────────────────────────────
   if (options?.add) {
     if (typeof options.add === "string") {
@@ -79,6 +127,12 @@ export async function trackCommand(options?: {
     return;
   }
 
+  // ─── --interactive: Interactive task manager ─────────────────
+  if (options?.interactive) {
+    await runInteractiveTasks(slug);
+    return;
+  }
+
   // ─── Ensure tasks.md exists ───────────────────────────────────
   let content = readTasksFile(slug);
   if (!content) {
@@ -91,7 +145,6 @@ export async function trackCommand(options?: {
   installGitHook();
 
   // ─── Parse and display ────────────────────────────────────────
-  const today = formatDate();
   const tasks = parseTasks(content);
   const weekTasks = tasks.filter((t) => t.section === "week");
   const backlogTasks = tasks.filter((t) => t.section === "backlog");
@@ -226,30 +279,13 @@ export async function trackCommand(options?: {
     console.log(renderBenchmarks(benchmarks));
   }
 
-  // ─── Stale Task Detection ─────────────────────────────────────
-  for (const task of visibleOpen) {
-    const age = getTaskAgeDays(task.createdAt);
-    if (age >= 3) {
-      const action = await select({
-        message: `#${task.id} "${task.title}" is ${age} days old. Still relevant?`,
-        options: [
-          { value: "keep", label: "[k]eep" },
-          { value: "snooze", label: "[s]nooze 3 days" },
-          { value: "cut", label: "[c]ut (archived)" },
-        ],
-      });
-
-      if (!isCancel(action)) {
-        if (action === "cut") {
-          cutTask(slug, task.id, task.title, today);
-        } else if (action === "snooze") {
-          snoozeTask(slug, task.id, 3, today);
-          const oracleWarning = getSnoozeWarning();
-          if (oracleWarning) {
-            clog.message(`🔮 Snooze Oracle: ${oracleWarning}`);
-          }
-        }
-      }
+  // ─── Stale Task Detection (Non-blocking warning) ───────────────
+  const staleTasks = visibleOpen.filter((t) => getTaskAgeDays(t.createdAt) >= 3);
+  if (staleTasks.length > 0) {
+    clog.warn(`${staleTasks.length} stale task(s) detected (3+ days old):`);
+    for (const task of staleTasks) {
+      const age = getTaskAgeDays(task.createdAt);
+      clog.message(`  → #${task.id} "${task.title}" is ${age} days old. Run: loopkit track ${task.id} --snooze/--done/--cut`);
     }
   }
 
@@ -292,11 +328,11 @@ async function runStandupFlow(slug: string): Promise<void> {
   // ── Show context ────────────────────────────────────────
   if (openTasks.length > 0) {
     clog.message(`${openTasks.length} open task${openTasks.length !== 1 ? "s" : ""} this week:`);
-    openTasks.slice(0, 5).forEach((t) => clog.log(`    ${colors.muted("○")} ${t}`));
+    openTasks.slice(0, 5).forEach((t) => clog.message(`    ${colors.muted("○")} ${t}`));
     if (openTasks.length > 5) {
       clog.message(`  … and ${openTasks.length - 5} more`);
     }
-    clog.log("");
+    clog.message("");
   } else {
     clog.info("No open tasks yet. Add some with `loopkit track --add “task”`");
   }
@@ -523,12 +559,71 @@ async function addTasksViaEditor(slug: string): Promise<void> {
 }
 
 /**
+ * Completes the specified task by marking it as checked and adding completion metadata.
+ */
+function completeTask(slug: string, taskId: number, today: string): void {
+  const content = readTasksFile(slug);
+  if (!content) {
+    clog.error("Could not read tasks file.");
+    process.exit(1);
+  }
+
+  const tasks = parseTasks(content);
+  const task = tasks.find((t) => t.id === taskId);
+  if (!task) {
+    clog.error(`Task #${taskId} not found.`);
+    process.exit(1);
+  }
+
+  if (task.done) {
+    clog.warn(`Task #${taskId} is already completed.`);
+    return;
+  }
+
+  const lines = content.split("\n");
+  const updatedLines = lines.map((line) => {
+    const match = line.match(/^(-\s*\[\s*\]\s*)#(\d+)\s/);
+    if (match && parseInt(match[2]) === taskId) {
+      const rest = line.substring(match[1].length);
+      let cleanLine = rest.replace(/\s*snoozed:\d{4}-\d{2}-\d{2}/, "").trim();
+      if (cleanLine.endsWith(" —")) {
+        cleanLine = cleanLine.substring(0, cleanLine.length - 2).trim();
+      } else if (cleanLine.endsWith("—")) {
+        cleanLine = cleanLine.substring(0, cleanLine.length - 1).trim();
+      }
+      const metadata = `closed via cli on ${today}`;
+      if (cleanLine.includes(" — ")) {
+        return `- [x] ${cleanLine} ${metadata}`;
+      }
+      return `- [x] ${cleanLine} — ${metadata}`;
+    }
+    return line;
+  });
+
+  writeTasksFile(slug, updatedLines.join("\n"));
+  clog.success(`Completed #${taskId}: "${task.title}"`);
+}
+
+/**
  * Archives the task line to cut.md then removes it from tasks.md.
  * Never silently deletes — data goes to cut.md for recovery.
  */
-function cutTask(slug: string, taskId: number, taskTitle: string, today: string): void {
+function cutTask(slug: string, taskId: number, taskTitle?: string, today?: string): void {
   const content = readTasksFile(slug);
-  if (!content) return;
+  if (!content) {
+    clog.error("Could not read tasks file.");
+    process.exit(1);
+  }
+
+  const tasks = parseTasks(content);
+  const task = tasks.find((t) => t.id === taskId);
+  if (!task) {
+    clog.error(`Task #${taskId} not found.`);
+    process.exit(1);
+  }
+
+  const title = taskTitle || task.title;
+  const actualToday = today || formatDate();
 
   const lines = content.split("\n");
   let archivedLine = "";
@@ -543,7 +638,7 @@ function cutTask(slug: string, taskId: number, taskTitle: string, today: string)
   });
 
   // Write to cut.md archive first (data safety before deletion)
-  appendToCut(slug, archivedLine || `#${taskId} ${taskTitle}`, today);
+  appendToCut(slug, archivedLine || `#${taskId} ${title}`, actualToday);
   writeTasksFile(slug, updated.join("\n"));
   clog.warn(`#${taskId} cut → archived to .loopkit/projects/${slug}/cut.md`);
 }
@@ -554,7 +649,22 @@ function cutTask(slug: string, taskId: number, taskTitle: string, today: string)
  */
 function snoozeTask(slug: string, taskId: number, days: number, today: string): void {
   const content = readTasksFile(slug);
-  if (!content) return;
+  if (!content) {
+    clog.error("Could not read tasks file.");
+    process.exit(1);
+  }
+
+  const tasks = parseTasks(content);
+  const task = tasks.find((t) => t.id === taskId);
+  if (!task) {
+    clog.error(`Task #${taskId} not found.`);
+    process.exit(1);
+  }
+
+  if (task.done) {
+    clog.warn(`Task #${taskId} is already completed. Cannot snooze.`);
+    return;
+  }
 
   const snoozeDate = new Date();
   snoozeDate.setDate(snoozeDate.getDate() + days);
@@ -564,7 +674,12 @@ function snoozeTask(slug: string, taskId: number, days: number, today: string): 
     const match = line.match(/#(\d+)\s/);
     if (match && parseInt(match[1]) === taskId) {
       // Remove any existing snooze tag then add new one
-      const withoutSnooze = line.replace(/\s*snoozed:\d{4}-\d{2}-\d{2}/, "");
+      let withoutSnooze = line.replace(/\s*snoozed:\d{4}-\d{2}-\d{2}/, "").trim();
+      if (withoutSnooze.endsWith(" —")) {
+        withoutSnooze = withoutSnooze.substring(0, withoutSnooze.length - 2).trim();
+      } else if (withoutSnooze.endsWith("—")) {
+        withoutSnooze = withoutSnooze.substring(0, withoutSnooze.length - 1).trim();
+      }
       // Append snooze metadata to the meta section
       if (withoutSnooze.includes(" — ")) {
         return `${withoutSnooze} snoozed:${snoozedUntil}`;
@@ -576,6 +691,166 @@ function snoozeTask(slug: string, taskId: number, days: number, today: string): 
 
   writeTasksFile(slug, lines.join("\n"));
   clog.info(`#${taskId} snoozed until ${snoozedUntil}`);
+}
+
+/**
+ * Interactive menu to perform actions on a single task.
+ */
+async function runSingleTaskMenu(slug: string, taskId: number, today: string): Promise<void> {
+  const content = readTasksFile(slug);
+  if (!content) {
+    clog.error("Could not read tasks file.");
+    process.exit(1);
+  }
+
+  const tasks = parseTasks(content);
+  const task = tasks.find((t) => t.id === taskId);
+  if (!task) {
+    clog.error(`Task #${taskId} not found.`);
+    process.exit(1);
+  }
+
+  ceremonyIntro(`Task #${taskId}`);
+  clog.message(`Task: "${task.title}"`);
+  clog.message(`Status: ${task.done ? "Done" : "Open"}`);
+  clog.message(`Created: ${task.createdAt}`);
+  if (task.snoozedUntil) {
+    clog.message(`Snoozed until: ${task.snoozedUntil}`);
+  }
+
+  const action = await select({
+    message: "Choose action:",
+    options: [
+      { value: "done", label: "Complete task" },
+      { value: "snooze", label: "Snooze task" },
+      { value: "cut", label: "Cut (archive) task" },
+      { value: "cancel", label: "Cancel" },
+    ],
+  });
+
+  if (isCancel(action) || action === "cancel") {
+    ceremonyOutro("Cancelled.");
+    return;
+  }
+
+  if (action === "done") {
+    completeTask(slug, taskId, today);
+  } else if (action === "snooze") {
+    const daysStr = await text({
+      message: "Snooze for how many days?",
+      placeholder: "3",
+      validate: (val) => {
+        if (val && isNaN(parseInt(val, 10))) return "Please enter a valid number of days.";
+      },
+    });
+    if (isCancel(daysStr)) {
+      ceremonyOutro("Cancelled.");
+      return;
+    }
+    const days = daysStr ? parseInt(daysStr, 10) : 3;
+    snoozeTask(slug, taskId, days, today);
+    const oracleWarning = getSnoozeWarning();
+    if (oracleWarning) {
+      clog.message(`🔮 Snooze Oracle: ${oracleWarning}`);
+    }
+  } else if (action === "cut") {
+    cutTask(slug, taskId, task.title, today);
+  }
+
+  ceremonyOutro("Done.");
+}
+
+/**
+ * Interactive task manager allowing user to recursively choose, update and exit.
+ */
+async function runInteractiveTasks(slug: string): Promise<void> {
+  const today = formatDate();
+
+  while (true) {
+    const content = readTasksFile(slug);
+    if (!content) {
+      clog.error("Could not read tasks file.");
+      process.exit(1);
+    }
+
+    const tasks = parseTasks(content);
+    const openTasks = tasks.filter(
+      (t) => !t.done && (!t.snoozedUntil || t.snoozedUntil <= today)
+    );
+
+    if (openTasks.length === 0) {
+      ceremonyIntro("Interactive Task Manager");
+      clog.info("No open tasks! You're completely caught up. 🎉");
+      ceremonyOutro("Keep shipping!");
+      return;
+    }
+
+    ceremonyIntro("Interactive Task Manager");
+    
+    const taskOptions = openTasks.map((t) => {
+      const sectionLabel = t.section === "backlog" ? " [Backlog]" : "";
+      return {
+        value: t.id.toString(),
+        label: `#${t.id} ${t.title}${sectionLabel}`,
+      };
+    });
+
+    taskOptions.push({ value: "exit", label: "Exit Interactive Manager" });
+
+    const selectedTaskIdStr = await select({
+      message: "Select a task to update:",
+      options: taskOptions,
+    });
+
+    if (isCancel(selectedTaskIdStr) || selectedTaskIdStr === "exit") {
+      ceremonyOutro("Exiting task manager.");
+      return;
+    }
+
+    const selectedTaskId = parseInt(selectedTaskIdStr, 10);
+    const task = openTasks.find((t) => t.id === selectedTaskId);
+    if (!task) {
+      clog.error("Selected task not found.");
+      continue;
+    }
+
+    const action = await select({
+      message: `Action for #${task.id} "${task.title}":`,
+      options: [
+        { value: "done", label: "Complete task" },
+        { value: "snooze", label: "Snooze task" },
+        { value: "cut", label: "Cut (archive) task" },
+        { value: "back", label: "Go back to list" },
+      ],
+    });
+
+    if (isCancel(action) || action === "back") {
+      continue;
+    }
+
+    if (action === "done") {
+      completeTask(slug, selectedTaskId, today);
+    } else if (action === "snooze") {
+      const daysStr = await text({
+        message: "Snooze for how many days?",
+        placeholder: "3",
+        validate: (val) => {
+          if (val && isNaN(parseInt(val, 10))) return "Please enter a valid number of days.";
+        },
+      });
+      if (isCancel(daysStr)) {
+        continue;
+      }
+      const days = daysStr ? parseInt(daysStr, 10) : 3;
+      snoozeTask(slug, selectedTaskId, days, today);
+      const oracleWarning = getSnoozeWarning();
+      if (oracleWarning) {
+        clog.message(`🔮 Snooze Oracle: ${oracleWarning}`);
+      }
+    } else if (action === "cut") {
+      cutTask(slug, selectedTaskId, task.title, today);
+    }
+  }
 }
 
 function repairTasks(slug: string): void {

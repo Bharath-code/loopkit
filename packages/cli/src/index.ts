@@ -43,16 +43,20 @@ program
   });
 
 program
-  .command("track")
+  .command("track [id]")
   .description("Parse tasks.md and show project momentum")
   .option("-w, --week", "Show a summary of the current week")
   .option("-a, --add [title]", "Add a new task inline (or open $EDITOR with no arg)")
   .option("-r, --repair", "Repair and re-sequence broken task IDs")
   .option("-p, --project <slug>", "Switch active project")
   .option("-s, --stand", "Run 60-second daily standup check-in")
-  .action((options) => {
+  .option("-i, --interactive", "Interactively select and update tasks")
+  .option("--done", "Mark the specified task ID as done")
+  .option("--snooze [days]", "Snooze the specified task ID (default: 3 days)")
+  .option("--cut", "Cut/archive the specified task ID")
+  .action((id, options) => {
     recordEvent({ command: options.stand ? "track:stand" : "track" });
-    trackCommand(options);
+    trackCommand(id, options);
   });
 
 program
@@ -138,8 +142,9 @@ program
   .description("AI coaching based on your shipping patterns and milestones")
   .option("--on", "Enable coaching")
   .option("--off", "Disable coaching")
+  .option("--dna", "Generate your Founder DNA Report")
   .action((options) => {
-    recordEvent({ command: "coach" });
+    recordEvent({ command: options.dna ? "coach:dna" : "coach" });
     coachCommand(options);
   });
 

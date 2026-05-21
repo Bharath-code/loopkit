@@ -204,6 +204,15 @@ export const ShippingDNASchema = z.object({
 
 export type ShippingDNA = z.infer<typeof ShippingDNASchema>;
 
+// ─── Analytics: DNA Recommendation ──────────────────────────────
+
+export const DNARecommendationSchema = z.object({
+  recommendation: z.string(),
+});
+
+export type DNARecommendation = z.infer<typeof DNARecommendationSchema>;
+
+
 // ─── Analytics: Churn Risk ──────────────────────────────────────
 
 export const ChurnSignalSchema = z.object({

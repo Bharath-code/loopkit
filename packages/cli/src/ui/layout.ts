@@ -19,7 +19,7 @@ import {
 // ─── Gradient ────────────────────────────────────────────────────
 
 /**
- * Render text with a violet→cyan gradient (left to right).
+ * Render text with a white→violet gradient (left to right).
  * Used for primary brand headers.
  */
 export function gradient(text: string): string {
@@ -29,10 +29,10 @@ export function gradient(text: string): string {
   return chars
     .map((ch, i) => {
       const t = len > 1 ? i / (len - 1) : 0;
-      // Interpolate violet (#7C3AED) → cyan (#06B6D4)
-      const r = Math.round(0x7c + (0x06 - 0x7c) * t);
-      const g = Math.round(0x3a + (0xb6 - 0x3a) * t);
-      const b = Math.round(0xed + (0xd4 - 0xed) * t);
+      // Interpolate white (#FFFFFF) → violet (#7C3AED)
+      const r = Math.round(0xff + (0x7c - 0xff) * t);
+      const g = Math.round(0xff + (0x3a - 0xff) * t);
+      const b = Math.round(0xff + (0xed - 0xff) * t);
       return chalk.hex(
         `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`,
       ).bold(ch);

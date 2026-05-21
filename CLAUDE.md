@@ -262,22 +262,35 @@ Muted:     #6B7280 (gray-500)
 
 ---
 
-## Build Commands
+## Build & Test Commands
 
 ```bash
-# Root
-pnpm install                          # install all deps
-pnpm build                            # build all packages (Turborepo)
+# Root: install all dependencies
+pnpm install
 
-# Shared
-pnpm --filter @loopkit/shared build   # must run before CLI if schemas changed
+# Root: build all packages (Turborepo)
+pnpm build
 
-# CLI (package renamed to 'loopkit' — use direct cd)
+# Root: lint and type-check all packages
+pnpm lint
+pnpm --filter @loopkit/shared type-check
+pnpm --filter @loopkit/cli type-check
+pnpm --filter @loopkit/web type-check
+
+# Root: run all tests
+pnpm --filter @loopkit/shared test
+pnpm --filter @loopkit/cli test
+pnpm --filter @loopkit/web test
+
+# Shared: build schema registry (must run before CLI if schemas changed)
+pnpm --filter @loopkit/shared build
+
+# CLI: build or watch CLI
 cd packages/cli && pnpm build         # tsup → dist/index.js
 cd packages/cli && pnpm dev           # watch mode
 
-# Web
-cd packages/web && npx next dev -p 3099   # dev server
+# Web: run dashboard development server
+cd packages/web && npx next dev -p 3099
 
 # Test CLI locally
 node packages/cli/dist/index.js --help
@@ -289,22 +302,22 @@ node packages/cli/dist/index.js init
 ## Coding Rules
 
 ### DO
-- Use `@clack/prompts` for all interactive terminal UX (`p.text`, `p.confirm`, `p.select`, `p.spinner`, `p.intro`, `p.outro`)
-- Use `p.isCancel()` after every prompt and handle gracefully
-- Use `colors.*` from `ui/theme.ts` for all terminal output coloring
-- Use `generateStructured()` — never raw `fetch` to AI APIs
-- Validate all AI output against Zod schemas before using
-- Keep commands under ~200 lines — extract helpers to storage/local.ts or ai/client.ts
-- Always show `nextStep("commandname")` at the end of each command
+- Use UI layout components, ceremony frames, and Clack primitives exported from `ui/theme.ts` (e.g. `ceremonyIntro`, `ceremonyOutro`, `clog`, `tasks`, `password`, `multiselect`, `note`, `text`, `confirm`, `select`) instead of raw imports from `@clack/prompts`.
+- Use `isCancel()` after every prompt and handle gracefully by running `ceremonyOutro("Cancelled.")` (or equivalent) and exiting with `process.exit(0)`.
+- Use `token.*` (or the backwards-compatible `colors.*`) from `ui/theme.ts` for all terminal output coloring.
+- Use `generateStructured()` — never raw `fetch` to AI APIs.
+- Validate all AI output against Zod schemas before using.
+- Keep command files modular — extract complex business/storage logic to `storage/local.ts` or analytical modules.
+- Always show `nextStep("commandname")` at the end of each command.
 
 ### DON'T
-- Don't use `console.log` for user-facing output — use `p.log.info()`, `colors.*`, or `box()`
-- Don't use `Ink` or `React` in the CLI
-- Don't store secrets in `.loopkit/config.json` (only tokens, not raw API keys in plaintext for free users)
-- Don't modify existing git hooks — append-only only
-- Don't block on any single failure — degrade and continue
-- Don't add new npm dependencies without checking if existing ones cover the need
-- Don't build features not in the PRD without explicit user approval
+- Don't use raw `console.log` inside ceremony frames. Use the `clog` facade (`clog.success`, `clog.info`, `clog.warn`, `clog.error`, `clog.step`, `clog.message`) to keep all logs properly aligned and framed within the Clack vertical border lines (`│`).
+- Don't use `Ink` or `React` in the CLI.
+- Don't store secrets in `.loopkit/config.json` in plaintext. Encrypt external API keys (like the Anthropic key) using the localized Salt.
+- Don't modify existing git hooks — hook modifications must be append-only.
+- Don't block on any single failure — degrade gracefully and continue.
+- Don't add new npm dependencies without checking if existing ones cover the need.
+- Don't build features not in the PRD without explicit user approval.
 
 ### Git Hook Safety (CRITICAL)
 The git hook in `track.ts` MUST be append-only:
