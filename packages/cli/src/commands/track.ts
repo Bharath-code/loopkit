@@ -1,4 +1,3 @@
-import * as p from "@clack/prompts";
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
@@ -25,7 +24,7 @@ import { computeBenchmarks, renderBenchmarks } from "../analytics/benchmarks.js"
 import { getSnoozeWarning } from "../analytics/oracle.js";
 import { getPriorityMoment, recordMomentShown } from "../analytics/coach.js";
 import { computeLoopKitScore } from "../analytics/score.js";
-import { colors, header, pass, warn, info, clog, nextStep, shortcutsHint, emptyState, coachingCard, standupCard, ceremonyIntro, ceremonyOutro } from "../ui/theme.js";
+import { colors, header, pass, warn, info, clog, nextStep, shortcutsHint, emptyState, coachingCard, standupCard, ceremonyIntro, ceremonyOutro, select, isCancel, text, confirm } from "../ui/theme.js";
 
 export async function trackCommand(options?: {
   add?: string;
@@ -231,7 +230,7 @@ export async function trackCommand(options?: {
   for (const task of visibleOpen) {
     const age = getTaskAgeDays(task.createdAt);
     if (age >= 3) {
-      const action = await p.select({
+      const action = await select({
         message: `#${task.id} "${task.title}" is ${age} days old. Still relevant?`,
         options: [
           { value: "keep", label: "[k]eep" },
@@ -240,7 +239,7 @@ export async function trackCommand(options?: {
         ],
       });
 
-      if (!p.isCancel(action)) {
+      if (!isCancel(action)) {
         if (action === "cut") {
           cutTask(slug, task.id, task.title, today);
         } else if (action === "snooze") {
@@ -303,7 +302,7 @@ async function runStandupFlow(slug: string): Promise<void> {
   }
 
   // ── The one question that matters ────────────────────────────
-  const taskToday = await p.text({
+  const taskToday = await text({
     message: "What’s your #1 task today?",
     placeholder: openTasks[0] ?? "The single most important thing to do today",
     validate: (val) => {
@@ -311,7 +310,7 @@ async function runStandupFlow(slug: string): Promise<void> {
     },
   });
 
-  if (p.isCancel(taskToday)) {
+  if (isCancel(taskToday)) {
     ceremonyOutro("Standup cancelled. Come back when ready.");
     return;
   }
@@ -414,24 +413,24 @@ async function handleShippingBlock(slug: string): Promise<boolean> {
     clog.error(`⚠️  SHIPPING BLOCK: You haven't shipped in ${diffDays} days!`);
     clog.message("To maintain momentum, you should ship at least once every 14 days.");
     
-    const override = await p.confirm({
+    const override = await confirm({
       message: "Do you want to override this block and add the task anyway?",
       active: "Yes, override",
       inactive: "No, cancel",
     });
     
-    if (p.isCancel(override) || !override) {
+    if (isCancel(override) || !override) {
       clog.warn("Task addition canceled. Run `loopkit ship` first.");
       return false;
     }
     
-    const reason = await p.text({
+    const reason = await text({
       message: "Please enter a reason for overriding this shipping block:",
       placeholder: "e.g., waiting on third-party API approval",
       validate: (value) => (value.trim().length < 5 ? "Reason must be at least 5 characters." : undefined),
     });
     
-    if (p.isCancel(reason) || !reason) {
+    if (isCancel(reason) || !reason) {
       clog.warn("Task addition canceled. Reason required.");
       return false;
     }

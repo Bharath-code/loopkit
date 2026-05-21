@@ -185,6 +185,18 @@ export const spinner = p.spinner;
 /** Cancel sentinel check */
 export const isCancel = p.isCancel;
 
+/** Cancel terminal prompt */
+export const cancel = p.cancel;
+
+/** Standard text input prompt */
+export const text = p.text;
+
+/** Standard binary confirm prompt */
+export const confirm = p.confirm;
+
+/** Standard single-select prompt */
+export const select = p.select;
+
 /** Level-2 header — white bold */
 export function subheader(text: string): string {
   return token.heading(text);

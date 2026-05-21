@@ -1,5 +1,5 @@
 import { readLastNLoopLogs, readLoopLog, readBriefJson } from "../storage/local.js";
-import { colors, header, pass, warn, box } from "../ui/theme.js";
+import { colors, header, pass, warn, box, clog } from "../ui/theme.js";
 
 export interface SuccessPrediction {
   probability: number;
@@ -161,7 +161,7 @@ function computeTrend(weeks: Array<{ tasksCompleted: number; weekNumber: number 
 export function renderPrediction(prediction: SuccessPrediction): void {
   const emoji = prediction.probability >= 60 ? "🚀" : prediction.probability >= 40 ? "📈" : "🌱";
 
-  console.log(header(`${emoji} Success Predictor`));
+  clog.step(`${emoji} Success Predictor`);
 
   const probColor = prediction.probability >= 60
     ? colors.success
@@ -169,31 +169,31 @@ export function renderPrediction(prediction: SuccessPrediction): void {
       ? colors.warning
       : colors.danger;
 
-  console.log(`  Probability of revenue in 6 months: ${probColor.bold(`${prediction.probability}%`)}`);
-  console.log(colors.dim(`  Confidence: ${prediction.confidence} (${prediction.weeksAnalyzed} weeks analyzed)`));
-  console.log("");
+  clog.message(`Probability of revenue in 6 months: ${probColor.bold(`${prediction.probability}%`)}`);
+  clog.message(`Confidence: ${prediction.confidence} (${prediction.weeksAnalyzed} weeks analyzed)`);
+  clog.message("");
 
   if (prediction.strengths.length > 0) {
-    console.log(colors.white.bold("  Strengths"));
+    clog.step("Strengths");
     for (const s of prediction.strengths) {
-      console.log(`  ${pass(s)}`);
+      clog.message(pass(s));
     }
-    console.log("");
+    clog.message("");
   }
 
   if (prediction.risks.length > 0) {
-    console.log(colors.warning.bold("  Risks"));
+    clog.warn("Risks");
     for (const r of prediction.risks) {
-      console.log(`  ${warn(r)}`);
+      clog.message(warn(r));
     }
-    console.log("");
+    clog.message("");
   }
 
-  console.log(colors.dim("  How to shift your probability:"));
+  clog.message("How to shift your probability:");
   for (const f of prediction.shiftFactors) {
     const sign = f.direction === "positive" ? "+" : "";
-    console.log(colors.dim(`    ${f.factor}: ${sign}${f.impact}%`));
+    clog.message(`  ${f.factor}: ${sign}${f.impact}%`);
   }
-  console.log("");
-  console.log(colors.dim("  Note: This is a heuristic model, not a guarantee. Actual outcomes depend on market, timing, and execution."));
+  clog.message("");
+  clog.message("Note: This is a heuristic model, not a guarantee. Actual outcomes depend on market, timing, and execution.");
 }

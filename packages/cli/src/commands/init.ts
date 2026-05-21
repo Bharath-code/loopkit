@@ -1,4 +1,3 @@
-import * as p from "@clack/prompts";
 import {
   slugify,
   BriefSchema,
@@ -40,6 +39,11 @@ import {
   clog,
   note,
   tasks,
+  confirm,
+  isCancel,
+  select,
+  text,
+  spinner,
 } from "../ui/theme.js";
 import {
   recordBriefCategories,
@@ -95,11 +99,11 @@ export async function initCommand(
     const draft = readDraft(slug);
 
     if (draft) {
-      const resume = await p.confirm({
+      const resume = await confirm({
         message: `Found a saved session for "${resumeName}". Resume where you left off?`,
       });
 
-      if (p.isCancel(resume)) {
+      if (isCancel(resume)) {
         if (answers.name || slug) {
           const currentSlug =
             slug || slugify((answers.name as string) || "untitled");
@@ -115,7 +119,7 @@ export async function initCommand(
         clog.message(`Resuming from question ${startQuestion + 1}/5`);
       }
     } else if (projectExists(slug)) {
-      const action = await p.select({
+      const action = await select({
         message: `"${resumeName}" already exists.`,
         options: [
           { value: "overwrite", label: "Overwrite — start fresh" },
@@ -123,7 +127,7 @@ export async function initCommand(
         ],
       });
 
-      if (p.isCancel(action)) {
+      if (isCancel(action)) {
     ceremonyOutro("Session cancelled.");
         process.exit(0);
       }
@@ -189,13 +193,13 @@ export async function initCommand(
     // Skip if already answered (from resume)
     if (answers[q.key]) continue;
 
-    const value = await p.text({
+    const value = await text({
       message: q.message,
       placeholder: q.placeholder,
       validate: q.validate,
     });
 
-    if (p.isCancel(value)) {
+    if (isCancel(value)) {
       // Save draft on Ctrl+C
       if (answers.name || slug) {
         const currentSlug =
@@ -210,14 +214,14 @@ export async function initCommand(
 
     // Soft warning for short answers on substantive questions
     if (i > 0 && (value as string).split(/\s+/).length < 5) {
-      const addMore = await p.confirm({
+      const addMore = await confirm({
         message: "That's pretty short. Add more?",
       });
-      if (!p.isCancel(addMore) && addMore) {
-        const more = await p.text({
+      if (!isCancel(addMore) && addMore) {
+        const more = await text({
           message: `${q.message} (expanded)`,
         });
-        if (!p.isCancel(more)) {
+        if (!isCancel(more)) {
           answers[q.key] = `${value} ${more}`;
         }
       }
@@ -273,22 +277,22 @@ export async function initCommand(
     renderBrief(finalAnswers, brief, slug);
 
     if (!selectedTemplate && options?.template === undefined) {
-      const useTemplate = await p.confirm({
+      const useTemplate = await confirm({
         message: "Add starter tasks from a project template?",
       });
 
-      if (!p.isCancel(useTemplate) && useTemplate) {
+      if (!isCancel(useTemplate) && useTemplate) {
         const templateOptions = getTemplateList().map((t) => ({
           value: t.id,
           label: `${t.name} — ${t.description}`,
         }));
 
-        const choice = await p.select({
+        const choice = await select({
           message: "Choose a template:",
           options: templateOptions,
         });
 
-        if (!p.isCancel(choice)) {
+        if (!isCancel(choice)) {
           selectedTemplate = getTemplate(choice);
         }
       }
@@ -382,11 +386,11 @@ export async function initCommand(
         console.log(box(validation.questions.map((q: string, i: number) => `${i + 1}. ${q}`).join("\n")));
         clog.message(validation.encouragement);
 
-        const wantIterate = await p.confirm({
+        const wantIterate = await confirm({
           message: "Want to iterate on your brief based on these questions?",
         });
 
-        if (!p.isCancel(wantIterate) && wantIterate) {
+        if (!isCancel(wantIterate) && wantIterate) {
           clog.info("Run `loopkit init --analyze <name>` to update your brief.");
         }
       } catch {
@@ -408,12 +412,13 @@ export async function initCommand(
     writeConfig(config);
   }
 
-  console.log(nextStep("track"));
-  console.log(
+  clog.step("Next Step");
+  clog.info(`Run ${colors.primary.bold("loopkit track")} to plan your first week's tasks.`);
+  clog.message(
     colors.dim(
-      "\n  💡 Set a Sunday reminder to close your week:\n" +
-      "     macOS: Add a weekly calendar event for Sunday 6pm\n" +
-      `     Or cron: 0 18 * * 0 cd ${process.cwd()} && loopkit loop\n`
+      "💡 Set a Sunday reminder to close your week:\n" +
+      "   macOS: Add a weekly calendar event for Sunday 6pm\n" +
+      `   Or cron: 0 18 * * 0 cd ${process.cwd()} && loopkit loop`
     )
   );
   ceremonyOutro("Brief saved. Now build against it.");
@@ -422,24 +427,24 @@ export async function initCommand(
   if (options?.cron) {
     const installed = await installFridayReminder();
     if (installed) {
-      console.log(info("Friday reminder cron job installed. You'll get a reminder at 4 PM every Friday."));
+      clog.info("Friday reminder cron job installed. You'll get a reminder at 4 PM every Friday.");
     } else {
-      console.log(colors.warning("Cron job already installed or failed to install."));
+      clog.warn("Cron job already installed or failed to install.");
     }
   }
 
   // ─── Prompt to install shell aliases (first-time users) ─────────────
   const config = readConfig();
   if (!config.aliasesInstalled) {
-    const wantAliases = await p.confirm({
+    const wantAliases = await confirm({
       message: "Install shell aliases for faster commands? (Recommended)",
     });
 
-    if (!p.isCancel(wantAliases) && wantAliases) {
+    if (!isCancel(wantAliases) && wantAliases) {
       const installed = await installAliases();
       if (installed) {
-        console.log(info("Shell aliases installed: lk, lks, lkl, lkt"));
-        console.log(colors.muted("Restart your shell to apply changes."));
+        clog.info("Shell aliases installed: lk, lks, lkl, lkt");
+        clog.message("Restart your shell to apply changes.");
         config.aliasesInstalled = true;
         const { writeConfig } = await import("../storage/local.js");
         writeConfig(config);
@@ -498,7 +503,7 @@ function renderBrief(
     ),
   );
 
-  console.log(`\n${info(`Saved → .loopkit/projects/${slug}/brief.md`)}`);
+  clog.success(`Saved → .loopkit/projects/${slug}/brief.md`);
   note("Run loopkit track to plan your first week's tasks.", "Next Step");
 }
 
@@ -555,16 +560,15 @@ function renderTrendHint(answers: InitAnswers): void {
   const similarCount = (trending.icp[icpCat] || 0) - 1;
 
   if (similarCount >= 1) {
-    console.log("");
-    console.log(colors.primary.bold("  Trending Validation"));
-    console.log(
+    clog.step("Trending Validation");
+    clog.message(
       colors.dim(
-        `  ${similarCount} other founder${similarCount > 1 ? "s" : ""} ${similarCount > 1 ? "are" : "is"} exploring similar ICP spaces this month.`,
+        `${similarCount} other founder${similarCount > 1 ? "s" : ""} ${similarCount > 1 ? "are" : "is"} exploring similar ICP spaces this month.`,
       ),
     );
-    console.log(
+    clog.message(
       colors.dim(
-        "  Run `loopkit radar` to see recent launches in your category.",
+        "Run `loopkit radar` to see recent launches in your category.",
       ),
     );
   }

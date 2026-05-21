@@ -403,6 +403,11 @@ describe("predictSuccess", () => {
 
 describe("renderPrediction", () => {
   it("renders high probability with rocket emoji", () => {
+    const chunks: string[] = [];
+    const stdoutSpy = vi.spyOn(process.stdout, "write").mockImplementation((chunk) => {
+      chunks.push(String(chunk));
+      return true;
+    });
     const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
     renderPrediction({
       probability: 65,
@@ -414,12 +419,19 @@ describe("renderPrediction", () => {
       ],
       weeksAnalyzed: 10,
     });
-    expect(consoleSpy.mock.calls.some((c) => c[0].includes("🚀"))).toBe(true);
-    expect(consoleSpy.mock.calls.some((c) => c[0].includes("65%"))).toBe(true);
+    const allOutput = chunks.join("") + consoleSpy.mock.calls.map((c) => c.join(" ")).join("\n");
+    expect(allOutput.includes("🚀")).toBe(true);
+    expect(allOutput.includes("65%")).toBe(true);
+    stdoutSpy.mockRestore();
     consoleSpy.mockRestore();
   });
 
   it("renders medium probability with chart emoji", () => {
+    const chunks: string[] = [];
+    const stdoutSpy = vi.spyOn(process.stdout, "write").mockImplementation((chunk) => {
+      chunks.push(String(chunk));
+      return true;
+    });
     const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
     renderPrediction({
       probability: 45,
@@ -429,11 +441,18 @@ describe("renderPrediction", () => {
       shiftFactors: [],
       weeksAnalyzed: 10,
     });
-    expect(consoleSpy.mock.calls.some((c) => c[0].includes("📈"))).toBe(true);
+    const allOutput = chunks.join("") + consoleSpy.mock.calls.map((c) => c.join(" ")).join("\n");
+    expect(allOutput.includes("📈")).toBe(true);
+    stdoutSpy.mockRestore();
     consoleSpy.mockRestore();
   });
 
   it("renders low probability with seedling emoji", () => {
+    const chunks: string[] = [];
+    const stdoutSpy = vi.spyOn(process.stdout, "write").mockImplementation((chunk) => {
+      chunks.push(String(chunk));
+      return true;
+    });
     const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
     renderPrediction({
       probability: 20,
@@ -443,7 +462,9 @@ describe("renderPrediction", () => {
       shiftFactors: [],
       weeksAnalyzed: 8,
     });
-    expect(consoleSpy.mock.calls.some((c) => c[0].includes("🌱"))).toBe(true);
+    const allOutput = chunks.join("") + consoleSpy.mock.calls.map((c) => c.join(" ")).join("\n");
+    expect(allOutput.includes("🌱")).toBe(true);
+    stdoutSpy.mockRestore();
     consoleSpy.mockRestore();
   });
 });

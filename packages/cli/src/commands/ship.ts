@@ -1,4 +1,3 @@
-import * as p from "@clack/prompts";
 import { execSync, spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
@@ -14,7 +13,7 @@ import {
   shipLogExists,
 } from "../storage/local.js";
 import { pushShipLogToConvex, getConvexProjectId } from "../storage/sync.js";
-import { colors, header, pass, fail, warn, box, nextStep, info, shortcutsHint, emptyState, coachingCard, ceremonyIntro, ceremonyOutro } from "../ui/theme.js";
+import { colors, header, pass, fail, warn, box, nextStep, info, shortcutsHint, emptyState, coachingCard, ceremonyIntro, ceremonyOutro, text, confirm, select, isCancel, cancel, spinner, clog } from "../ui/theme.js";
 import { celebrateCommand } from "./celebrate.js";
 import { fetchPeerShips, recordPeerShip, renderPeerInspiration } from "../analytics/peers.js";
 import { getPriorityMoment, recordMomentShown } from "../analytics/coach.js";
@@ -82,7 +81,7 @@ function openInEditor(content: string): string {
   try {
     const result = spawnSync(editor, [tmpFile], { stdio: "inherit" });
     if (result.error) {
-      console.log(warn(`Could not open ${editor}: ${result.error.message}`));
+      clog.warn(`Could not open ${editor}: ${result.error.message}`);
       return content; // fallback: return original
     }
     return fs.readFileSync(tmpFile, "utf-8");
@@ -127,14 +126,14 @@ export async function shipCommand(): Promise<void> {
 
   if (!slug) {
     // Fallback: ask inline questions
-    console.log(warn("No brief found. Run `loopkit init` first for better AI output."));
+    clog.warn("No brief found. Run `loopkit init` first for better AI output.");
 
-    const name = await p.text({ message: "Product name?" });
-    if (p.isCancel(name)) { p.cancel("Cancelled."); process.exit(0); }
+    const name = await text({ message: "Product name?" });
+    if (isCancel(name)) { cancel("Cancelled."); process.exit(0); }
     productName = name;
 
-    const who = await p.text({ message: "Who is it for?" });
-    if (p.isCancel(who)) { p.cancel("Cancelled."); process.exit(0); }
+    const who = await text({ message: "Who is it for?" });
+    if (isCancel(who)) { cancel("Cancelled."); process.exit(0); }
     icp = who;
   }
 
@@ -158,13 +157,13 @@ export async function shipCommand(): Promise<void> {
   }
 
   // ─── What shipped ────────────────────────────────────────────
-  const rawWhatShipped = await p.text({
+  const rawWhatShipped = await text({
     message: "What's the main thing you shipped? (one sentence)",
     placeholder: "e.g. Added PDF export for SOW documents",
   });
 
-  if (p.isCancel(rawWhatShipped)) {
-    p.cancel("Cancelled.");
+  if (isCancel(rawWhatShipped)) {
+    cancel("Cancelled.");
     process.exit(0);
   }
 
@@ -174,7 +173,7 @@ export async function shipCommand(): Promise<void> {
   // ─── Check if ship log exists today ───────────────────────────
   const today = formatDate();
   if (shipLogExists(today)) {
-    const overwrite = await p.select({
+    const overwrite = await select({
       message: "A ship log exists for today.",
       options: [
         { value: "overwrite", label: "[o]verwrite" },
@@ -182,7 +181,7 @@ export async function shipCommand(): Promise<void> {
         { value: "skip", label: "[s]kip" },
       ],
     });
-    if (p.isCancel(overwrite) || overwrite === "skip") {
+    if (isCancel(overwrite) || overwrite === "skip") {
       ceremonyOutro("Skipped.");
       return;
     }
@@ -198,7 +197,7 @@ export async function shipCommand(): Promise<void> {
     whatShipped,
   };
 
-  const s = p.spinner();
+  const s = spinner();
   s.start("Generating drafts for HN, Twitter, and Indie Hackers...");
 
   let platforms: PlatformDraft[];
@@ -214,18 +213,18 @@ export async function shipCommand(): Promise<void> {
     s.stop("Drafts ready.");
   } catch {
     s.stop("Draft generation failed.");
-    console.log(colors.danger("AI unavailable. Saving ship log without drafts."));
+    clog.error("AI unavailable. Saving ship log without drafts.");
 
     // Still collect the checklist on failure
-    console.log(header("Pre-Launch Checklist"));
-    const readmeUpdated = await p.confirm({ message: "README updated this week?" });
-    checklist["readme"] = !p.isCancel(readmeUpdated) && readmeUpdated;
-    const landingLive = await p.confirm({ message: "Landing page live?" });
-    checklist["landing"] = !p.isCancel(landingLive) && landingLive;
-    const analyticsOn = await p.confirm({ message: "Analytics installed?" });
-    checklist["analytics"] = !p.isCancel(analyticsOn) && analyticsOn;
-    const feedbackOn = await p.confirm({ message: "Feedback collection active?" });
-    checklist["feedback"] = !p.isCancel(feedbackOn) && feedbackOn;
+    clog.step("Pre-Launch Checklist");
+    const readmeUpdated = await confirm({ message: "README updated this week?" });
+    checklist["readme"] = !isCancel(readmeUpdated) && readmeUpdated;
+    const landingLive = await confirm({ message: "Landing page live?" });
+    checklist["landing"] = !isCancel(landingLive) && landingLive;
+    const analyticsOn = await confirm({ message: "Analytics installed?" });
+    checklist["analytics"] = !isCancel(analyticsOn) && analyticsOn;
+    const feedbackOn = await confirm({ message: "Feedback collection active?" });
+    checklist["feedback"] = !isCancel(feedbackOn) && feedbackOn;
 
     const logContent = buildLogContent(today, productName, whatShipped, checklist, []);
     saveShipLog(logContent, today);
@@ -246,7 +245,7 @@ export async function shipCommand(): Promise<void> {
       });
     }
 
-    console.log(info(`Ship log saved → .loopkit/ships/${today}.md`));
+    clog.info(`Ship log saved → .loopkit/ships/${today}.md`);
     console.log(nextStep("loop", "Close your week Sunday"));
     ceremonyOutro("Shipped. Now close the loop Sunday.");
     return;
@@ -260,7 +259,7 @@ export async function shipCommand(): Promise<void> {
     let done = false;
 
     while (!done) {
-      console.log(header(platform.label));
+      clog.step(platform.label);
       console.log(box(platform.content));
 
       // Show character count for Twitter drafts
@@ -269,12 +268,12 @@ export async function shipCommand(): Promise<void> {
         for (const tweet of tweetParts) {
           const clean = tweet.replace(/^\d+\.\s*/, "");
           if (clean.length > 240) {
-            console.log(colors.warning(`  ⚠ Tweet is ${clean.length} chars — over 240 recommended`));
+            clog.warn(`  ⚠ Tweet is ${clean.length} chars — over 240 recommended`);
           }
         }
       }
 
-      const action = await p.select({
+      const action = await select({
         message: `${platform.label}:`,
         options: [
           { value: "use", label: "[u]se as-is" },
@@ -284,7 +283,7 @@ export async function shipCommand(): Promise<void> {
         ],
       });
 
-      if (p.isCancel(action) || action === "skip") {
+      if (isCancel(action) || action === "skip") {
         done = true;
         continue;
       }
@@ -302,7 +301,7 @@ export async function shipCommand(): Promise<void> {
       }
 
       if (action === "regenerate") {
-        const rs = p.spinner();
+        const rs = spinner();
         rs.start(`Regenerating ${platform.label}...`);
         try {
           const result = await generateDrafts(ctx);
@@ -314,7 +313,7 @@ export async function shipCommand(): Promise<void> {
           rs.stop("Done.");
         } catch {
           rs.stop("Regeneration failed.");
-          console.log(warn("Could not regenerate — using previous draft."));
+          clog.warn("Could not regenerate — using previous draft.");
         }
         continue;
       }
@@ -322,30 +321,44 @@ export async function shipCommand(): Promise<void> {
   }
 
   // ─── Pre-launch checklist (after draft review — user has seen value first) ──
-  console.log(header("Pre-Launch Checklist"));
+  clog.step("Pre-Launch Checklist");
 
-  const readmeUpdated = await p.confirm({ message: "README updated this week?" });
-  checklist["readme"] = !p.isCancel(readmeUpdated) && readmeUpdated;
-  console.log(checklist["readme"] ? pass("README updated") : warn("README not updated"));
+  const readmeUpdated = await confirm({ message: "README updated this week?" });
+  checklist["readme"] = !isCancel(readmeUpdated) && readmeUpdated;
+  if (checklist["readme"]) {
+    clog.success("README updated");
+  } else {
+    clog.warn("README not updated");
+  }
 
-  const landingLive = await p.confirm({ message: "Landing page live?" });
-  checklist["landing"] = !p.isCancel(landingLive) && landingLive;
-  console.log(checklist["landing"] ? pass("Landing page live") : warn("No landing page"));
+  const landingLive = await confirm({ message: "Landing page live?" });
+  checklist["landing"] = !isCancel(landingLive) && landingLive;
+  if (checklist["landing"]) {
+    clog.success("Landing page live");
+  } else {
+    clog.warn("No landing page");
+  }
 
-  const analyticsOn = await p.confirm({ message: "Analytics installed?" });
-  checklist["analytics"] = !p.isCancel(analyticsOn) && analyticsOn;
-  console.log(checklist["analytics"] ? pass("Analytics active") : warn("No analytics — add PostHog"));
+  const analyticsOn = await confirm({ message: "Analytics installed?" });
+  checklist["analytics"] = !isCancel(analyticsOn) && analyticsOn;
+  if (checklist["analytics"]) {
+    clog.success("Analytics active");
+  } else {
+    clog.warn("No analytics — add PostHog");
+  }
 
-  const feedbackOn = await p.confirm({ message: "Feedback collection active?" });
-  checklist["feedback"] = !p.isCancel(feedbackOn) && feedbackOn;
-  console.log(
-    checklist["feedback"] ? pass("Feedback active") : warn("No feedback — run `loopkit pulse --setup`")
-  );
+  const feedbackOn = await confirm({ message: "Feedback collection active?" });
+  checklist["feedback"] = !isCancel(feedbackOn) && feedbackOn;
+  if (checklist["feedback"]) {
+    clog.success("Feedback active");
+  } else {
+    clog.warn("No feedback — run `loopkit pulse --setup`");
+  }
 
   // ─── Save ship log ────────────────────────────────────────────
   const logContent = buildLogContent(today, productName, whatShipped, checklist, usedDrafts);
   saveShipLog(logContent, today);
-  console.log(info(`Ship log saved → .loopkit/ships/${today}.md`));
+  clog.info(`Ship log saved → .loopkit/ships/${today}.md`);
 
   // ─── Sync ship log to Convex (best-effort) ────────────────────
   const convexProjectId = slug ? getConvexProjectId(slug) : undefined;

@@ -1,10 +1,9 @@
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { streamObject } from "ai";
 import { type ZodSchema } from "zod";
-import * as p from "@clack/prompts";
 import { readConfig, writeConfig } from "../storage/local.js";
 import { getCachedResult, setCachedResult } from "../storage/cache.js";
-import { colors } from "../ui/theme.js";
+import { colors, confirm, text, isCancel, clog } from "../ui/theme.js";
 
 interface ResolvedAuth {
   anthropicKey: string | null;
@@ -113,17 +112,17 @@ export async function generateStructured<T extends object>(options: {
     }
 
     if (res.status === 402 || res.status === 403) {
-      console.log(`\n${colors.warning("⚠️  Hosted AI requires a Solo/Pro subscription.")}`);
-      console.log(colors.muted("You can upgrade your plan or Bring Your Own Key (BYOK) for free.\n"));
+      clog.warn("⚠️  Hosted AI requires a Solo/Pro subscription.");
+      clog.message("You can upgrade your plan or Bring Your Own Key (BYOK) for free.\n");
 
-      const useByok = await p.confirm({
+      const useByok = await confirm({
         message: "Would you like to configure your local Anthropic API Key?",
         active: "Yes, enter key",
         inactive: "No, cancel",
       });
 
-      if (!p.isCancel(useByok) && useByok) {
-        const apiKey = await p.text({
+      if (!isCancel(useByok) && useByok) {
+        const apiKey = await text({
           message: "Enter your Anthropic API Key (starts with sk-ant-):",
           placeholder: "sk-ant-...",
           validate: (val) => {
@@ -137,11 +136,11 @@ export async function generateStructured<T extends object>(options: {
           },
         });
 
-        if (!p.isCancel(apiKey) && apiKey) {
+        if (!isCancel(apiKey) && apiKey) {
           const config = readConfig();
           config.anthropicKey = apiKey;
           writeConfig(config);
-          console.log(colors.success("API key saved securely. Retrying request...\n"));
+          clog.success("API key saved securely. Retrying request...\n");
 
           return generateStructured(options);
         }

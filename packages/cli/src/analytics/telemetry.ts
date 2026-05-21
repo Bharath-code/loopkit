@@ -1,10 +1,9 @@
-import * as p from "@clack/prompts";
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
 import { getWeekNumber, formatDate, type TelemetryEvent, type TelemetryExport, type TelemetryBrief, TelemetryBriefSchema } from "@loopkit/shared";
 import { getRoot, readConfig, writeConfig } from "../storage/local.js";
-import { colors, info, pass, fail } from "../ui/theme.js";
+import { colors, info, pass, fail, confirm, isCancel, clog } from "../ui/theme.js";
 
 const TELEMETRY_DIR = "telemetry";
 const BRIEF_AGGREGATES_FILE = "brief-aggregates.json";
@@ -110,15 +109,15 @@ export async function startTelemetryPrompt(): Promise<void> {
 
   if (config.telemetry.promptWeek && config.telemetry.promptWeek === weekNum) return;
 
-  console.log(`\n${colors.primary.bold("  📊 Help make LoopKit better")}`);
-  console.log(colors.dim("  We collect anonymous usage data to improve features and show benchmarks."));
-  console.log(colors.dim("  Everything is local by default. Nothing leaves your machine unless you opt in."));
+  clog.step("📊 Help make LoopKit better");
+  clog.message("We collect anonymous usage data to improve features and show benchmarks.");
+  clog.message("Everything is local by default. Nothing leaves your machine unless you opt in.");
 
-  const optIn = await p.confirm({
+  const optIn = await confirm({
     message: "Opt into anonymous usage telemetry?",
   });
 
-  if (p.isCancel(optIn)) {
+  if (isCancel(optIn)) {
     config.telemetry.prompted = true;
     config.telemetry.promptWeek = weekNum;
     writeConfig(config);
@@ -131,10 +130,10 @@ export async function startTelemetryPrompt(): Promise<void> {
   writeConfig(config);
 
   if (optIn) {
-    console.log(pass("Telemetry enabled. Thank you!"));
-    console.log(colors.dim("  Run `loopkit telemetry export` to review data, `loopkit telemetry delete` to remove."));
+    clog.success("Telemetry enabled. Thank you!");
+    clog.message("  Run `loopkit telemetry export` to review data, `loopkit telemetry delete` to remove.");
   } else {
-    console.log(info("Telemetry disabled. You can enable it later with `loopkit telemetry on`."));
+    clog.info("Telemetry disabled. You can enable it later with `loopkit telemetry on`.");
   }
 }
 
@@ -258,54 +257,54 @@ export async function telemetryCommand(action?: string): Promise<void> {
       const config = readConfig();
       config.telemetry = { optedIn: true, prompted: true };
       writeConfig(config);
-      console.log(pass("Telemetry enabled."));
+      clog.success("Telemetry enabled.");
       break;
     }
     case "off": {
       const config = readConfig();
       config.telemetry = { optedIn: false, prompted: true };
       writeConfig(config);
-      console.log(info("Telemetry disabled. Existing data preserved."));
+      clog.info("Telemetry disabled. Existing data preserved.");
       break;
     }
     case "export": {
       const data = exportTelemetry();
       const outPath = exportTelemetryToFile(undefined, data);
-      console.log(pass(`Exported ${data.events.length} events across ${data.weekCount} weeks`));
-      console.log(colors.dim(`  Saved to: ${outPath}`));
+      clog.success(`Exported ${data.events.length} events across ${data.weekCount} weeks`);
+      clog.message(`  Saved to: ${outPath}`);
       break;
     }
     case "delete": {
-      const confirmed = await p.confirm({
+      const confirmed = await confirm({
         message: "Delete all local telemetry data? This cannot be undone.",
       });
 
-      if (!p.isCancel(confirmed) && confirmed) {
+      if (!isCancel(confirmed) && confirmed) {
         deleteTelemetry();
-        console.log(pass("All telemetry data deleted."));
+        clog.success("All telemetry data deleted.");
       }
       break;
     }
     case "status": {
       const enabled = isTelemetryEnabled();
       const data = exportTelemetry();
-      console.log(colors.white.bold(`  Telemetry: ${enabled ? colors.success("on") : colors.muted("off")}`));
-      console.log(colors.dim(`  Events: ${data.events.length}`));
-      console.log(colors.dim(`  Weeks: ${data.weekCount}`));
-      console.log(colors.dim(`  ID: ${data.distinctId}`));
+      clog.step(`  Telemetry: ${enabled ? colors.success("on") : colors.muted("off")}`);
+      clog.message(`  Events: ${data.events.length}`);
+      clog.message(`  Weeks: ${data.weekCount}`);
+      clog.message(`  ID: ${data.distinctId}`);
       if (!enabled) {
-        console.log(colors.dim("  Run `loopkit telemetry on` to enable."));
+        clog.message("  Run `loopkit telemetry on` to enable.");
       }
       break;
     }
     default: {
-      console.log(colors.primary.bold("\n  loopkit telemetry"));
-      console.log(colors.dim("  Manage anonymous usage telemetry.\n"));
-      console.log(`  ${colors.white("telemetry")} ${colors.dim("     Show status")}`);
-      console.log(`  ${colors.white("telemetry on")} ${colors.dim("   Enable collection")}`);
-      console.log(`  ${colors.white("telemetry off")} ${colors.dim("  Disable collection (preserves data)")}`);
-      console.log(`  ${colors.white("telemetry export")} ${colors.dim("Export all data to JSON file")}`);
-      console.log(`  ${colors.white("telemetry delete")} ${colors.dim("Delete all local telemetry data")}`);
+      clog.step("loopkit telemetry");
+      clog.message("Manage anonymous usage telemetry.\n");
+      clog.message(`  ${colors.white("telemetry")} ${colors.dim("     Show status")}`);
+      clog.message(`  ${colors.white("telemetry on")} ${colors.dim("   Enable collection")}`);
+      clog.message(`  ${colors.white("telemetry off")} ${colors.dim("  Disable collection (preserves data)")}`);
+      clog.message(`  ${colors.white("telemetry export")} ${colors.dim("Export all data to JSON file")}`);
+      clog.message(`  ${colors.white("telemetry delete")} ${colors.dim("Delete all local telemetry data")}`);
       break;
     }
   }

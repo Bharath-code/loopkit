@@ -1,4 +1,3 @@
-import * as p from "@clack/prompts";
 import { readConfig, readTasksFile } from "../storage/local.js";
 import { colors, box, clog } from "../ui/theme.js";
 import { sendTerminalNotification } from "../notifications/terminal.js";

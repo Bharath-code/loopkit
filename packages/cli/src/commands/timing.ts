@@ -1,6 +1,5 @@
-import * as p from "@clack/prompts";
 import { readConfig, readBriefJson, listProjects } from "../storage/local.js";
-import { colors, header, info, shortcutsHint, ceremonyIntro, ceremonyOutro } from "../ui/theme.js";
+import { colors, header, info, shortcutsHint, ceremonyIntro, ceremonyOutro, text, isCancel, spinner, clog } from "../ui/theme.js";
 import { analyzeMarket } from "../analytics/marketTiming.js";
 import { detectProjectCategory } from "@loopkit/shared";
 import { pushTimingToConvex } from "../storage/sync.js";
@@ -34,13 +33,13 @@ export async function timingCommand(options?: {
     }
 
     if (!category) {
-      const input = await p.text({
+      const input = await text({
         message: "Enter your category or space:",
         placeholder: "e.g. saas founders, freelance tools",
         initialValue: "general",
       });
 
-      if (p.isCancel(input)) {
+      if (isCancel(input)) {
         ceremonyOutro("Cancelled.");
         return;
       }
@@ -48,15 +47,11 @@ export async function timingCommand(options?: {
       category = input;
     }
 
-    const s = p.spinner();
+    const s = spinner();
     s.start(`Analyzing market signals for "${category}"...`);
 
     const result = await analyzeMarket(category);
     s.stop(`Market signal computed.`);
-
-    console.log("");
-    header(`Market Signal: ${category}`);
-    console.log("");
 
     const { signal } = result;
 
@@ -73,11 +68,9 @@ export async function timingCommand(options?: {
           ? colors.danger
           : colors.warning;
 
-    info(
-      `${signalEmoji} Composite Score: ${signalColor(String(signal.compositeScore))}/100`,
-    );
-    info(`Signal: ${signalColor(signal.signal.toUpperCase())}`);
-    console.log("");
+    clog.step(`Market Signal: ${category}`);
+    clog.info(`${signalEmoji} Composite Score: ${signalColor(String(signal.compositeScore))}/100`);
+    clog.info(`Signal: ${signalColor(signal.signal.toUpperCase())}`);
 
     const trendArrow = (trend: string) => {
       switch (trend) {
@@ -90,18 +83,17 @@ export async function timingCommand(options?: {
       }
     };
 
-    console.log(colors.dim("  ─────────────────────────────────"));
-    console.log(
-      `  ${trendArrow(signal.fundingTrend)} Funding:   ${signal.fundingCount} rounds detected`,
+    clog.message(colors.dim("─────────────────────────────────"));
+    clog.message(
+      `${trendArrow(signal.fundingTrend)} Funding:   ${signal.fundingCount} rounds detected`,
     );
-    console.log(
-      `  ${trendArrow(signal.devTrend)} Dev Activity: ${signal.devGrowth} avg stars/repos`,
+    clog.message(
+      `${trendArrow(signal.devTrend)} Dev Activity: ${signal.devGrowth} avg stars/repos`,
     );
-    console.log(
-      `  ${trendArrow(signal.hiringTrend)} Hiring:     ${signal.hiringCount} postings found`,
+    clog.message(
+      `${trendArrow(signal.hiringTrend)} Hiring:     ${signal.hiringCount} postings found`,
     );
-    console.log(colors.dim("  ─────────────────────────────────"));
-    console.log("");
+    clog.message(colors.dim("─────────────────────────────────"));
 
     const interpretation =
       signal.signal === "heating"
@@ -110,13 +102,8 @@ export async function timingCommand(options?: {
           ? "Space is cooling down. May be saturated or past peak. Consider adjacent niches."
           : "Market is stable. Good time to enter if you have a differentiated angle.";
 
-    info(`Interpretation: ${interpretation}`);
-    console.log("");
-    console.log(
-      colors.dim(
-        `  Last updated: ${new Date(signal.lastUpdated).toLocaleDateString()}`,
-      ),
-    );
+    clog.message(`Interpretation: ${interpretation}`);
+    clog.message(colors.dim(`Last updated: ${new Date(signal.lastUpdated).toLocaleDateString()}`));
 
     try {
       await pushTimingToConvex({
@@ -134,10 +121,9 @@ export async function timingCommand(options?: {
       // Silently skip sync failure
     }
   } catch (error) {
-    console.log("");
-    console.log(colors.danger("  Market analysis failed."));
+    clog.error("Market analysis failed.");
     if (error instanceof Error) {
-      console.log(colors.dim(`  ${error.message}`));
+      clog.message(colors.dim(`  ${error.message}`));
     }
   }
 

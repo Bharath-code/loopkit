@@ -1,4 +1,3 @@
-import * as p from "@clack/prompts";
 import { LoopSynthesisSchema, UnstuckTasksSchema, getWeekNumber, formatDate, detectProjectCategory } from "@loopkit/shared";
 import { generateStructured } from "../ai/client.js";
 import { LOOP_SYSTEM_PROMPT, buildLoopPrompt } from "../ai/prompts/loop.js";
@@ -29,7 +28,7 @@ import { detectPatterns } from "../analytics/patterns.js";
 import { getPriorityMoment, recordMomentShown } from "../analytics/coach.js";
 import { computeLoopKitScore, renderLoopKitScore, readLoopKitScoreFromLog } from "../analytics/score.js";
 import { buildProofCard, buildTweetLine, copyToClipboard, buildTwitterIntentUrl, openUrl } from "../ui/proof-card.js";
-import { colors, header, box, pass, warn, info, nextStep, scoreBar, shortcutsHint, emptyState, patternCard, coachingCard, ceremonyIntro, ceremonyOutro, clog, note, tasks } from "../ui/theme.js";
+import { colors, header, box, pass, warn, info, nextStep, scoreBar, shortcutsHint, emptyState, patternCard, coachingCard, ceremonyIntro, ceremonyOutro, clog, note, tasks, confirm, isCancel, select, text, spinner } from "../ui/theme.js";
 
 interface LoopProof {
   previousScore: number;
@@ -46,7 +45,7 @@ export async function loopCommand(options?: { revenue?: string; async?: boolean 
   const slug = config.activeProject;
 
   if (!slug) {
-    console.log(colors.danger("No active project. Run `loopkit init` first."));
+    clog.error("No active project. Run `loopkit init` first.");
     process.exit(1);
   }
 
@@ -56,7 +55,7 @@ export async function loopCommand(options?: { revenue?: string; async?: boolean 
     ceremonyIntro("Revenue Update");
     const parsed = parseFloat(String(options.revenue).replace(/[^0-9.]/g, ""));
     if (Number.isNaN(parsed) || parsed < 0) {
-      console.log(colors.danger(`Invalid amount: "${options.revenue}". Use a number like --revenue 240`));
+      clog.error(`Invalid amount: "${options.revenue}". Use a number like --revenue 240`);
       process.exit(1);
     }
     const weekNum = getWeekNumber();
@@ -71,7 +70,7 @@ export async function loopCommand(options?: { revenue?: string; async?: boolean 
     });
     const history = readRevenueHistory();
     if (history.length === 1) {
-      console.log(pass(colors.success.bold(`🎉 First revenue logged! MRR: $${parsed}`)));
+      clog.success(`🎉 First revenue logged! MRR: $${parsed}`);
     } else {
       const deltaStr =
         delta !== null && delta !== 0
@@ -79,7 +78,7 @@ export async function loopCommand(options?: { revenue?: string; async?: boolean 
             ? colors.success(` ↑+$${delta}`)
             : colors.danger(` ↓$${Math.abs(delta)}`)
           : "";
-      console.log(pass(`MRR logged: $${parsed}${deltaStr}`));
+      clog.success(`MRR logged: $${parsed}${deltaStr}`);
     }
     ceremonyOutro("Revenue saved. Keep shipping. 🚀");
     return;
@@ -105,28 +104,28 @@ export async function loopCommand(options?: { revenue?: string; async?: boolean 
   if (isMonday && !loopLogExists(weekNum)) {
     const autoDraft = checkMissedSunday(slug);
     if (autoDraft) {
-      console.log(colors.warning("\n  🤖 Auto-Loop: Looks like you missed Sunday's ritual."));
-      console.log(colors.dim("  I've drafted your week summary from local data.\n"));
+      clog.warn("\n  🤖 Auto-Loop: Looks like you missed Sunday's ritual.");
+      clog.message("  I've drafted your week summary from local data.\n");
 
-      const confirm = await p.confirm({
+      const autoConfirm = await confirm({
         message: "Save this auto-generated loop draft?",
       });
 
-      if (!p.isCancel(confirm) && confirm) {
+      if (!isCancel(autoConfirm) && autoConfirm) {
         saveAutoLoopDraft(slug, autoDraft);
-        console.log(pass(`Week ${autoDraft.weekNumber} auto-loop saved.`));
-        console.log(colors.dim("  Run `loopkit loop` again for full AI synthesis."));
+        clog.success(`Week ${autoDraft.weekNumber} auto-loop saved.`);
+        clog.message("  Run `loopkit loop` again for full AI synthesis.");
         ceremonyOutro("Auto-loop complete. See you next Sunday.");
         return;
       } else {
-        console.log(info("Skipping auto-loop. Running full loop instead."));
+        clog.info("Skipping auto-loop. Running full loop instead.");
       }
     }
   }
 
   // ─── Mid-week check ──────────────────────────────────────────
   if (!isSunday && !isAsync) {
-    console.log(colors.muted("  Mid-week check-in mode (full loop runs Sunday).\n"));
+    clog.message("  Mid-week check-in mode (full loop runs Sunday).\n");
   }
 
   // ─── Gather local data ───────────────────────────────────────
@@ -208,18 +207,18 @@ export async function loopCommand(options?: { revenue?: string; async?: boolean 
   }
 
   // ─── Week Summary (instant, local data) ──────────────────────
-  console.log(header("Week in Numbers"));
-  console.log(`  ${colors.success("Done:")} ${tasksCompleted.length}`);
-  console.log(`  ${colors.warning("Open:")} ${tasksOpen.length}`);
-  console.log(`  ${colors.white("Shipped:")} ${shipLog ? "Yes" : "Not yet"}`);
-  console.log(`  ${colors.white.bold("Score:")} ${scoreBar(shippingScore, 100)}`);
+  clog.step("Week in Numbers");
+  clog.message(`${colors.success("Done:")} ${tasksCompleted.length}`);
+  clog.message(`${colors.warning("Open:")} ${tasksOpen.length}`);
+  clog.message(`${colors.white("Shipped:")} ${shipLog ? "Yes" : "Not yet"}`);
+  clog.message(`${colors.white.bold("Score:")} ${scoreBar(shippingScore, 100)}`);
 
   const pastStreak = getConsecutiveWeeksStreak(weekNum);
   const currentStreak = pastStreak + 1;
   if (currentStreak >= 2) {
-    console.log(`  ${colors.primary.bold("Streak:")} 🔥 ${currentStreak} consecutive weeks`);
+    clog.message(`${colors.primary.bold("Streak:")} 🔥 ${currentStreak} consecutive weeks`);
   } else if (pastStreak === 0 && proof.weeksActive >= 2) {
-    console.log(warn("  Streak reset — you missed a week. Let's start a new one today."));
+    clog.warn("Streak reset — you missed a week. Let's start a new one today.");
   }
 
   // ─── Handle no data (first week) ─────────────────────────────
@@ -232,17 +231,17 @@ export async function loopCommand(options?: { revenue?: string; async?: boolean 
       )
     );
 
-    const progress = await p.text({
+    const progress = await text({
       message: "What did you make progress on?",
       placeholder: "e.g. Set up the project, wrote the first draft",
     });
 
-    const nextThing = await p.text({
+    const nextThing = await text({
       message: "What's next week's one thing?",
       placeholder: "e.g. Ship the MVP landing page",
     });
 
-    if (!p.isCancel(progress) && !p.isCancel(nextThing)) {
+    if (!isCancel(progress) && !isCancel(nextThing)) {
       const logContent = [
         `# Week ${weekNum} — ${formatDate()} | project:${slug}`,
         "",
@@ -260,7 +259,7 @@ export async function loopCommand(options?: { revenue?: string; async?: boolean 
       ].join("\n");
 
       saveLoopLog(weekNum, logContent);
-      console.log(info(`Loop log saved → .loopkit/logs/week-${weekNum}.md`));
+      clog.info(`Loop log saved → .loopkit/logs/week-${weekNum}.md`);
 
       const convexProjectId = getConvexProjectId(slug);
       if (convexProjectId) {
@@ -283,14 +282,14 @@ export async function loopCommand(options?: { revenue?: string; async?: boolean 
 
   // ─── Unstuck Mode: 0 tasks (only triggers after week 1) ──────
   if (totalTasks === 0 && tasksCompleted.length === 0 && proof.weeksActive >= 2) {
-    console.log(colors.warning("\n  No tasks this week. Feeling stuck?\n"));
+    clog.warn("\n  No tasks this week. Feeling stuck?\n");
 
-    const wantUnstuck = await p.confirm({
+    const wantUnstuck = await confirm({
       message: "Generate 3 micro-tasks to get unstuck? (30-90 min each)",
     });
 
-    if (!p.isCancel(wantUnstuck) && wantUnstuck) {
-      const us = p.spinner();
+    if (!isCancel(wantUnstuck) && wantUnstuck) {
+      const us = spinner();
       us.start("Generating micro-tasks from your brief...");
 
       try {
@@ -312,17 +311,17 @@ export async function loopCommand(options?: { revenue?: string; async?: boolean 
 
         us.stop("Micro-tasks ready.");
 
-        console.log(header("Your 3 Micro-Tasks"));
+        clog.step("Your 3 Micro-Tasks");
         for (let i = 0; i < unstuck.microTasks.length; i++) {
-          console.log(`  ${colors.success(`${i + 1}.`)} ${unstuck.microTasks[i]}`);
+          clog.message(`${colors.success(`${i + 1}.`)} ${unstuck.microTasks[i]}`);
         }
-        console.log(colors.dim(`\n  ${unstuck.encouragement}`));
+        clog.message(`\n${unstuck.encouragement}`);
 
-        const wantAdd = await p.confirm({
+        const wantAdd = await confirm({
           message: "Add these to your tasks.md?",
         });
 
-        if (!p.isCancel(wantAdd) && wantAdd) {
+        if (!isCancel(wantAdd) && wantAdd) {
           const existing = readTasksFile(slug) || "";
           const newTasks = unstuck.microTasks
             .map((t, i) => `- [ ] #W${weekNum}-${i + 1} ${t}`)
@@ -337,22 +336,22 @@ export async function loopCommand(options?: { revenue?: string; async?: boolean 
 
           const { writeTasksFile } = await import("../storage/local.js");
           writeTasksFile(slug, updated);
-          console.log(pass("Micro-tasks added to tasks.md"));
+          clog.success("Micro-tasks added to tasks.md");
         }
       } catch {
         us.stop("Failed.");
-        console.log(warn("AI unavailable. Try again when connected."));
+        clog.warn("AI unavailable. Try again when connected.");
       }
     }
   }
 
   // ─── Mid-week: no AI by default (unless async mode) ──────────────────────
   if (!isSunday && !isAsync) {
-    const runFull = await p.confirm({
+    const runFull = await confirm({
       message: "Run full AI synthesis anyway?",
     });
 
-    if (p.isCancel(runFull) || !runFull) {
+    if (isCancel(runFull) || !runFull) {
       ceremonyOutro("Check back Sunday for full loop.");
       return;
     }
@@ -520,7 +519,7 @@ export async function loopCommand(options?: { revenue?: string; async?: boolean 
     );
 
     // ─── Accept / Change / Skip ─────────────────────────────────
-    const action = await p.select({
+    const action = await select({
       message: "This week's priority:",
       options: [
         { value: "accept", label: "[a]ccept — set as #1 task" },
@@ -533,20 +532,20 @@ export async function loopCommand(options?: { revenue?: string; async?: boolean 
     let overrideReason: string | undefined;
     let finalOneThing = synthesis.oneThing;
 
-    if (!p.isCancel(action)) {
+    if (!isCancel(action)) {
       if (action === "change") {
-        const custom = await p.text({
+        const custom = await text({
           message: "What's your one thing instead?",
         });
-        if (!p.isCancel(custom)) {
+        if (!isCancel(custom)) {
           finalOneThing = custom;
           overridden = true;
 
-          const reason = await p.text({
+          const reason = await text({
             message: "Why different? (helps improve future suggestions)",
             placeholder: "Optional — press Enter to skip",
           });
-          if (!p.isCancel(reason) && reason) {
+          if (!isCancel(reason) && reason) {
             overrideReason = reason;
           }
         }
@@ -574,7 +573,7 @@ export async function loopCommand(options?: { revenue?: string; async?: boolean 
     const charCount = synthesis.bipPost.length;
     clog.message(`${charCount}/280 characters${charCount > 280 ? " ⚠ over limit" : ""}`);
 
-    const postAction = await p.select({
+    const postAction = await select({
       message: "Share this post:",
       options: [
         { value: "twitter", label: "[t]weet on X  — open twitter.com/intent/tweet" },
@@ -583,7 +582,7 @@ export async function loopCommand(options?: { revenue?: string; async?: boolean 
       ],
     });
 
-    if (!p.isCancel(postAction)) {
+    if (!isCancel(postAction)) {
       if (postAction === "twitter") {
         const bipCopied = await copyToClipboard(synthesis.bipPost);
         const twitterUrl = buildTwitterIntentUrl(synthesis.bipPost);
@@ -623,7 +622,7 @@ export async function loopCommand(options?: { revenue?: string; async?: boolean 
       clog.success("Tweet line copied to clipboard.");
     }
 
-    const cardShareAction = await p.select({
+    const cardShareAction = await select({
       message: "Share proof card:",
       options: [
         { value: "twitter", label: "[t]weet on X — open twitter.com/intent/tweet" },
@@ -631,7 +630,7 @@ export async function loopCommand(options?: { revenue?: string; async?: boolean 
       ],
     });
 
-    if (!p.isCancel(cardShareAction) && cardShareAction === "twitter") {
+    if (!isCancel(cardShareAction) && cardShareAction === "twitter") {
       const twitterUrl = buildTwitterIntentUrl(tweetLine);
       await openUrl(twitterUrl);
       clog.success("Opened X/Twitter in browser!");
@@ -739,11 +738,11 @@ export async function loopCommand(options?: { revenue?: string; async?: boolean 
     if (currentStreak >= 4) {
       const config = readConfig();
       if (!config.referralShown) {
-        const wantReferral = await p.confirm({
+        const wantReferral = await confirm({
           message: "Share LoopKit with a founder friend and get 1 month of Solo free?",
         });
 
-        if (!p.isCancel(wantReferral) && wantReferral) {
+        if (!isCancel(wantReferral) && wantReferral) {
           const referralCode = generateReferralCode();
           note(`loopkit.dev/r/${referralCode}\n\nShare this link — when a friend signs up, you both get 1 month free.`, "Your Referral Link 🎁");
           config.referralShown = true;
@@ -839,7 +838,7 @@ function renderProof(proof: LoopProof): void {
     `${colors.white("Feedback:")} ${proof.feedbackResponses} response${proof.feedbackResponses === 1 ? "" : "s"}${proof.feedbackActedOn ? " -> acted on" : ""}`,
   ];
 
-  console.log(header("Proof This Week"));
+  clog.step("Proof This Week");
   console.log(box(lines.join("\n")));
 }
 
@@ -856,16 +855,12 @@ async function maybeShowUpgradeIntent(proof: LoopProof): Promise<void> {
     ? `${proof.weeksActive} weeks of data — want the dashboard and AI proxy to go deeper?`
     : "You're 4 weeks in — this is when the dashboard starts compounding. Want to unlock it?";
 
-  const wantsUpgrade = await p.confirm({ message });
+  const wantsUpgrade = await confirm({ message });
 
-  if (p.isCancel(wantsUpgrade) || !wantsUpgrade) return;
+  if (isCancel(wantsUpgrade) || !wantsUpgrade) return;
 
   recordEvent({ command: "upgrade:intent:solo" });
-  console.log(
-    info(
-      "Upgrade path: /login?intent=upgrade&plan=solo&source=cli-loop",
-    ),
-  );
+  clog.info("Upgrade path: /login?intent=upgrade&plan=solo&source=cli-loop");
 }
 
 // ─── Shipping DNA Display ────────────────────────────────────────
@@ -883,7 +878,7 @@ function displayDNA(dna: ShippingDNA): void {
 
   const emoji = patternEmoji[dna.pattern] || "📊";
 
-  console.log(header(`${emoji} Your Shipping DNA`));
+  clog.step(`${emoji} Your Shipping DNA`);
 
   const dnaLines = [
     colors.white.bold(`Pattern: ${dna.pattern}`),
@@ -928,15 +923,11 @@ function checkOverrideRate(slug: string): void {
 
   const overrideCount = logs.filter((l) => l.overridden).length;
   if (overrideCount >= THRESHOLD) {
-    console.log(
-      warn(
-        `Override rate: ${overrideCount}/${WINDOW} weeks — you've changed the AI recommendation more than half the time.`
-      )
+    clog.warn(
+      `Override rate: ${overrideCount}/${WINDOW} weeks — you've changed the AI recommendation more than half the time.`
     );
-    console.log(
-      colors.muted(
-        "  This may mean the AI needs better context. Try updating your brief: `loopkit init --analyze`"
-      )
+    clog.message(
+      "  This may mean the AI needs better context. Try updating your brief: `loopkit init --analyze`"
     );
   }
 }
@@ -952,12 +943,12 @@ async function maybePromptRevenue(_slug: string, weekNum: number): Promise<void>
       ? `Update MRR? (current: $${latestMRR})`
       : "Any revenue to log? (MRR in USD — press Enter to skip)";
 
-  const revenueAnswer = await p.text({
+  const revenueAnswer = await text({
     message,
     placeholder: latestMRR !== null ? `${latestMRR}` : "0 — skip with Enter",
   });
 
-  if (p.isCancel(revenueAnswer)) return;
+  if (isCancel(revenueAnswer)) return;
 
   const raw = (revenueAnswer as string).trim();
   if (!raw || raw === "0" || raw === "") return;
@@ -978,7 +969,7 @@ async function maybePromptRevenue(_slug: string, weekNum: number): Promise<void>
   });
 
   if (history.length === 0) {
-    console.log(pass(colors.success.bold(`🎉 First revenue! MRR: $${mrr} — you're in business.`)));
+    clog.success(`🎉 First revenue! MRR: $${mrr} — you're in business.`);
   } else {
     const deltaStr =
       delta !== null && delta !== 0
@@ -986,7 +977,7 @@ async function maybePromptRevenue(_slug: string, weekNum: number): Promise<void>
           ? colors.success(` ↑+$${delta}`)
           : colors.danger(` ↓$${Math.abs(delta)}`)
         : "";
-    console.log(pass(`MRR updated: $${mrr}${deltaStr}`));
+    clog.success(`MRR updated: $${mrr}${deltaStr}`);
   }
 }
 
@@ -1022,7 +1013,7 @@ async function detectAndTriggerMilestones(ctx: MilestoneDetectionContext): Promi
       projectId: convexProjectId,
       metadata: { weekNumber: weekNum },
     });
-    console.log(header("🎉 Milestone"));
+    clog.step("🎉 Milestone");
     console.log(box("You shipped your first week. 70% of founders quit by week 2. You're in the top 30%."));
   }
 
@@ -1033,7 +1024,7 @@ async function detectAndTriggerMilestones(ctx: MilestoneDetectionContext): Promi
       projectId: convexProjectId,
       metadata: { weekNumber: weekNum },
     });
-    console.log(header("🎉 Milestone"));
+    clog.step("🎉 Milestone");
     console.log(box("One month straight. Here's your pattern analysis — check your shipping DNA above."));
   }
 
@@ -1046,7 +1037,7 @@ async function detectAndTriggerMilestones(ctx: MilestoneDetectionContext): Promi
       projectId: convexProjectId,
       metadata: { mrr: latestMRR, weekNumber: weekNum },
     });
-    console.log(header("💰 Milestone"));
+    clog.step("💰 Milestone");
     console.log(box("First revenue signal! You've crossed the chasm from builder to business."));
   }
 
@@ -1057,7 +1048,7 @@ async function detectAndTriggerMilestones(ctx: MilestoneDetectionContext): Promi
       projectId: convexProjectId,
       metadata: { weekNumber: weekNum, weeksActive: proof.weeksActive },
     });
-    console.log(header("📊 Milestone"));
+    clog.step("📊 Milestone");
     console.log(box("You missed a week. 47 other founders ran loopkit loop yesterday. Get back in the game!"));
   }
 
@@ -1076,7 +1067,7 @@ async function detectAndTriggerMilestones(ctx: MilestoneDetectionContext): Promi
       projectId: convexProjectId,
       metadata: { weekNumber: weekNum, pricingMentions },
     });
-    console.log(header("🎯 Milestone"));
+    clog.step("🎯 Milestone");
     console.log(box("Pulse feedback mentions 'pricing' 3 times — time to charge for what you've built."));
   }
 }

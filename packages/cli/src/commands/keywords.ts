@@ -1,6 +1,5 @@
-import * as p from "@clack/prompts";
 import { readConfig, readBriefJson, listProjects } from "../storage/local.js";
-import { colors, shortcutsHint, ceremonyIntro, ceremonyOutro } from "../ui/theme.js";
+import { colors, clog, shortcutsHint, ceremonyIntro, ceremonyOutro, select, isCancel, text, spinner } from "../ui/theme.js";
 import { findKeywords } from "../analytics/keywordFinder.js";
 import { categorizeICP, categorizeProblem } from "../analytics/competitorRadar.js";
 
@@ -21,9 +20,9 @@ export async function keywordsCommand(options?: { category?: string; project?: s
         category = categorizeICP(brief.answers.icp);
         problemCategory = categorizeProblem(brief.answers.problem);
 
-        console.log(colors.dim(`  Finding keywords for: ${colors.white(category)}`));
+        clog.message(colors.dim(`Finding keywords for: ${colors.white(category)}`));
         if (problemCategory !== "other") {
-          console.log(colors.dim(`  Problem area: ${colors.white(problemCategory)}`));
+          clog.message(colors.dim(`Problem area: ${colors.white(problemCategory)}`));
         }
       }
     }
@@ -31,7 +30,7 @@ export async function keywordsCommand(options?: { category?: string; project?: s
     if (!category) {
       const projects = listProjects();
       if (projects.length > 0) {
-        const selected = await p.select({
+        const selected = await select({
           message: "Which project to find keywords for?",
           options: projects.map((slug) => {
             const brief = readBriefJson(slug);
@@ -40,7 +39,7 @@ export async function keywordsCommand(options?: { category?: string; project?: s
           }),
         });
 
-        if (p.isCancel(selected)) {
+        if (isCancel(selected)) {
           ceremonyOutro("Search cancelled.");
           return;
         }
@@ -54,12 +53,12 @@ export async function keywordsCommand(options?: { category?: string; project?: s
     }
 
     if (!category) {
-      const input = await p.text({
+      const input = await text({
         message: "Enter a category (e.g., saas founders, ecommerce, developers):",
         placeholder: "e.g. saas founders",
       });
 
-      if (p.isCancel(input)) {
+      if (isCancel(input)) {
         ceremonyOutro("Search cancelled.");
         return;
       }
@@ -68,7 +67,7 @@ export async function keywordsCommand(options?: { category?: string; project?: s
     }
   }
 
-  const s = p.spinner();
+  const s = spinner();
   s.start(`Scanning SEO data sources for "${category}"...`);
 
   try {
@@ -77,8 +76,8 @@ export async function keywordsCommand(options?: { category?: string; project?: s
     if (result.totalFound === 0) {
       s.stop("No keyword opportunities found.");
       console.log("");
-      console.log(colors.muted("  No data available for this category."));
-      console.log(colors.dim("  Try a broader category or check back later."));
+      clog.message("No data available for this category.");
+      clog.message("Try a broader category or check back later.");
       return;
     }
 
@@ -90,12 +89,11 @@ export async function keywordsCommand(options?: { category?: string; project?: s
     );
 
     if (lowHanging.length > 0) {
-      console.log(colors.primary.bold(`  ${lowHanging.length} low-hanging fruit`));
-      console.log("");
+      clog.step(`${lowHanging.length} low-hanging fruit`);
     }
 
-    console.log(colors.dim("  Keyword                          Score  Volume      Competition"));
-    console.log(colors.dim("  " + "─".repeat(70)));
+    clog.message(colors.dim("Keyword                          Score  Volume      Competition"));
+    clog.message(colors.dim("─".repeat(70)));
 
     for (const opp of result.opportunities.slice(0, 10)) {
       const scoreColor = opp.score >= 70 ? colors.success : opp.score >= 40 ? colors.warning : colors.muted;
@@ -105,20 +103,20 @@ export async function keywordsCommand(options?: { category?: string; project?: s
       const kwDisplay = opp.keyword.length > 30 ? opp.keyword.slice(0, 27) + "..." : opp.keyword;
       const padded = kwDisplay.padEnd(32);
 
-      console.log(
-        `  ${padded} ${scoreColor(String(opp.score).padStart(3))}  ${volIcon} ${opp.volume.padEnd(6)}  ${compColor(opp.competition)}`
+      clog.message(
+        `${padded} ${scoreColor(String(opp.score).padStart(3))}  ${volIcon} ${opp.volume.padEnd(6)}  ${compColor(opp.competition)}`
       );
 
       if (opp.suggestions && opp.suggestions.length > 0) {
-        console.log(colors.dim(`    → ${opp.suggestions.slice(0, 3).join(", ")}`));
+        clog.message(colors.dim(`  → ${opp.suggestions.slice(0, 3).join(", ")}`));
       }
     }
 
-    console.log("");
-    console.log(colors.dim("  Cached for 7 days. Run again to refresh."));
+    clog.message("");
+    clog.message("Cached for 7 days. Run again to refresh.");
   } catch (error) {
     s.stop("Search failed.");
-    console.log(colors.danger("  Could not fetch keyword data. Check your internet connection."));
+    clog.error("Could not fetch keyword data. Check your internet connection.");
   }
 
   ceremonyOutro("Create content that ranks.");

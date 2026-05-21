@@ -1,4 +1,3 @@
-import * as p from "@clack/prompts";
 import QRCode from "qrcode";
 import { PulseClusterSchema } from "@loopkit/shared";
 import { generateStructured } from "../ai/client.js";
@@ -22,6 +21,11 @@ import {
   emptyState,
   ceremonyIntro,
   ceremonyOutro,
+  spinner,
+  confirm,
+  isCancel,
+  clog,
+  note,
 } from "../ui/theme.js";
 
 interface PulseOptions {
@@ -38,17 +42,13 @@ export async function pulseCommand(options: PulseOptions): Promise<void> {
   // ─── --share: Generate shareable feedback URL ────────────────
   if (options.share) {
     if (!slug) {
-      console.log(
-        colors.danger("No active project. Run `loopkit init` first."),
-      );
+      clog.error("No active project. Run `loopkit init` first.");
       process.exit(1);
     }
 
     const token = config.auth?.apiKey;
     if (!token) {
-      console.log(
-        colors.danger("Authentication required. Run `loopkit auth` first."),
-      );
+      clog.error("Authentication required. Run `loopkit auth` first.");
       process.exit(1);
     }
 
@@ -56,7 +56,7 @@ export async function pulseCommand(options: PulseOptions): Promise<void> {
     const name = brief?.answers?.name || slug;
 
     const API_URL = process.env.LOOPKIT_API_URL || "http://localhost:3000";
-    const s = p.spinner();
+    const s = spinner();
     s.start("Creating shareable feedback form...");
 
     try {
@@ -82,19 +82,7 @@ export async function pulseCommand(options: PulseOptions): Promise<void> {
         saveBrief(slug, brief.answers, brief.brief, convexProjectId);
       }
 
-      console.log(header("Shareable Pulse URL"));
-      console.log(
-        box(
-          [
-            colors.primary(url),
-            "",
-            "Share this link to collect feedback:",
-            "  • Email it to beta users",
-            "  • Post it in your community",
-            "  • Embed it with the widget script",
-          ].join("\n"),
-        ),
-      );
+      note(url, "Your Feedback URL");
 
       try {
         const qr = await QRCode.toString(url, {
@@ -106,17 +94,15 @@ export async function pulseCommand(options: PulseOptions): Promise<void> {
         // QR generation failed, URL is already shown
       }
 
-      console.log(
+      clog.message(
         colors.muted(
-          `\n  Embed widget: <script src="${API_URL}/api/pulse/widget?projectId=${convexProjectId || 'YOUR_PROJECT_ID'}"></script>\n`,
+          `Embed widget: <script src="${API_URL}/api/pulse/widget?projectId=${convexProjectId || 'YOUR_PROJECT_ID'}"></script>`,
         ),
       );
     } catch (err) {
       s.stop("Failed to create share link.");
-      console.log(
-        colors.danger(
-          `Error: ${err instanceof Error ? err.message : "Unknown error"}`,
-        ),
+      clog.error(
+        `Error: ${err instanceof Error ? err.message : "Unknown error"}`,
       );
       process.exit(1);
     }
@@ -128,7 +114,7 @@ export async function pulseCommand(options: PulseOptions): Promise<void> {
   if (options.add !== undefined) {
     const text = options.add.trim();
     if (!text) {
-      console.log(colors.danger("Response text cannot be empty."));
+      clog.error("Response text cannot be empty.");
       process.exit(1);
     }
 
@@ -139,15 +125,15 @@ export async function pulseCommand(options: PulseOptions): Promise<void> {
       (r) => r.toLowerCase().replace(/\s+/g, " ") === normalized
     );
     if (isDuplicate) {
-      console.log(colors.warning("Response already exists (skipped duplicate)."));
+      clog.warn("Response already exists (skipped duplicate).");
       return;
     }
 
     appendPulseResponse(text);
     const total = readPulseResponses().length;
-    console.log(pass(`Response added (${total} total)`));
+    clog.success(`Response added (${total} total)`);
     if (total < 5) {
-      console.log(colors.muted(`  Need ${5 - total} more for AI clustering.`));
+      clog.message(`Need ${5 - total} more for AI clustering.`);
     }
     return;
   }
@@ -157,13 +143,11 @@ export async function pulseCommand(options: PulseOptions): Promise<void> {
     ceremonyIntro("Pulse Setup");
 
     if (!slug) {
-      console.log(
-        colors.danger("No active project. Run `loopkit init` first."),
-      );
+      clog.error("No active project. Run `loopkit init` first.");
       process.exit(1);
     }
 
-    console.log(header("Feedback Collection — V1 (Local)"));
+    clog.step("Feedback Collection — V1 (Local)");
     console.log(
       box(
         [
@@ -198,9 +182,9 @@ export async function pulseCommand(options: PulseOptions): Promise<void> {
         "loopkit pulse --setup",
       ),
     );
-    console.log(
+    clog.message(
       colors.muted(
-        "  After 7 days with 0 responses: is your feedback channel visible?\n",
+        "After 7 days with 0 responses: is your feedback channel visible?",
       ),
     );
     ceremonyOutro("");
@@ -210,21 +194,19 @@ export async function pulseCommand(options: PulseOptions): Promise<void> {
   // ─── Raw mode ─────────────────────────────────────────────────
   if (options.raw || responses.length < 5) {
     if (responses.length < 5) {
-      console.log(
-        warn(
-          `Not enough responses to cluster reliably (${responses.length}/5 minimum). Showing raw.`,
-        ),
+      clog.warn(
+        `Not enough responses to cluster reliably (${responses.length}/5 minimum). Showing raw.`,
       );
     }
 
-    console.log(header(`Raw Responses (${responses.length})`));
+    clog.step(`Raw Responses (${responses.length})`);
     for (let i = 0; i < responses.length; i++) {
-      console.log(`  ${colors.dim(`${i + 1}.`)} "${responses[i]}"`);
+      clog.message(`${colors.dim(`${i + 1}.`)} "${responses[i]}"`);
     }
 
-    console.log(
+    clog.message(
       colors.muted(
-        "\n  Tip: Your feedback channel may need better placement.\n",
+        "Tip: Your feedback channel may need better placement.",
       ),
     );
     ceremonyOutro("");
@@ -232,7 +214,7 @@ export async function pulseCommand(options: PulseOptions): Promise<void> {
   }
 
   // ─── AI Clustering ────────────────────────────────────────────
-  const s = p.spinner();
+  const s = spinner();
   s.start("Clustering feedback...");
 
   try {
@@ -256,48 +238,47 @@ export async function pulseCommand(options: PulseOptions): Promise<void> {
             ? colors.warning("●")
             : colors.muted("●");
 
-      console.log(header(`${icon} ${cluster.label} (${cluster.count})`));
-      console.log(`  ${colors.dim(cluster.pattern)}`);
+      clog.step(`${icon} ${cluster.label} (${cluster.count})`);
+      clog.message(colors.dim(cluster.pattern));
       for (const quote of cluster.quotes) {
-        console.log(`  ${colors.dim("→")} "${quote}"`);
+        clog.message(`${colors.dim("→")} "${quote}"`);
       }
     }
 
     if (clusters.outliers.length > 0) {
-      console.log(header("Outliers"));
+      clog.step("Outliers");
       for (const outlier of clusters.outliers) {
-        console.log(`  ${colors.dim("?")} "${outlier}"`);
+        clog.message(`${colors.dim("?")} "${outlier}"`);
       }
     }
 
-    console.log(
-      colors.dim(
-        `\n  Confidence: ${Math.round(clusters.confidence * 100)}% clearly clustered`,
-      ),
+    clog.message(
+      `Confidence: ${Math.round(clusters.confidence * 100)}% clearly clustered`,
     );
     if (clusters.note) {
-      console.log(colors.dim(`  ${clusters.note}`));
+      clog.message(clusters.note);
     }
 
     // ─── Tag to sprint ───────────────────────────────────────────
     const fixNow = clusters.clusters.find((c) => c.label === "Fix now");
     if (fixNow && fixNow.count > 0) {
-      const tagAction = await p.confirm({
+      const tagAction = await confirm({
         message: `Tag "${fixNow.pattern}" to this week's sprint?`,
       });
 
-      if (!p.isCancel(tagAction) && tagAction) {
-        console.log(pass(`Tagged to sprint: [from pulse] ${fixNow.pattern}`));
+      if (!isCancel(tagAction) && tagAction) {
+        clog.success(`Tagged to sprint: [from pulse] ${fixNow.pattern}`);
       }
     }
   } catch {
     s.stop("Clustering failed.");
-    console.log(warn("Clustering failed — showing raw feedback."));
+    clog.warn("Clustering failed — showing raw feedback.");
     for (let i = 0; i < responses.length; i++) {
-      console.log(`  ${colors.dim(`${i + 1}.`)} "${responses[i]}"`);
+      clog.message(`${colors.dim(`${i + 1}.`)} "${responses[i]}"`);
     }
   }
 
-  console.log(nextStep("loop"));
+  clog.step("Next Step");
+  clog.info(`Run ${colors.primary.bold("loopkit loop")} to close your weekly loop.`);
   ceremonyOutro("");
 }

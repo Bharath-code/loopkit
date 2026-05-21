@@ -1,4 +1,3 @@
-import * as p from "@clack/prompts";
 import { installAliases, removeAliases, getShellInfo } from "../aliases/installer.js";
 import { clog } from "../ui/theme.js";
 

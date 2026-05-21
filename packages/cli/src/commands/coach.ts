@@ -1,4 +1,3 @@
-import * as p from "@clack/prompts";
 import { readConfig, writeConfig } from "../storage/local.js";
 import { getCoachingPlan, recordMomentShown } from "../analytics/coach.js";
 import {
@@ -9,6 +8,9 @@ import {
   shortcutsHint,
   ceremonyIntro,
   ceremonyOutro,
+  spinner,
+  confirm,
+  isCancel,
 } from "../ui/theme.js";
 
 export async function coachCommand(options?: {
@@ -46,7 +48,7 @@ export async function coachCommand(options?: {
   console.log(shortcutsHint());
 
   // ─── Generate coaching plan ───────────────────────────────────
-  const s = p.spinner();
+  const s = spinner();
   s.start("Analyzing your shipping data...");
 
   const plan = getCoachingPlan(slug);
@@ -55,11 +57,12 @@ export async function coachCommand(options?: {
 
   if (!plan || plan.moments.length === 0) {
     clog.step("Not Enough Data Yet");
-    clog.message("  Coaching needs at least 2 weeks of loop data.");
+    clog.message("Coaching needs at least 2 weeks of loop data.");
     clog.message(
-      "  Run `loopkit loop` for a few weeks to unlock personalized coaching.",
+      "Run `loopkit loop` for a few weeks to unlock personalized coaching.",
     );
-    console.log(nextStep("loop"));
+    clog.step("Next Step");
+    clog.info(`Run ${colors.primary.bold("loopkit loop")} for a few weeks to unlock coaching.`);
     ceremonyOutro("Keep shipping. Coaching will get smarter every week.");
     return;
   }
@@ -69,21 +72,22 @@ export async function coachCommand(options?: {
 
   // ─── Interactive: acknowledge each moment ─────────────────────
   for (const moment of plan.moments) {
-    const ack = await p.confirm({
+    const ack = await confirm({
       message: `Acknowledge: ${moment.title}?`,
     });
 
-    if (p.isCancel(ack)) {
+    if (isCancel(ack)) {
       ceremonyOutro("Coaching cancelled.");
       return;
     }
 
     if (ack) {
       recordMomentShown(moment.id);
-      clog.success(`  ✓ Marked as seen`);
+      clog.success("Marked as seen");
     }
   }
 
-  console.log(nextStep("loop"));
+  clog.step("Next Step");
+  clog.info(`Run ${colors.primary.bold("loopkit loop")} to check in.`);
   ceremonyOutro("Coaching complete. See you next week.");
 }

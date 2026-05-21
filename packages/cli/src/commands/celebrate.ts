@@ -1,4 +1,3 @@
-import * as p from "@clack/prompts";
 import { getWeekNumber, formatDate } from "@loopkit/shared";
 import {
   readConfig,
@@ -13,7 +12,7 @@ import {
 } from "../storage/local.js";
 import { computeLoopKitScore } from "../analytics/score.js";
 import { buildProofCard, buildTweetLine, copyToClipboard, buildTwitterIntentUrl, openUrl } from "../ui/proof-card.js";
-import { colors, header, box, pass, info, ceremonyIntro, ceremonyOutro } from "../ui/theme.js";
+import { colors, header, box, pass, info, clog, ceremonyIntro, ceremonyOutro, multiselect, isCancel } from "../ui/theme.js";
 import { getConvexProjectId } from "../storage/sync.js";
 
 // ─── ASCII Confetti ─────────────────────────────────────────────
@@ -153,7 +152,7 @@ export async function celebrateCommand(
   }
 
   if (!slug) {
-    console.log(colors.danger("No active project. Run `loopkit init` first."));
+    clog.error("No active project. Run `loopkit init` first.");
     process.exit(1);
   }
 
@@ -198,25 +197,19 @@ export async function celebrateCommand(
 
   // ─── Milestone callouts ───────────────────────────────────────
   if (score.currentStreak === 1) {
-    console.log(pass("First week shipped — the hardest one!"));
+    clog.success("First week shipped — the hardest one!");
   }
   if (score.currentStreak === 4) {
-    console.log(
-      colors.primary.bold("  🎯 4-week streak — you're building a habit!"),
-    );
+    clog.success("🎯 4-week streak — you're building a habit!");
   }
   if (score.currentStreak === 12) {
-    console.log(
-      colors.primary.bold("  🏅 12-week streak — quarterly operator!"),
-    );
+    clog.success("🏅 12-week streak — quarterly operator!");
   }
   if (score.completionRate === 100 && score.tasksTotal > 0) {
-    console.log(colors.success.bold("  💯 Perfect week — every task done!"));
+    clog.success("💯 Perfect week — every task done!");
   }
   if (score.totalShipped >= 50) {
-    console.log(
-      colors.secondary.bold("  ⚡ 50+ tasks shipped — veteran founder!"),
-    );
+    clog.success("⚡ 50+ tasks shipped — veteran founder!");
   }
 
   // ─── Shareable Proof Card (GF-2) ────────────────────────────────
@@ -237,29 +230,30 @@ export async function celebrateCommand(
   const shareText = buildProofCard(proofCardData);
   const tweetLine = buildTweetLine(proofCardData);
 
-  console.log(header("Share"));
-  console.log(colors.dim("  Copy this to share your progress:"));
+  clog.step("Share");
+  clog.message("Copy this to share your progress:");
   console.log(box(shareText));
 
-  const shareAction = await p.select({
-    message: "Share this week's win:",
+  const shareActions = await multiselect({
+    message: "Share this week's win (space to select):",
     options: [
-      { value: "twitter", label: "[t]weet on X — open twitter.com/intent/tweet" },
-      { value: "copy",    label: "[c]opy tweet line to clipboard" },
-      { value: "skip",   label: "[s]kip" },
+      { value: "twitter", label: "Tweet on X — open twitter.com/intent/tweet" },
+      { value: "copy",    label: "Copy tweet line to clipboard" },
     ],
+    required: false,
   });
 
-  if (!p.isCancel(shareAction)) {
-    if (shareAction === "twitter") {
+  if (!isCancel(shareActions) && Array.isArray(shareActions)) {
+    if (shareActions.includes("twitter")) {
       const copied = await copyToClipboard(tweetLine);
       const twitterUrl = buildTwitterIntentUrl(tweetLine);
       await openUrl(twitterUrl);
-      console.log(pass("Opened X/Twitter in browser!"));
-      if (copied) console.log(colors.dim("  (Also copied to clipboard as fallback.)"));
-    } else if (shareAction === "copy") {
+      clog.success("Opened X/Twitter in browser!");
+      if (copied) clog.message("  (Also copied to clipboard as fallback.)");
+    }
+    if (shareActions.includes("copy")) {
       const copied = await copyToClipboard(tweetLine);
-      if (copied) console.log(pass("Tweet line copied to clipboard — paste and share!"));
+      if (copied) clog.success("Tweet line copied to clipboard — paste and share!");
     }
   }
 
@@ -288,16 +282,16 @@ export async function celebrateCommand(
       // Sync to Convex
       const { pushPublicWinToConvex } = await import("../storage/sync.js");
       await pushPublicWinToConvex(publicWin);
-      console.log(info("Win posted to public feed at loopkit.dev/wins"));
+      clog.info("Win posted to public feed at loopkit.dev/wins");
     } else {
-      console.log(colors.warning("Not authenticated — win not posted to public feed. Run `loopkit auth` to enable sharing."));
+      clog.warn("Not authenticated — win not posted to public feed. Run `loopkit auth` to enable sharing.");
     }
   }
 
   // ─── What's next ──────────────────────────────────────────────
-  console.log(header("What's Next"));
-  console.log(info("Run `loopkit loop` to synthesize your week"));
-  console.log(info("Or `loopkit track` to plan next week's tasks"));
+  clog.step("What's Next");
+  clog.info("Run `loopkit loop` to synthesize your week");
+  clog.info("Or `loopkit track` to plan next week's tasks");
 
   if (standalone) {
     ceremonyOutro("Keep shipping. 🚀");

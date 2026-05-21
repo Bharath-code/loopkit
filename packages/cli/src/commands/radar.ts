@@ -1,4 +1,3 @@
-import * as p from "@clack/prompts";
 import { readConfig, readBriefJson, listProjects } from "../storage/local.js";
 import {
   colors,
@@ -6,9 +5,14 @@ import {
   info,
   pass,
   fail,
+  clog,
   shortcutsHint,
   ceremonyIntro,
   ceremonyOutro,
+  select,
+  isCancel,
+  text,
+  spinner,
 } from "../ui/theme.js";
 import {
   scanCompetitors,
@@ -37,10 +41,10 @@ export async function radarCommand(options?: {
         category = categorizeICP(brief.answers.icp);
         problemCategory = categorizeProblem(brief.answers.problem);
 
-        console.log(colors.dim(`  Scanning for: ${colors.white(category)}`));
+        clog.message(`Scanning for: ${colors.white(category)}`);
         if (problemCategory !== "other") {
-          console.log(
-            colors.dim(`  Problem area: ${colors.white(problemCategory)}`),
+          clog.message(
+            colors.dim(`Problem area: ${colors.white(problemCategory)}`),
           );
         }
       }
@@ -49,7 +53,7 @@ export async function radarCommand(options?: {
     if (!category) {
       const projects = listProjects();
       if (projects.length > 0) {
-        const selected = await p.select({
+        const selected = await select({
           message: "Which project to scan for?",
           options: projects.map((slug) => {
             const brief = readBriefJson(slug);
@@ -58,7 +62,7 @@ export async function radarCommand(options?: {
           }),
         });
 
-        if (p.isCancel(selected)) {
+        if (isCancel(selected)) {
           ceremonyOutro("Scan cancelled.");
           return;
         }
@@ -72,13 +76,13 @@ export async function radarCommand(options?: {
     }
 
     if (!category) {
-      const input = await p.text({
+      const input = await text({
         message:
           "Enter a category to scan (e.g., saas, ecommerce, developers):",
         placeholder: "e.g. saas founders",
       });
 
-      if (p.isCancel(input)) {
+      if (isCancel(input)) {
         ceremonyOutro("Scan cancelled.");
         return;
       }
@@ -87,7 +91,7 @@ export async function radarCommand(options?: {
     }
   }
 
-  const s = p.spinner();
+  const s = spinner();
   s.start(`Scanning Product Hunt & Hacker News for "${category}"...`);
 
   let result;
@@ -96,9 +100,9 @@ export async function radarCommand(options?: {
     s.stop(`Found ${result.totalFound} relevant launches.`);
 
     if (result.totalFound === 0) {
-      console.log("");
-      console.log(colors.muted("  No recent launches found in this category."));
-      console.log(colors.dim("  Try a broader category or check back later."));
+      clog.message("");
+      clog.message("No recent launches found in this category.");
+      clog.message("Try a broader category or check back later.");
       return;
     }
 
@@ -109,11 +113,7 @@ export async function radarCommand(options?: {
     });
 
     if (thisWeek.length > 0) {
-      console.log("");
-      console.log(
-        colors.primary.bold(`  ${thisWeek.length} launches this week`),
-      );
-      console.log("");
+      clog.step(`${thisWeek.length} launches this week`);
     }
 
     for (const launch of result.launches.slice(0, 10)) {
@@ -129,29 +129,27 @@ export async function radarCommand(options?: {
           ? colors.primary("[PH]")
           : colors.secondary("[HN]");
 
-      console.log(`  ${platformBadge} ${colors.white.bold(launch.name)}`);
+      clog.message(`${platformBadge} ${colors.white.bold(launch.name)}`);
       if (launch.tagline && launch.tagline !== launch.name) {
-        console.log(`    ${colors.dim(launch.tagline)}`);
+        clog.message(`  ${colors.dim(launch.tagline)}`);
       }
-      console.log(
-        `    ${colors.dim(dateStr)} · ${relevanceColor(`relevance: ${launch.relevance}%`)}`,
+      clog.message(
+        `  ${colors.dim(dateStr)} · ${relevanceColor(`relevance: ${launch.relevance}%`)}`,
       );
       if (launch.description) {
-        console.log(`    ${colors.dim(launch.description)}`);
+        clog.message(`  ${colors.dim(launch.description)}`);
       }
       if (launch.url) {
-        console.log(`    ${colors.secondary(launch.url)}`);
+        clog.message(`  ${colors.secondary(launch.url)}`);
       }
-      console.log("");
+      clog.message("");
     }
 
-    console.log(colors.dim(`  Cached for 24 hours. Run again to refresh.`));
+    clog.message(`Cached for 24 hours. Run again to refresh.`);
   } catch (error) {
     s.stop("Scan failed.");
-    console.log(
-      colors.danger(
-        "  Could not fetch competitor data. Check your internet connection.",
-      ),
+    clog.error(
+      "Could not fetch competitor data. Check your internet connection.",
     );
   }
 

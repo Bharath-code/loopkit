@@ -6,7 +6,6 @@
  * switching-cost feature — you don't leave a tool that holds your MRR journey.
  */
 
-import * as p from "@clack/prompts";
 import { getWeekNumber, formatDate, type RevenueEntry } from "@loopkit/shared";
 import {
   readConfig,
@@ -14,7 +13,7 @@ import {
   readRevenueHistory,
   getLatestMRR,
 } from "../storage/local.js";
-import { colors, header, box, pass, info, ceremonyIntro, ceremonyOutro } from "../ui/theme.js";
+import { colors, header, box, pass, info, ceremonyIntro, ceremonyOutro, text, isCancel, select, clog } from "../ui/theme.js";
 
 // ─── Command ────────────────────────────────────────────────────
 
@@ -30,7 +29,7 @@ export async function revenueCommand(options?: RevenueOptions): Promise<void> {
   const slug = config.activeProject;
 
   if (!slug) {
-    console.log(colors.danger("No active project. Run `loopkit init` first."));
+    clog.error("No active project. Run `loopkit init` first.");
     process.exit(1);
   }
 
@@ -47,7 +46,7 @@ export async function revenueCommand(options?: RevenueOptions): Promise<void> {
   if (options?.add !== undefined) {
     const parsed = parseAmountInput(options.add);
     if (parsed === null) {
-      console.log(colors.danger(`Invalid amount: "${options.add}". Use a number like --add 240`));
+      clog.error(`Invalid amount: "${options.add}". Use a number like --add 240`);
       process.exit(1);
     }
     await saveRevenueEntry(parsed, slug);
@@ -58,10 +57,10 @@ export async function revenueCommand(options?: RevenueOptions): Promise<void> {
   // ── Interactive mode ──────────────────────────────────────────
   const latest = getLatestMRR();
   if (latest !== null) {
-    console.log(info(`Current MRR: ${colors.success.bold(formatCurrency(latest, "USD"))}`));
+    clog.info(`Current MRR: ${colors.success.bold(formatCurrency(latest, "USD"))}`);
   }
 
-  const amountStr = await p.text({
+  const amountStr = await text({
     message: "New MRR? (monthly recurring revenue in USD)",
     placeholder: latest !== null ? `Previous: ${latest}` : "e.g. 240",
     validate: (val) => {
@@ -70,7 +69,7 @@ export async function revenueCommand(options?: RevenueOptions): Promise<void> {
     },
   });
 
-  if (p.isCancel(amountStr)) {
+  if (isCancel(amountStr)) {
     ceremonyOutro("Cancelled.");
     return;
   }
@@ -78,7 +77,7 @@ export async function revenueCommand(options?: RevenueOptions): Promise<void> {
   const mrr = parseAmountInput(amountStr as string)!;
 
   // Optional fields
-  const source = await p.select({
+  const source = await select({
     message: "Revenue source:",
     options: [
       { value: "stripe", label: "Stripe" },
@@ -89,17 +88,17 @@ export async function revenueCommand(options?: RevenueOptions): Promise<void> {
     ],
   });
 
-  if (p.isCancel(source)) {
+  if (isCancel(source)) {
     ceremonyOutro("Cancelled.");
     return;
   }
 
-  const noteRaw = await p.text({
+  const noteRaw = await text({
     message: "Note? (optional)",
     placeholder: "e.g. First paying customer!",
   });
 
-  if (p.isCancel(noteRaw)) {
+  if (isCancel(noteRaw)) {
     ceremonyOutro("Cancelled.");
     return;
   }
@@ -170,19 +169,19 @@ async function saveRevenueEntry(
   }
 
   console.log(box(cardLines.join("\n"), `💰 Week ${weekNum}`));
-  console.log(pass(`Saved to .loopkit/revenue.json`));
+  clog.success(`Saved to .loopkit/revenue.json`);
 }
 
 function renderRevenueHistory(): void {
   const history = readRevenueHistory();
 
   if (history.length === 0) {
-    console.log(colors.muted("  No revenue logged yet."));
-    console.log(info("Log your first MRR: loopkit revenue --add 240"));
+    clog.message("No revenue logged yet.");
+    clog.info("Log your first MRR: loopkit revenue --add 240");
     return;
   }
 
-  console.log(header("Revenue History"));
+  clog.step("Revenue History");
 
   for (const entry of history) {
     const delta =
@@ -201,8 +200,8 @@ function renderRevenueHistory(): void {
     const sourceBadge = entry.source ? colors.dim(` [${entry.source}]`) : "";
     const note = entry.note ? colors.dim(` "${entry.note}"`) : "";
 
-    console.log(
-      `  ${colors.muted(entry.date)} ${colors.white.bold(formatCurrency(entry.mrr, entry.currency))}${deltaStr}${sourceBadge}${note}`
+    clog.message(
+      `${colors.muted(entry.date)} ${colors.white.bold(formatCurrency(entry.mrr, entry.currency))}${deltaStr}${sourceBadge}${note}`
     );
   }
 

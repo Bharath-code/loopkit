@@ -1,16 +1,27 @@
 import { Command } from "commander";
-import * as p from "@clack/prompts";
-import { colors, ceremonyIntro, ceremonyOutro } from "../ui/theme.js";
+import { colors, ceremonyIntro, ceremonyOutro, spinner, note, password, isCancel, clog } from "../ui/theme.js";
 import { readConfig, writeConfig } from "../storage/local";
 
 export const authCommand = new Command("auth")
   .description("Authenticate LoopKit CLI with your web account")
-  .action(async () => {
+  .option("--key", "Enter API key directly (no browser)")
+  .action(async (options?: { key?: boolean }) => {
     console.clear();
     ceremonyIntro("Auth");
 
+    if (options?.key) {
+      const apiKey = await password({ message: "Paste your Anthropic API key:" });
+      if (isCancel(apiKey)) { ceremonyOutro("Cancelled."); return; }
+      const config = readConfig();
+      config.auth = { apiKey: apiKey as string };
+      writeConfig(config);
+      clog.success("API key saved. You're ready to ship.");
+      ceremonyOutro("Authenticated.");
+      return;
+    }
+
     try {
-      const s = p.spinner();
+      const s = spinner();
       s.start("Generating authentication session");
 
       const API_URL = process.env.LOOPKIT_API_URL || "http://localhost:3000";
@@ -28,7 +39,7 @@ export const authCommand = new Command("auth")
       const { code } = await res.json();
       s.stop("Session generated");
 
-      p.note(
+      note(
         `Open the following URL in your browser:\n\n${colors.primary(`${API_URL}/cli-auth?code=${code}`)}`,
         "Action Required"
       );
