@@ -63,9 +63,10 @@ program
 program
   .command("ship")
   .description("AI generates drafts for HN, Twitter, and Indie Hackers")
-  .action(() => {
+  .option("--changelog", "Automatically convert the week's ship log and git commits into a release notes changelog")
+  .action((options) => {
     recordEvent({ command: "ship" });
-    shipCommand();
+    shipCommand(options);
   });
 
 program

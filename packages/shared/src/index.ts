@@ -79,6 +79,19 @@ export const ShipLogSchema = z.object({
 
 export type ShipLog = z.infer<typeof ShipLogSchema>;
 
+// ─── loopkit ship --changelog ───────────────────────────────────
+
+export const ChangelogDraftSchema = z.object({
+  title: z.string().describe("A catchy, user-friendly title for this release"),
+  version: z.string().describe("Suggested version number (e.g. v1.1.0 or v0.2.0) based on changes"),
+  features: z.array(z.string()).describe("New features or major additions"),
+  improvements: z.array(z.string()).describe("Performance, usability, or minor enhancements"),
+  fixes: z.array(z.string()).describe("Bug fixes and resolved issues"),
+});
+
+export type ChangelogDraft = z.infer<typeof ChangelogDraftSchema>;
+
+
 // ─── loopkit pulse ──────────────────────────────────────────────
 
 export const PulseResponseSchema = z.object({

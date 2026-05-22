@@ -34,7 +34,7 @@ function getModelId(tier: ModelTier): string {
 // ─── Structured Generation ──────────────────────────────────────
 
 export async function generateStructured<T extends object>(options: {
-  command: "init" | "ship" | "pulse" | "loop" | "update";
+  command: "init" | "ship" | "pulse" | "loop" | "update" | "changelog";
   system: string;
   prompt: string;
   schema: ZodSchema<T>;

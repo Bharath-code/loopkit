@@ -2,15 +2,18 @@ import { execSync, spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { ShipDraftsSchema, formatDate } from "@loopkit/shared";
+import { ShipDraftsSchema, ChangelogDraftSchema, type ChangelogDraft, formatDate } from "@loopkit/shared";
 import { generateStructured } from "../ai/client.js";
 import { SHIP_SYSTEM_PROMPT, buildShipPrompt } from "../ai/prompts/ship.js";
+import { CHANGELOG_SYSTEM_PROMPT, buildChangelogPrompt } from "../ai/prompts/changelog.js";
 import {
   readConfig,
   readBriefJson,
   readTasksFile,
   saveShipLog,
   shipLogExists,
+  getShipDir,
+  readShipLog,
 } from "../storage/local.js";
 import { pushShipLogToConvex, getConvexProjectId } from "../storage/sync.js";
 import { colors, header, pass, fail, warn, box, nextStep, info, shortcutsHint, emptyState, coachingCard, ceremonyIntro, ceremonyOutro, text, confirm, select, isCancel, cancel, spinner, clog } from "../ui/theme.js";
@@ -91,9 +94,166 @@ function openInEditor(content: string): string {
   }
 }
 
-export async function shipCommand(): Promise<void> {
+export async function shipCommand(options?: { changelog?: boolean }): Promise<void> {
   const config = readConfig();
   const slug = config.activeProject;
+
+  if (options?.changelog) {
+    ceremonyIntro("Changelog");
+    console.log(shortcutsHint());
+
+    let productName = slug || "your product";
+    let tasksCompleted: string[] = [];
+
+    if (slug) {
+      const briefData = readBriefJson(slug);
+      if (briefData?.answers) {
+        productName = briefData.answers.name;
+      }
+
+      // Parse completed tasks
+      const tasksContent = readTasksFile(slug);
+      if (tasksContent) {
+        const lines = tasksContent.split("\n");
+        tasksCompleted = lines
+          .filter((l) => /^\s*-\s*\[x\]/i.test(l))
+          .map((l) => l.replace(/^\s*-\s*\[x\]\s*/, "").trim());
+      }
+    }
+
+    // Git commits
+    let gitCommits: string[] = [];
+    try {
+      const gitOutput = execSync('git log --since="7 days ago" --oneline', {
+        stdio: ["ignore", "pipe", "ignore"],
+        encoding: "utf-8",
+      });
+      gitCommits = gitOutput
+        .split("\n")
+        .map((line) => line.trim())
+        .filter((line) => line.length > 0);
+    } catch {
+      // not a git repo or git not installed
+    }
+
+    // Get what shipped
+    let whatShipped: string | undefined;
+    const today = formatDate();
+    const todayLog = readShipLog(today);
+    if (todayLog) {
+      whatShipped = extractWhatShipped(todayLog);
+    }
+
+    if (!whatShipped) {
+      const recentLog = getMostRecentShipLogContent();
+      if (recentLog) {
+        whatShipped = extractWhatShipped(recentLog);
+      }
+    }
+
+    if (!whatShipped) {
+      const rawWhatShipped = await text({
+        message: "No recent ship log found. What's the main thing you shipped? (one sentence)",
+        placeholder: "e.g. Added PDF export for SOW documents",
+      });
+
+      if (isCancel(rawWhatShipped)) {
+        cancel("Cancelled.");
+        process.exit(0);
+      }
+      whatShipped = (rawWhatShipped as string).slice(0, 200);
+    }
+
+    const s = spinner();
+    s.start("Generating release notes...");
+
+    let draft: ChangelogDraft;
+    try {
+      draft = await generateStructured({
+        command: "changelog",
+        system: CHANGELOG_SYSTEM_PROMPT,
+        prompt: buildChangelogPrompt({
+          productName,
+          gitCommits,
+          tasksCompleted,
+          whatShipped,
+        }),
+        schema: ChangelogDraftSchema,
+        tier: "creative",
+        temperature: 0.3,
+      });
+      s.stop("Draft ready.");
+    } catch (e: any) {
+      s.stop("Generation failed.");
+      clog.error(`AI unavailable or request failed: ${e.message}`);
+      ceremonyOutro("Changelog generation failed.");
+      return;
+    }
+
+    let done = false;
+    let changelogMarkdown = formatChangelogEntry(draft, today);
+
+    while (!done) {
+      clog.step("Changelog Release Notes Draft");
+      console.log(box(changelogMarkdown));
+
+      const action = await select({
+        message: "Changelog options:",
+        options: [
+          { value: "use", label: "[u]se as-is" },
+          { value: "edit", label: "[e]dit in $EDITOR" },
+          { value: "regenerate", label: "[r]egenerate" },
+          { value: "skip", label: "[s]kip" },
+        ],
+      });
+
+      if (isCancel(action) || action === "skip") {
+        ceremonyOutro("Changelog skipped.");
+        return;
+      }
+
+      if (action === "use") {
+        prependToChangelog(changelogMarkdown);
+        clog.success("Changelog prepended to CHANGELOG.md");
+        done = true;
+        continue;
+      }
+
+      if (action === "edit") {
+        changelogMarkdown = openInEditor(changelogMarkdown);
+        continue;
+      }
+
+      if (action === "regenerate") {
+        const rs = spinner();
+        rs.start("Regenerating changelog...");
+        try {
+          draft = await generateStructured({
+            command: "changelog",
+            system: CHANGELOG_SYSTEM_PROMPT,
+            prompt: buildChangelogPrompt({
+              productName,
+              gitCommits,
+              tasksCompleted,
+              whatShipped,
+            }),
+            schema: ChangelogDraftSchema,
+            tier: "creative",
+            temperature: 0.3,
+          });
+          changelogMarkdown = formatChangelogEntry(draft, today);
+          rs.stop("Done.");
+        } catch (e: any) {
+          rs.stop("Regeneration failed.");
+          clog.warn(`Could not regenerate: ${e.message}`);
+        }
+        continue;
+      }
+    }
+
+    ceremonyOutro("Changelog updated successfully.");
+    return;
+  }
 
   ceremonyIntro("Ship it");
   console.log(shortcutsHint());
@@ -108,9 +268,9 @@ export async function shipCommand(): Promise<void> {
   if (slug) {
     const briefData = readBriefJson(slug);
     if (briefData) {
-      productName = briefData.answers.name;
-      problem = briefData.answers.problem;
-      icp = briefData.answers.icp;
+      productName = briefData.answers?.name || productName;
+      problem = briefData.answers?.problem;
+      icp = briefData.answers?.icp;
       bet = briefData.brief?.bet;
     }
 
@@ -427,4 +587,68 @@ function buildLogContent(
     "",
     ...(usedDrafts.length > 0 ? usedDrafts : ["_No drafts saved._"]),
   ].join("\n");
+}
+
+function extractWhatShipped(content: string): string | undefined {
+  const match = content.match(/\*\*What shipped:\*\*\s*(.*)/);
+  return match ? match[1].trim() : undefined;
+}
+
+function getMostRecentShipLogContent(): string | undefined {
+  const shipDir = getShipDir();
+  if (!fs.existsSync(shipDir)) return undefined;
+  try {
+    const files = fs
+      .readdirSync(shipDir)
+      .filter((f) => /^\d{4}-\d{2}-\d{2}\.md$/.test(f))
+      .sort((a, b) => b.localeCompare(a));
+    if (files.length === 0) return undefined;
+    return fs.readFileSync(path.join(shipDir, files[0]), "utf-8");
+  } catch {
+    return undefined;
+  }
+}
+
+function formatChangelogEntry(draft: ChangelogDraft, date: string): string {
+  const lines: string[] = [];
+  lines.push(`## ${draft.version} - ${date}: ${draft.title}`);
+  lines.push("");
+
+  if (draft.features && draft.features.length > 0) {
+    lines.push("### Features");
+    draft.features.forEach((item) => lines.push(`- ${item}`));
+    lines.push("");
+  }
+
+  if (draft.improvements && draft.improvements.length > 0) {
+    lines.push("### Improvements");
+    draft.improvements.forEach((item) => lines.push(`- ${item}`));
+    lines.push("");
+  }
+
+  if (draft.fixes && draft.fixes.length > 0) {
+    lines.push("### Fixes");
+    draft.fixes.forEach((item) => lines.push(`- ${item}`));
+    lines.push("");
+  }
+
+  return lines.join("\n").trim() + "\n";
+}
+
+function prependToChangelog(entryMarkdown: string) {
+  const changelogPath = path.join(process.cwd(), "CHANGELOG.md");
+  const header = "# Changelog\n\n";
+  let content = "";
+  if (fs.existsSync(changelogPath)) {
+    content = fs.readFileSync(changelogPath, "utf-8");
+  }
+
+  if (content.startsWith("# Changelog")) {
+    const rest = content.slice("# Changelog".length).replace(/^\s+/, "");
+    const newContent = `${header}${entryMarkdown}\n${rest}`;
+    fs.writeFileSync(changelogPath, newContent, "utf-8");
+  } else {
+    const newContent = `${header}${entryMarkdown}\n${content}`;
+    fs.writeFileSync(changelogPath, newContent, "utf-8");
+  }
 }

@@ -31,7 +31,7 @@
 
 - [x] `loopkit init` — Define Phase (5 questions, AI scoring, brief saved, session resume, collision handling)
 - [x] `loopkit track` — Develop Phase (tasks.md parser, board view, git hook, stale detection, snooze, cut archive, `--add`, `--week`, `--repair`)
-- [x] `loopkit ship` — Deliver Phase (reads brief, generates HN/Twitter/IH drafts, per-draft actions, ship log)
+- [x] `loopkit ship` — Deliver Phase (reads brief, generates HN/Twitter/IH drafts, per-draft actions, ship log, and `--changelog` to convert ship log/commits to release notes)
 - [x] `loopkit pulse` — Feedback Phase (local storage, AI clustering, tag-to-sprint, `--raw`, `--setup`, `--add`, `--share` with QR code)
 - [x] `loopkit loop` — Iterate Phase (local aggregation, week summary, AI synthesis, tension detection, override tracking, BIP post)
 - [x] `loopkit auth` — Login via browser OAuth, encrypted token storage
