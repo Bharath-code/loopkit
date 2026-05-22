@@ -126,10 +126,21 @@ describe("coachCommand --dna", () => {
     });
 
     vi.mocked(computeBenchmarks).mockReturnValue({
+      metrics: {
+        avgTasksCompleted: 5,
+        avgScore: 90,
+        streak: 3,
+        totalWeeks: 2,
+        completionRate: 80,
+      },
+      percentiles: {
+        tasksCompleted: 85,
+        shippingScore: 90,
+        completionRate: 80,
+        streak: 70,
+      },
       overallPercentile: 92,
       comparison: "Outperforming 92% of founders.",
-      velocityPercentile: 85,
-      scorePercentile: 90,
     });
 
     vi.mocked(readBriefJson).mockReturnValue({
@@ -142,6 +153,7 @@ describe("coachCommand --dna", () => {
       },
       brief: {
         bet: "bet on developers",
+        uncomfortableTruth: "not enough founders",
         riskiestAssumption: "no one uses CLI",
         validateAction: "launch",
         mvpPlainEnglish: "cli app",

@@ -10,7 +10,7 @@ export default function PulseInboxPage() {
   const [activeTab, setActiveTab] = useState<
     "all" | "fix" | "validate" | "noise"
   >("all");
-  const [prevIds, setPrevIds] = useState<Set<string>>(new Set());
+  const prevIdsRef = useRef<Set<string>>(new Set());
   const [newIds, setNewIds] = useState<Set<string>>(new Set());
 
   const projects = useQuery(api.projects.list);
@@ -26,14 +26,28 @@ export default function PulseInboxPage() {
     if (!responses) return;
     const currentIds = new Set(responses.map((r) => r._id));
     const incoming = new Set<string>();
-    for (const id of currentIds) {
-      if (!prevIds.has(id)) incoming.add(id);
+    
+    if (prevIdsRef.current.size > 0) {
+      for (const id of currentIds) {
+        if (!prevIdsRef.current.has(id)) {
+          incoming.add(id);
+        }
+      }
     }
+
+    let timer: NodeJS.Timeout | undefined;
     if (incoming.size > 0) {
-      setNewIds(incoming);
-      setTimeout(() => setNewIds(new Set()), 5000);
+      timer = setTimeout(() => {
+        setNewIds(incoming);
+        setTimeout(() => setNewIds(new Set()), 5000);
+      }, 0);
     }
-    setPrevIds(currentIds);
+    
+    prevIdsRef.current = currentIds;
+
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
   }, [responses]);
 
   const tabs = [
@@ -66,6 +80,7 @@ export default function PulseInboxPage() {
   ];
 
   const formatRelativeTime = (timestamp: number) => {
+    // eslint-disable-next-line react-hooks/purity
     const diff = Date.now() - timestamp;
     const minutes = Math.floor(diff / 60000);
     const hours = Math.floor(diff / 3600000);

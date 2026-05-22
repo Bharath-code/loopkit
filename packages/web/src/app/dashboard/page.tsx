@@ -505,7 +505,9 @@ function AdvisorShareWidget({
   activeProject,
   user,
 }: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   activeProject: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   user: any;
 }) {
   const toggleShare = useMutation(api.projects.toggleShare);
@@ -529,8 +531,9 @@ function AdvisorShareWidget({
     setError(null);
     try {
       await toggleShare({ projectId: activeProject._id });
-    } catch (err: any) {
-      setError(err?.message || "Failed to update sharing settings.");
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to update sharing settings.";
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

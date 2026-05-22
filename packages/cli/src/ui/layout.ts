@@ -63,7 +63,7 @@ export function divider(label?: string): string {
 
 export type BadgeVariant = "brand" | "success" | "warning" | "error" | "info" | "muted";
 
-const badgeColors: Record<BadgeVariant, chalk.Chalk> = {
+const badgeColors: Record<BadgeVariant, typeof chalk> = {
   brand:   token.brand,
   success: token.success,
   warning: token.warning,

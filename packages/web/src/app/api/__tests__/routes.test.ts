@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 process.env.NEXT_PUBLIC_CONVEX_URL = "https://test.convex.cloud";
 process.env.POLAR_WEBHOOK_SECRET = "test-webhook-secret";
 process.env.NEXT_PUBLIC_APP_URL = "http://localhost:3000";

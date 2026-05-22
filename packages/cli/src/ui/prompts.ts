@@ -151,7 +151,7 @@ export async function select<T extends string>(
   message: string,
   options: SelectOption<T>[],
 ): Promise<T> {
-  const result = await p.select({ message, options });
+  const result = await p.select({ message, options: options as any });
   return requireInput(result) as T;
 }
 

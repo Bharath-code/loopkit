@@ -73,17 +73,7 @@ export function SimulatorTerminal({
     setOutputLines(welcome);
   }, []);
 
-  // Handle injected commands from quick buttons
-  useEffect(() => {
-    if (injectedCommand && !isProcessing) {
-      setInputValue(injectedCommand);
-      onInjectedCommandConsumed();
-      // Execute on next tick so input value is set
-      setTimeout(() => {
-        executeCommand(injectedCommand);
-      }, 50);
-    }
-  }, [injectedCommand, isProcessing, onInjectedCommandConsumed]);
+
 
   const promptUser = useCallback((question: string): Promise<string> => {
     setPromptQuestion(question);
@@ -176,6 +166,18 @@ export function SimulatorTerminal({
     },
     [state, addLine, onStateChange, onCommandExecuted, promptUser],
   );
+
+  // Handle injected commands from quick buttons
+  useEffect(() => {
+    if (injectedCommand && !isProcessing) {
+      onInjectedCommandConsumed();
+      const timer = setTimeout(() => {
+        setInputValue(injectedCommand);
+        executeCommand(injectedCommand);
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [injectedCommand, isProcessing, onInjectedCommandConsumed, executeCommand]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {

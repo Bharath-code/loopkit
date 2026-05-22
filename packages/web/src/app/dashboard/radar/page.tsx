@@ -160,6 +160,7 @@ export default function RadarPage() {
 
   const thisWeekCount = useMemo(() => {
     if (!data) return 0;
+    // eslint-disable-next-line react-hooks/purity
     const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
     return data.launches.filter((l) => new Date(l.date).getTime() >= weekAgo)
       .length;

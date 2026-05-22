@@ -67,6 +67,7 @@ const TOOL_COMMANDS = [
   { name: "timing",    description: "Analyze market timing signals" },
   { name: "coach",     description: "AI coaching based on your shipping patterns" },
   { name: "celebrate", description: "ASCII confetti + shareable weekly card" },
+  { name: "update",    description: "Generate structured monthly investor updates (Markdown & HTML)" },
   { name: "auth",      description: "Manage your API key (BYOK)" },
   { name: "aliases",   description: "Install shell shortcuts: lk, lks, lkt, lkl" },
   { name: "telemetry", description: "Manage anonymous usage analytics" },

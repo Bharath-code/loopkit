@@ -238,7 +238,7 @@ export default function AdvisorSharePage({
   );
 }
 
-function getStreak(logs: any[]): number {
+function getStreak(logs: Array<{ weekNumber: number }>): number {
   let streak = 0;
   let prevWeek: number | null = null;
   const sorted = [...logs].sort((a, b) => b.weekNumber - a.weekNumber);

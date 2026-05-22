@@ -141,7 +141,7 @@ export const type = {
 
 export type BoxVariant = "default" | "success" | "warning" | "error" | "info";
 
-export const boxColor: Record<BoxVariant, chalk.Chalk> = {
+export const boxColor: Record<BoxVariant, typeof chalk> = {
   default: palette.gray,
   success: palette.emerald,
   warning: palette.amber,

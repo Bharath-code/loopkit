@@ -43,7 +43,10 @@ export default function DashboardLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
-    setSidebarOpen(false);
+    const timer = setTimeout(() => {
+      setSidebarOpen(false);
+    }, 0);
+    return () => clearTimeout(timer);
   }, [pathname]);
 
   useEffect(() => {

@@ -379,7 +379,7 @@ export async function loopCommand(options?: { revenue?: string; async?: boolean 
   // ─── AI Synthesis via p.tasks() ───────────────────────────
   // Three clearly-labelled stages keep the user informed the whole time.
   // Each task captures its result into the outer scope so we can render below.
-  let synthesis: Awaited<ReturnType<typeof generateStructured>> | null = null;
+  let synthesis: any = null;
   let synthesisError: unknown = null;
 
   await tasks([

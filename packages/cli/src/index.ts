@@ -16,6 +16,7 @@ import { coachCommand } from "./commands/coach.js";
 import { revenueCommand } from "./commands/revenue.js";
 import { remindFridayCommand } from "./commands/remind.js";
 import { aliasesCommand } from "./commands/aliases.js";
+import { updateCommand } from "./commands/update.js";
 import { recordEvent, telemetryCommand } from "./analytics/telemetry.js";
 
 const program = new Command();
@@ -172,6 +173,15 @@ program
   .action((options) => {
     recordEvent({ command: "aliases" });
     aliasesCommand(options);
+  });
+
+program
+  .command("update [month]")
+  .description("Generate structured monthly investor updates (Markdown & HTML)")
+  .option("--year <year>", "Specify the year for the update (defaults to current year)")
+  .action((month, options) => {
+    recordEvent({ command: "update" });
+    updateCommand(month, options);
   });
 
 program.parse(process.argv);
