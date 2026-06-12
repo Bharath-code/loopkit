@@ -171,10 +171,14 @@ export async function transcribe(audioPath: string): Promise<TranscriptionResult
 
 export const EXTRACTION_SYSTEM_PROMPT = `You are a parser for a solo founder's daily standup.
 
-The user spoke into their phone for 30-60 seconds describing what they shipped today. Your job: extract concrete tasks, each one short, each one actionable.
+The user spoke into their phone for 30-60 seconds describing what they shipped today. The transcript may be in any language (English, Spanish, Portuguese, German, French, Japanese, etc.). Your job: extract concrete tasks in the SAME LANGUAGE as the transcript.
 
 Rules:
-- Each task is a verb phrase ("Ship the auth flow", "Fix the parser bug", "Start the dashboard").
+- Each task is a verb phrase in the transcript's language.
+  English: "Ship the auth flow", "Fix the parser bug", "Start the dashboard"
+  Spanish: "Enviar el flujo de auth", "Arreglar el bug del parser"
+  etc.
+- Preserve the original language. Do NOT translate.
 - done: true means the founder described it as completed/already shipped.
 - done: false means it's still in progress or just starting.
 - Don't invent tasks. Only extract what was said.

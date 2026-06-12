@@ -121,6 +121,60 @@ export async function maybePromptReferral(currentStreak: number): Promise<void> 
   writeConfig(config);
 }
 
+interface ExperimentReminder {
+  startDate: string;
+  days: number;
+  prompt: string;
+}
+
+/**
+ * Pure filter: returns the subset of reminders whose deadline has
+ * passed. Exported for testing.
+ */
+export function partitionDueReminders(
+  reminders: ExperimentReminder[],
+  now: number = Date.now(),
+): { due: ExperimentReminder[]; pending: ExperimentReminder[] } {
+  const due: ExperimentReminder[] = [];
+  const pending: ExperimentReminder[] = [];
+  for (const r of reminders) {
+    const start = new Date(r.startDate).getTime();
+    const deadline = start + r.days * 24 * 60 * 60 * 1000;
+    if (now >= deadline) due.push(r);
+    else pending.push(r);
+  }
+  return { due, pending };
+}
+
+/**
+ * Read pending pricing-experiment reminders from config and surface
+ * any whose deadline has passed. Once shown, the reminder is cleared
+ * so we don't re-prompt every loop.
+ *
+ * Wired here (not on a cron) so we don't need a background daemon.
+ * Worst case: user misses one Sunday, sees the reminder the next.
+ */
+export async function maybePromptPricingExperiment(): Promise<void> {
+  const config = readConfig() as { experiments?: ExperimentReminder[] };
+  const reminders = config.experiments ?? [];
+  if (reminders.length === 0) return;
+
+  const { due, pending } = partitionDueReminders(reminders);
+  if (due.length === 0) return;
+
+  for (const r of due) {
+    clog.step("🧪 Pricing experiment check-in");
+    note(
+      `${r.prompt}\n\nRun \`loopkit audit\` for the bigger picture, or \`loopkit price\` to refine your tiers.`,
+      `${r.days}-day experiment`,
+    );
+  }
+
+  // Clear the surfaced reminders (keep future ones if any)
+  (config as { experiments?: ExperimentReminder[] }).experiments = pending;
+  writeConfig(config as Parameters<typeof writeConfig>[0]);
+}
+
 // ─── GF-3: Milestone Detection ──────────────────────────────────
 
 export interface MilestoneDetectionContext {

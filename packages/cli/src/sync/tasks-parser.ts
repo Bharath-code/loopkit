@@ -55,14 +55,19 @@ const REVERSE_STATUS_MAP: Record<TaskStatus, string> = {
 /**
  * Parse tasks.md content into structured tasks.
  * Tolerant of malformed lines (returns only well-formed tasks).
+ *
+ * Multi-line titles: a line that starts with whitespace (but is not a
+ * new checkbox) is treated as a continuation of the previous task's
+ * title. Indented with at least 2 spaces and a non-checkbox character.
  */
 export function parseTasksFile(content: string): ParsedTask[] {
   const lines = content.split("\n");
   const tasks: ParsedTask[] = [];
   let currentSection: TaskSection = "week";
-  let nextBacklogId = 1;
 
-  for (const line of lines) {
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]!;
+
     if (/^##\s+This Week/i.test(line)) {
       currentSection = "week";
       continue;
@@ -80,16 +85,36 @@ export function parseTasksFile(content: string): ParsedTask[] {
     const status = STATUS_MAP[box];
     if (!status) continue;
 
-    // Extract id and title
+    // Extract id and title (with multi-line continuation support)
     const idMatch = rest.match(/^#(\S+)\s+(.+?)(?:\s+—\s+(.+))?$/);
     if (!idMatch) continue;
-    const [, idStr, title, meta] = idMatch;
+    const [, idStr, baseTitle, meta] = idMatch;
     const id = parseInt(idStr, 10);
     if (Number.isNaN(id)) continue;
 
+    // Look ahead for indented continuation lines (not new tasks)
+    const titleLines: string[] = [baseTitle.trim()];
+    for (let j = i + 1; j < lines.length; j++) {
+      const next = lines[j]!;
+      // A new task line ends continuation
+      if (/^\s*-\s*\[.\]/.test(next)) break;
+      // A section header ends continuation
+      if (/^##\s+/.test(next)) break;
+      // A blank line ends continuation
+      if (next.trim() === "") break;
+      // An indented non-checkbox line is a continuation
+      if (/^\s{2,}\S/.test(next)) {
+        titleLines.push(next.trim());
+        i = j; // advance outer loop
+      } else {
+        break;
+      }
+    }
+    const fullTitle = titleLines.join(" ").replace(/\s+/g, " ").trim();
+
     const task: ParsedTask = {
       id,
-      title: title.trim(),
+      title: fullTitle,
       status,
       section: currentSection,
       createdAt: "",

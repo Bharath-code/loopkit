@@ -294,8 +294,9 @@ export function OnboardingFlow({ sessionKey }: { sessionKey: string }) {
                 </h3>
                 <p className="text-sm text-zinc-400">
                   Every Sunday, run{" "}
-                  <code className="font-mono text-violet-400">loopkit loop</code>.
-                  90 seconds. One decision. One post. Loop closed.
+                  <code className="font-mono text-violet-400">loopkit loop</code>{" "}
+                  in your CLI. We&apos;ll show your week on the dashboard
+                  within seconds.
                 </p>
               </div>
             </Step>
@@ -322,10 +323,10 @@ export function OnboardingFlow({ sessionKey }: { sessionKey: string }) {
                 </button>
               ) : (
                 <Link
-                  href="/wins"
+                  href="/dashboard"
                   className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium transition-colors"
                 >
-                  I&apos;m shipping
+                  Open my dashboard
                   <ChevronRight className="h-4 w-4" />
                 </Link>
               )}

@@ -173,6 +173,14 @@ export const markDone = mutation({
 /**
  * Bulk-apply dashboard edits. The dashboard calls this on every
  * mutation to keep Convex in sync with the client's optimistic state.
+ *
+ * Race safety: Convex mutations are atomic per-call, so two parallel
+ * bulkUpsert calls won't interleave their inserts. Within a single call
+ * we gather all existing rows in one query (not a per-row read inside
+ * the loop) to ensure the LWW comparison uses a consistent snapshot.
+ * If two pushes arrive for the same row with identical updatedAt, the
+ * last write wins; this is acceptable because CLI is canonical for
+ * new tasks and the timestamps are millisecond-resolution.
  */
 export const bulkUpsert = mutation({
   args: {
@@ -203,17 +211,23 @@ export const bulkUpsert = mutation({
       throw new Error("Not authorized for this project");
     }
 
+    // Gather all existing rows in one query, then write. This avoids
+    // the read-inside-loop pattern that can yield surprising
+    // interleavings when multiple mutations target the same rows.
+    const existingRows = await ctx.db
+      .query("tasks")
+      .withIndex("by_cli_id", (q) => q.eq("projectId", args.projectId))
+      .collect();
+    const existingByCliId = new Map(
+      existingRows.map((r) => [r.cliTaskId, r]),
+    );
+
     let inserted = 0;
     let updated = 0;
     let skipped = 0;
 
     for (const t of args.tasks) {
-      const existing = await ctx.db
-        .query("tasks")
-        .withIndex("by_cli_id", (q) =>
-          q.eq("projectId", args.projectId).eq("cliTaskId", t.cliTaskId),
-        )
-        .first();
+      const existing = existingByCliId.get(t.cliTaskId);
 
       if (!existing) {
         await ctx.db.insert("tasks", { ...t, projectId: args.projectId });

@@ -42,6 +42,7 @@ import {
   checkOverrideRate,
   maybePromptRevenue,
   maybePromptReferral,
+  maybePromptPricingExperiment,
   detectAndTriggerMilestones,
   maybeShowUpgradeIntent,
 } from "./loop/post-actions.js";
@@ -753,6 +754,9 @@ export async function loopCommand(options?: { revenue?: string; async?: boolean 
 
     // ─── Override rate warning ───────────────────────────────────
     checkOverrideRate(slug);
+
+    // ─── Pricing experiment check-in (e.g. 30-day reminder) ────
+    await maybePromptPricingExperiment();
 
     // ─── Referral prompt (streak >= 4) ────────────────────────────
     await maybePromptReferral(currentStreak);

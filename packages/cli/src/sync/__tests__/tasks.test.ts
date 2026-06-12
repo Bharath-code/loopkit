@@ -81,6 +81,36 @@ describe("parseTasksFile", () => {
     const tasks = parseTasksFile(content);
     expect(tasks).toHaveLength(2);
   });
+
+  it("supports multi-line task titles (indented continuation)", () => {
+    const content = `# T
+## This Week
+- [ ] #1 Ship the auth flow including
+  the OAuth handshake, the JWT refresh,
+  and the password reset
+- [ ] #2 Build the dashboard
+`;
+    const tasks = parseTasksFile(content);
+    expect(tasks).toHaveLength(2);
+    expect(tasks[0].title).toBe(
+      "Ship the auth flow including the OAuth handshake, the JWT refresh, and the password reset",
+    );
+    expect(tasks[1].title).toBe("Build the dashboard");
+  });
+
+  it("stops multi-line continuation at a new checkbox or section header", () => {
+    const content = `# T
+## This Week
+- [ ] #1 First task
+  with continuation
+## Backlog
+- [ ] #1 Second task
+`;
+    const tasks = parseTasksFile(content);
+    expect(tasks).toHaveLength(2);
+    expect(tasks[0].title).toBe("First task with continuation");
+    expect(tasks[1].section).toBe("backlog");
+  });
 });
 
 describe("renderTasksFile", () => {
