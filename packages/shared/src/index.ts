@@ -331,6 +331,15 @@ export const ConfigSchema = z.object({
   referralShown: z.boolean().optional(),
   referralCode: z.string().optional(),
   labsEnabled: z.boolean().optional(),
+  syncStatus: z
+    .object({
+      lastAttempt: z.string().optional(),
+      lastSuccess: z.string().optional(),
+      failureCount: z.number().default(0),
+      lastError: z.string().optional(),
+      lastEndpoint: z.string().optional(),
+    })
+    .optional(),
 });
 
 export type Config = z.infer<typeof ConfigSchema>;

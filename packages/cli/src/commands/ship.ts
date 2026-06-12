@@ -20,6 +20,7 @@ import { colors, header, pass, fail, warn, box, nextStep, info, shortcutsHint, e
 import { celebrateCommand } from "./celebrate.js";
 import { fetchPeerShips, recordPeerShip, renderPeerInspiration } from "../analytics/peers.js";
 import { getPriorityMoment, recordMomentShown } from "../analytics/coach.js";
+import { shouldShowSyncBanner } from "./sync.js";
 
 // ─── Context shape passed to AI ────────────────────────────────
 interface ShipContext {
@@ -97,6 +98,11 @@ function openInEditor(content: string): string {
 export async function shipCommand(options?: { changelog?: boolean }): Promise<void> {
   const config = readConfig();
   const slug = config.activeProject;
+
+  // ─── Sync banner (if dashboard isn't getting data) ──────────────
+  if (shouldShowSyncBanner()) {
+    clog.warn("Your dashboard isn't syncing. Run `loopkit sync status`.");
+  }
 
   if (options?.changelog) {
     ceremonyIntro("Changelog");

@@ -18,6 +18,7 @@ import { remindFridayCommand } from "./commands/remind.js";
 import { aliasesCommand } from "./commands/aliases.js";
 import { updateCommand } from "./commands/update.js";
 import { labsCommand } from "./commands/labs-cmd.js";
+import { syncCommand } from "./commands/sync.js";
 import { recordEvent, telemetryCommand } from "./analytics/telemetry.js";
 
 const program = new Command();
@@ -188,9 +189,16 @@ program
 
 program
   .command("labs [action]")
-  .description("Toggle experimental commands (radar, keywords, timing, update)")
+  .description("Toggle experimental commands (off by default)")
   .action((action) => {
     labsCommand(action);
+  });
+
+program
+  .command("sync [action]")
+  .description("Check or reset the CLI → dashboard sync state")
+  .action((action) => {
+    syncCommand(action);
   });
 
 program.parse(process.argv);

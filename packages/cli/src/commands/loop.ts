@@ -45,6 +45,7 @@ import {
   detectAndTriggerMilestones,
   maybeShowUpgradeIntent,
 } from "./loop/post-actions.js";
+import { shouldShowSyncBanner } from "./sync.js";
 
 export type { LoopProof } from "./loop/helpers.js";
 
@@ -71,6 +72,11 @@ export async function loopCommand(options?: { revenue?: string; async?: boolean 
   const isAsync = options?.async;
 
   ceremonyIntro(isAsync ? `Week ${weekNum} Review (Async Mode)` : `Week ${weekNum} Review`);
+
+  // ─── Sync banner (if dashboard isn't getting data) ──────────────
+  if (shouldShowSyncBanner()) {
+    clog.warn("Your dashboard isn't syncing. Run `loopkit sync status`.");
+  }
 
   console.log(shortcutsHint());
 

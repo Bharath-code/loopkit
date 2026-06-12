@@ -65,6 +65,7 @@ const TOOL_COMMANDS = [
   { name: "coach",     description: "AI coaching based on your shipping patterns" },
   { name: "celebrate", description: "ASCII confetti + shareable weekly card" },
   { name: "auth",      description: "Manage your API key (BYOK)" },
+  { name: "sync",      description: "Check or reset CLI → dashboard sync health" },
   { name: "aliases",   description: "Install shell shortcuts: lk, lks, lkt, lkl" },
   { name: "telemetry", description: "Manage anonymous usage analytics" },
   { name: "labs",      description: "Toggle experimental commands (off by default)" },

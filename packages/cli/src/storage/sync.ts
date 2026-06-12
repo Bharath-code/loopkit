@@ -1,4 +1,4 @@
-import { readConfig, readBriefJson } from "./local.js";
+import { readConfig, writeConfig, readBriefJson } from "./local.js";
 
 const API_URL = process.env.LOOPKIT_API_URL || "http://localhost:3000";
 
@@ -48,10 +48,12 @@ interface ShipLogSyncPayload {
   };
 }
 
-async function postSync(path: string, body: unknown): Promise<void> {
+async function postSync(path: string, body: unknown): Promise<{ ok: boolean; status?: number }> {
   const config = readConfig();
   const token = config.auth?.apiKey;
-  if (!token) return; // Silently skip if not authenticated
+  if (!token) return { ok: false }; // Silently skip if not authenticated
+
+  const now = new Date().toISOString();
 
   try {
     const res = await fetch(`${API_URL}${path}`, {
@@ -63,11 +65,44 @@ async function postSync(path: string, body: unknown): Promise<void> {
       body: JSON.stringify(body),
     });
 
-    if (!res.ok) {
-      console.debug("Sync failed:", res.status);
+    if (res.ok) {
+      // Record success
+      const cfg = readConfig();
+      cfg.syncStatus = {
+        ...cfg.syncStatus,
+        lastAttempt: now,
+        lastSuccess: now,
+        failureCount: 0,
+        lastError: undefined,
+        lastEndpoint: path,
+      };
+      writeConfig(cfg);
+      return { ok: true };
     }
-  } catch {
-    // Network error — ignore, local data is preserved
+
+    // Record failure (non-2xx)
+    const cfg = readConfig();
+    cfg.syncStatus = {
+      ...cfg.syncStatus,
+      lastAttempt: now,
+      failureCount: (cfg.syncStatus?.failureCount || 0) + 1,
+      lastError: `HTTP ${res.status}`,
+      lastEndpoint: path,
+    };
+    writeConfig(cfg);
+    return { ok: false, status: res.status };
+  } catch (err) {
+    // Network error — record but don't throw
+    const cfg = readConfig();
+    cfg.syncStatus = {
+      ...cfg.syncStatus,
+      lastAttempt: now,
+      failureCount: (cfg.syncStatus?.failureCount || 0) + 1,
+      lastError: err instanceof Error ? err.message : String(err),
+      lastEndpoint: path,
+    };
+    writeConfig(cfg);
+    return { ok: false };
   }
 }
 

@@ -24,6 +24,7 @@ import { computeBenchmarks, renderBenchmarks } from "../analytics/benchmarks.js"
 import { getSnoozeWarning } from "../analytics/oracle.js";
 import { getPriorityMoment, recordMomentShown } from "../analytics/coach.js";
 import { computeLoopKitScore } from "../analytics/score.js";
+import { shouldShowSyncBanner } from "./sync.js";
 import { colors, header, pass, warn, info, clog, nextStep, shortcutsHint, emptyState, coachingCard, standupCard, ceremonyIntro, ceremonyOutro, select, isCancel, text, confirm } from "../ui/theme.js";
 
 export async function trackCommand(
@@ -65,6 +66,11 @@ export async function trackCommand(
   }
 
   const today = formatDate();
+
+  // ─── Sync banner (if dashboard isn't getting data) ──────────────────────
+  if (shouldShowSyncBanner()) {
+    clog.warn("Your dashboard isn't syncing. Run `loopkit sync status`.");
+  }
 
   // ─── If ID is specified, run inline action or single-task interactive prompt ─────────────────────────
   if (id) {
