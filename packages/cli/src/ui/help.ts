@@ -126,7 +126,7 @@ function renderHelp(): string {
   lines.push("");
   lines.push(`  ${BRAND}  ${TAGLINE}`);
   lines.push("");
-  lines.push(`  ${token.dim("Version 0.1.0")}`);
+  lines.push(`  ${token.dim("Version 0.2.0")}`);
   lines.push("");
 
   // ── Usage

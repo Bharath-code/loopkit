@@ -1,8 +1,39 @@
 # LoopKit — Build Status
 
-**Last updated:** April 27, 2026 (Design System Overhaul Plan Added — 6 Phases, 37 Tasks)  
-**Version:** 0.1.0  
-**Overall:** MVP complete · All sprints shipped · 369 tests passing · 0 launch blockers · Ready to ship
+**Last updated:** June 12, 2026 (v0.2.0 release — "Loop Closes Both Ways")  
+**Version:** 0.2.0  
+**Overall:** v0.2.0 shipped · 582 tests passing · 0 P0 bugs · Bidirectional sync live · Public distribution ready
+
+## v0.2.0 Highlights
+
+- **Bidirectional task sync** — CLI ↔ Convex, LWW conflict resolution, "CLI" / "WEB" provenance badges. Closes the loop.
+- **Three wow-features** — `loopkit audit` (founder therapy), `loopkit price` (pricing copilot), `loopkit voice` (60s standup → tasks).
+- **Public distribution** — `/wins` feed, `/wins/[handle]` profiles, `/wins/[handle]/[year]/card` sharable PNGs.
+- **5-step web onboarding** with CLI deep-link (`--from-web` flag).
+- **CLI bundle 364KB → 16KB** (22.7x) via lazy command loading. Cold start 194ms.
+- **YAML frontmatter** in loop logs — analytics read structured fields, no more regex fragility.
+- **Labs flag** for 4 commands — sharpens the product thesis.
+- **Refactored `loop.ts`** 1,074 → 839 lines. Extracted to 5 supporting modules.
+
+## Migration Notes from 0.1.0
+
+- All `loopkit track` flags unchanged; new flags: `--push`, `--pull`, `--sync`.
+- All `loopkit loop` flags unchanged.
+- New commands: `sync`, `audit`, `price`, `voice`, `labs`. Run `loopkit --help` to see them all.
+- Old loop logs (without YAML frontmatter) still parse via the legacy regex fallback in `parseLoopLog()`. New logs written by `loopkit loop` automatically include frontmatter.
+- Encrypted tokens remain encrypted; no re-auth required.
+
+## Next: v0.3.0 (Forward Look)
+
+Likely themes for the next release:
+- **Email digest** (Phase 4.3) — Sunday morning inbox reminder.
+- **Pattern detection ML** (Phase IE-11/12) — replace rule-based with ML on user behavior data.
+- **Public Founder Graph** (Phase 5.1+) — aggregate anonymized data into "State of Solo Founders" reports.
+- **Embedded onboarding** — replace the separate `/onboarding` page with a modal in the landing hero.
+
+---
+
+[Full v0.2.0 release notes](CHANGELOG.md) | [Original build plan](IMPLEMENTATION_PLAN.md)
 
 ---
 

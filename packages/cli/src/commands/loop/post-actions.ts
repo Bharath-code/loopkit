@@ -143,7 +143,7 @@ export async function detectAndTriggerMilestones(ctx: MilestoneDetectionContext)
       metadata: { weekNumber: weekNum },
     });
     clog.step("🎉 Milestone");
-    console.log(box("You shipped your first week. 70% of founders quit by week 2. You're in the top 30%."));
+    console.log(box("You shipped your first week. The Sunday loop is now yours."));
   }
 
   // Milestone 2: Week 4 complete
@@ -178,7 +178,7 @@ export async function detectAndTriggerMilestones(ctx: MilestoneDetectionContext)
       metadata: { weekNumber: weekNum, weeksActive: proof.weeksActive },
     });
     clog.step("📊 Milestone");
-    console.log(box("You missed a week. 47 other founders ran loopkit loop yesterday. Get back in the game!"));
+    console.log(box("You missed a week. Run loopkit loop now to start a new streak."));
   }
 
   // Milestone 5: Pricing signal in pulse feedback
