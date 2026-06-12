@@ -21,6 +21,7 @@ import { labsCommand } from "./commands/labs-cmd.js";
 import { syncCommand } from "./commands/sync.js";
 import { auditCommand } from "./commands/audit.js";
 import { priceCommand } from "./commands/price.js";
+import { voiceTrackCommand } from "./commands/track-voice.js";
 import { recordEvent, telemetryCommand } from "./analytics/telemetry.js";
 
 const program = new Command();
@@ -63,6 +64,19 @@ program
   .action((id, options) => {
     recordEvent({ command: options.stand ? "track:stand" : "track" });
     trackCommand(id, options);
+  });
+
+program
+  .command("voice")
+  .description("Record a voice standup (60s) → transcribed → tasks added to tasks.md")
+  .option("--max <seconds>", "Max recording duration in seconds (default 60)", (v) => parseInt(v, 10))
+  .option("--no-preview", "Skip the confirmation step before writing")
+  .action((options) => {
+    recordEvent({ command: "track:voice" });
+    voiceTrackCommand({
+      max: options.max,
+      preview: options.preview,
+    });
   });
 
 program

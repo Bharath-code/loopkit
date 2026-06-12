@@ -78,6 +78,7 @@ const PRIMARY_COMMANDS = [
 const TOOL_COMMANDS = [
   { name: "coach",     description: "AI coaching based on your shipping patterns" },
   { name: "celebrate", description: "Confetti + card; --annual [year] for year-in-review" },
+  { name: "voice",     description: "Record a 60s standup → transcribed → tasks added" },
   { name: "auth",      description: "Manage your API key (BYOK)" },
   { name: "sync",      description: "Check or reset CLI → dashboard sync health" },
   { name: "aliases",   description: "Install shell shortcuts: lk, lks, lkt, lkl" },
