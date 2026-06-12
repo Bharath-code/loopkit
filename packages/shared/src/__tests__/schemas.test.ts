@@ -26,6 +26,7 @@ import {
   detectProjectCategory,
   RevenueEntrySchema,
   StandupLogSchema,
+  AuditReportSchema,
 } from "../index";
 
 describe("InitAnswersSchema", () => {
@@ -997,5 +998,84 @@ describe("StandupLogSchema", () => {
       standupStreak: -1,
     };
     expect(() => StandupLogSchema.parse(invalid)).toThrow();
+  });
+});
+
+describe("AuditReportSchema", () => {
+  const validReport = {
+    periodWeeks: 8,
+    totalTasksCompleted: 24,
+    totalTasksShipped: 6,
+    totalPulseResponses: 12,
+    overrideRate: 0.1,
+    feedbackActedOnRate: 0.6,
+    velocityTrend: "accelerating",
+    patternEvolution: [
+      { week: 1, dominantTaskType: "product" },
+      { week: 2, dominantTaskType: "distribution", note: "shipped the launch post" },
+    ],
+    comparedToCohort: {
+      shippingScore: { you: 75, cohortMedian: 55 },
+      streak: { you: 4, cohortMedian: 3 },
+      tasksPerWeek: { you: 3, cohortMedian: 4 },
+    },
+    topAvoidancePattern: "You skip distribution tasks in 6 of 8 weeks.",
+    biggestInsight: "Your shipping score went up 15% after you started shipping weekly.",
+    oneChangeForNextMonth: "Block 90 minutes every Tuesday for distribution tasks.",
+    riskIfUnchanged: "Stuck in builder mode; revenue stays at $0.",
+  };
+
+  it("parses a valid audit report", () => {
+    const result = AuditReportSchema.parse(validReport);
+    expect(result.periodWeeks).toBe(8);
+    expect(result.patternEvolution.length).toBe(2);
+    expect(result.comparedToCohort.streak.you).toBe(4);
+  });
+
+  it("rejects overrideRate above 1", () => {
+    const invalid = { ...validReport, overrideRate: 1.5 };
+    expect(() => AuditReportSchema.parse(invalid)).toThrow();
+  });
+
+  it("rejects negative overrideRate", () => {
+    const invalid = { ...validReport, overrideRate: -0.1 };
+    expect(() => AuditReportSchema.parse(invalid)).toThrow();
+  });
+
+  it("rejects invalid velocityTrend", () => {
+    const invalid = { ...validReport, velocityTrend: "sideways" };
+    expect(() => AuditReportSchema.parse(invalid)).toThrow();
+  });
+
+  it("rejects invalid dominantTaskType", () => {
+    const invalid = {
+      ...validReport,
+      patternEvolution: [{ week: 1, dominantTaskType: "marketing" }],
+    };
+    expect(() => AuditReportSchema.parse(invalid)).toThrow();
+  });
+
+  it("rejects topAvoidancePattern over 280 chars", () => {
+    const invalid = {
+      ...validReport,
+      topAvoidancePattern: "x".repeat(281),
+    };
+    expect(() => AuditReportSchema.parse(invalid)).toThrow();
+  });
+
+  it("accepts 1-char topAvoidancePattern (no min length)", () => {
+    const valid = { ...validReport, topAvoidancePattern: "x" };
+    const result = AuditReportSchema.parse(valid);
+    expect(result.topAvoidancePattern).toBe("x");
+  });
+
+  it("rejects empty patternEvolution", () => {
+    const invalid = { ...validReport, patternEvolution: [] };
+    expect(() => AuditReportSchema.parse(invalid)).toThrow();
+  });
+
+  it("rejects periodWeeks above 52", () => {
+    const invalid = { ...validReport, periodWeeks: 100 };
+    expect(() => AuditReportSchema.parse(invalid)).toThrow();
   });
 });

@@ -59,6 +59,13 @@ const PRIMARY_COMMANDS = [
     when:        "On payment",
     flags:       ["--add <amount>", "--log"],
   },
+  {
+    name:        "audit",
+    args:        "",
+    description: "Founder therapy: 2-page report on the last 8 weeks",
+    when:        "Monthly",
+    flags:       ["--weeks <n>", "--export <md|pdf>", "--cohort"],
+  },
 ] as const;
 
 const TOOL_COMMANDS = [

@@ -19,6 +19,7 @@ import { aliasesCommand } from "./commands/aliases.js";
 import { updateCommand } from "./commands/update.js";
 import { labsCommand } from "./commands/labs-cmd.js";
 import { syncCommand } from "./commands/sync.js";
+import { auditCommand } from "./commands/audit.js";
 import { recordEvent, telemetryCommand } from "./analytics/telemetry.js";
 
 const program = new Command();
@@ -199,6 +200,21 @@ program
   .description("Check or reset the CLI → dashboard sync state")
   .action((action) => {
     syncCommand(action);
+  });
+
+program
+  .command("audit")
+  .description("Founder therapy: 2-page report on the last 8 weeks of work")
+  .option("-w, --weeks <n>", "Window in weeks (default 8, max 52)", (v) => parseInt(v, 10))
+  .option("-e, --export <format>", "Export to .loopkit/audits/ (md or pdf)")
+  .option("--cohort", "Show only the cohort comparison")
+  .action((options) => {
+    recordEvent({ command: "audit" });
+    auditCommand({
+      weeks: options.weeks,
+      export: options.export,
+      cohort: options.cohort,
+    });
   });
 
 program.parse(process.argv);

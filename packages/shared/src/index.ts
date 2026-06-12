@@ -225,6 +225,44 @@ export const DNARecommendationSchema = z.object({
 
 export type DNARecommendation = z.infer<typeof DNARecommendationSchema>;
 
+// ─── Analytics: Audit Report (v0.2.0) ───────────────────────────
+
+export const AuditCohortSchema = z.object({
+  shippingScore: z.object({ you: z.number(), cohortMedian: z.number() }),
+  streak: z.object({ you: z.number(), cohortMedian: z.number() }),
+  tasksPerWeek: z.object({ you: z.number(), cohortMedian: z.number() }),
+});
+
+export const AuditPatternEvolutionSchema = z.object({
+  week: z.number(),
+  dominantTaskType: z.enum([
+    "distribution",
+    "product",
+    "admin",
+    "feedback",
+    "design",
+    "infra",
+  ]),
+  note: z.string().optional(),
+});
+
+export const AuditReportSchema = z.object({
+  periodWeeks: z.number().min(1).max(52),
+  totalTasksCompleted: z.number(),
+  totalTasksShipped: z.number(),
+  totalPulseResponses: z.number(),
+  overrideRate: z.number().min(0).max(1),
+  feedbackActedOnRate: z.number().min(0).max(1),
+  velocityTrend: z.enum(["accelerating", "steady", "declining", "volatile"]),
+  patternEvolution: z.array(AuditPatternEvolutionSchema).min(1).max(16),
+  comparedToCohort: AuditCohortSchema,
+  topAvoidancePattern: z.string().max(280),
+  biggestInsight: z.string().max(280),
+  oneChangeForNextMonth: z.string().max(280),
+  riskIfUnchanged: z.string().max(280),
+});
+
+export type AuditReport = z.infer<typeof AuditReportSchema>;
 
 // ─── Analytics: Churn Risk ──────────────────────────────────────
 
