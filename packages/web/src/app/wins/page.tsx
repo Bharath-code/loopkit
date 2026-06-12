@@ -64,6 +64,63 @@ function relativeTime(ts: number): string {
   return `${Math.floor(diffDays / 30)}mo ago`;
 }
 
+// ─── Sample data (shown only when no real wins exist yet) ──────
+// Helps launch with a populated feel; replaced by real data as soon
+// as one user runs `loopkit celebrate --share`.
+const SAMPLE_WINS: PublicWin[] = [
+  {
+    _id: "sample-1",
+    productName: "ProposalAI",
+    weekNum: 12,
+    shippingScore: 88,
+    streak: 12,
+    tasksCompleted: 5,
+    tasksTotal: 5,
+    feedbackCount: 8,
+    loopkitScore: 91,
+    mrr: 240,
+    oneThing:
+      "Stop perfectionism. Ship the v0.1 with a known gap. The gap is the conversation that gets you the next customer.",
+    createdAt: Date.now() - 2 * 24 * 60 * 60 * 1000,
+    handle: "demo-founder",
+    projectSlug: "proposalai",
+  },
+  {
+    _id: "sample-2",
+    productName: "ShipLane",
+    weekNum: 8,
+    shippingScore: 75,
+    streak: 6,
+    tasksCompleted: 4,
+    tasksTotal: 5,
+    feedbackCount: 3,
+    loopkitScore: 78,
+    mrr: null,
+    oneThing:
+      "Distribution tasks keep getting pushed to next week. Block 90 min Tuesday and 90 min Friday. Non-negotiable.",
+    createdAt: Date.now() - 4 * 24 * 60 * 60 * 1000,
+    handle: "founder-jane",
+    projectSlug: "shiplane",
+  },
+  {
+    _id: "sample-3",
+    productName: "PulseDeck",
+    weekNum: 5,
+    shippingScore: 100,
+    streak: 5,
+    tasksCompleted: 3,
+    tasksTotal: 3,
+    feedbackCount: 12,
+    loopkitScore: 85,
+    mrr: 60,
+    oneThing:
+      "Three paying customers this week. All from one tweet thread. Build-in-public works when the loop is honest.",
+    createdAt: Date.now() - 6 * 24 * 60 * 60 * 1000,
+    handle: "mike-builds",
+    projectSlug: "pulsedeck",
+  },
+];
+
 function WinCard({ win }: { win: PublicWin }) {
   return (
     <article className="p-5 rounded-2xl border border-zinc-800 bg-zinc-900/30 hover:bg-zinc-900/50 transition-colors">
@@ -138,6 +195,17 @@ export default async function WinsPage() {
         )
       : 0;
 
+  const showSamples = wins.length === 0;
+  const displayedWins = showSamples ? SAMPLE_WINS : wins;
+  const stats = showSamples
+    ? { count: SAMPLE_WINS.length, founders: 3, avg: 88, streak: 12 }
+    : {
+        count: totalWins,
+        founders: shippingFounders,
+        avg: avgScore,
+        streak: longestStreak,
+      };
+
   return (
     <main id="main-content" className="relative overflow-hidden">
       {/* ─── Hero ──────────────────────────────────────────── */}
@@ -146,8 +214,10 @@ export default async function WinsPage() {
 
         <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
           <div className="fade-up inline-flex items-center gap-2 px-4 py-1.5 mb-8 rounded-full border border-zinc-800 bg-zinc-900/50 text-sm text-zinc-400">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            {totalWins > 0 ? `${totalWins} public win${totalWins === 1 ? "" : "s"}` : "Wins start here"}
+            <span className={`w-2 h-2 rounded-full ${showSamples ? "bg-amber-500" : "bg-emerald-500"} animate-pulse`} />
+            {showSamples
+              ? "Sample wins — your data appears here when you ship"
+              : `${stats.count} public win${stats.count === 1 ? "" : "s"}`}
           </div>
 
           <h1 className="fade-up delay-1 text-5xl sm:text-7xl font-bold tracking-tight leading-[1.08]">
@@ -166,21 +236,21 @@ export default async function WinsPage() {
             <dl className="fade-up delay-3 mt-10 grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-2xl mx-auto">
               <div className="p-4 rounded-xl border border-zinc-800 bg-zinc-900/30">
                 <dt className="text-xs text-zinc-500 uppercase tracking-wider">Wins</dt>
-                <dd className="mt-1 text-2xl font-bold text-white">{totalWins}</dd>
+                <dd className="mt-1 text-2xl font-bold text-white">{stats.count}</dd>
               </div>
               <div className="p-4 rounded-xl border border-zinc-800 bg-zinc-900/30">
                 <dt className="text-xs text-zinc-500 uppercase tracking-wider">Founders</dt>
-                <dd className="mt-1 text-2xl font-bold text-white">{shippingFounders}</dd>
+                <dd className="mt-1 text-2xl font-bold text-white">{stats.founders}</dd>
               </div>
               <div className="p-4 rounded-xl border border-zinc-800 bg-zinc-900/30">
                 <dt className="text-xs text-zinc-500 uppercase tracking-wider">Avg Score</dt>
-                <dd className="mt-1 text-2xl font-bold text-white">{avgScore}%</dd>
+                <dd className="mt-1 text-2xl font-bold text-white">{stats.avg}%</dd>
               </div>
               <div className="p-4 rounded-xl border border-orange-500/20 bg-zinc-900/30">
                 <dt className="text-xs text-orange-400 uppercase tracking-wider flex items-center gap-1">
                   <Flame className="h-3 w-3" /> Longest
                 </dt>
-                <dd className="mt-1 text-2xl font-bold text-white">{longestStreak}</dd>
+                <dd className="mt-1 text-2xl font-bold text-white">{stats.streak}</dd>
               </div>
             </dl>
           )}
@@ -207,36 +277,43 @@ export default async function WinsPage() {
         <div className="max-w-4xl mx-auto">
           <header className="mb-12">
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-3">
-              This week&apos;s wins
+              {showSamples ? "Sample wins (what you'll see)" : "This week's wins"}
             </h2>
             <p className="text-zinc-400">
-              {wins.length > 0
-                ? `Showing the ${wins.length} most recent public wins.`
-                : "No public wins yet. Be the first — run `loopkit celebrate --share`."}
+              {showSamples
+                ? "These are sample wins. Run `loopkit celebrate --share` after your next `loop` and yours will appear here."
+                : `Showing the ${wins.length} most recent public wins.`}
             </p>
           </header>
 
           {wins.length === 0 ? (
-            <div className="p-12 text-center rounded-2xl border border-dashed border-zinc-800 bg-zinc-900/20">
-              <Trophy className="h-10 w-10 text-zinc-700 mx-auto mb-4" aria-hidden="true" />
-              <h3 className="text-lg font-semibold text-white mb-2">
-                The leaderboard is open.
-              </h3>
-              <p className="text-zinc-400 text-sm mb-6 max-w-md mx-auto">
-                When a LoopKit user runs <code className="font-mono text-violet-400">loopkit celebrate --share</code>,
-                their weekly win lands here.
-              </p>
-              <Link
-                href="/"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-white text-black text-sm font-medium hover:bg-zinc-200 transition-colors"
-              >
-                Start shipping
-                <ChevronRight className="h-4 w-4" aria-hidden="true" />
-              </Link>
-            </div>
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {displayedWins.map((win) => (
+                  <WinCard key={win._id} win={win} />
+                ))}
+              </div>
+              <div className="mt-8 p-8 text-center rounded-2xl border border-dashed border-zinc-800 bg-zinc-900/20">
+                <Trophy className="h-10 w-10 text-zinc-700 mx-auto mb-4" aria-hidden="true" />
+                <h3 className="text-lg font-semibold text-white mb-2">
+                  Ready to land your win here?
+                </h3>
+                <p className="text-zinc-400 text-sm mb-6 max-w-md mx-auto">
+                  Run <code className="font-mono text-violet-400">loopkit celebrate --share</code>{" "}
+                  after your next <code className="font-mono text-violet-400">loop</code> and replace one of these samples with your own.
+                </p>
+                <Link
+                  href="/"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-white text-black text-sm font-medium hover:bg-zinc-200 transition-colors"
+                >
+                  Start shipping
+                  <ChevronRight className="h-4 w-4" aria-hidden="true" />
+                </Link>
+              </div>
+            </>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {wins.map((win) => (
+              {displayedWins.map((win) => (
                 <WinCard key={win._id} win={win} />
               ))}
             </div>
