@@ -61,6 +61,9 @@ program
   .option("--done", "Mark the specified task ID as done")
   .option("--snooze [days]", "Snooze the specified task ID (default: 3 days)")
   .option("--cut", "Cut/archive the specified task ID")
+  .option("--push", "Push local tasks.md to the dashboard (CLI → Convex)")
+  .option("--pull", "Pull dashboard tasks into local tasks.md (Convex → CLI)")
+  .option("--sync", "Bidirectional sync with LWW conflict resolution")
   .action((id, options) => {
     recordEvent({ command: options.stand ? "track:stand" : "track" });
     trackCommand(id, options);

@@ -40,6 +40,33 @@ export default defineSchema({
     count: v.number(),
   }).index("by_key", ["key"]),
 
+  // ─── v0.2.0: Tasks for bidirectional CLI↔Convex sync ────────────
+  // cliTaskId matches the local tasks.md [1], [2], etc. so we can
+  // round-trip a task without an ID-mapping table. updatedAt is the
+  // LWW (last-write-wins) tiebreaker. lastModifiedBy tells us which
+  // side touched it last so we can show "synced just now from CLI"
+  // vs "edited on dashboard" copy.
+  tasks: defineTable({
+    projectId: v.id("projects"),
+    cliTaskId: v.number(),
+    title: v.string(),
+    status: v.union(
+      v.literal("open"),
+      v.literal("done"),
+      v.literal("snoozed"),
+      v.literal("cut"),
+    ),
+    section: v.union(v.literal("week"), v.literal("backlog")),
+    createdAt: v.string(),
+    closedAt: v.optional(v.string()),
+    closedVia: v.optional(v.string()),
+    snoozedUntil: v.optional(v.string()),
+    updatedAt: v.string(),
+    lastModifiedBy: v.union(v.literal("cli"), v.literal("web")),
+  })
+    .index("by_project", ["projectId"])
+    .index("by_cli_id", ["projectId", "cliTaskId"]),
+
   loopLogs: defineTable({
     projectId: v.id("projects"),
     weekNumber: v.number(),

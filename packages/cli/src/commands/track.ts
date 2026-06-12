@@ -25,6 +25,7 @@ import { getSnoozeWarning } from "../analytics/oracle.js";
 import { getPriorityMoment, recordMomentShown } from "../analytics/coach.js";
 import { computeLoopKitScore } from "../analytics/score.js";
 import { shouldShowSyncBanner } from "./sync.js";
+import { pushTasks, pullTasks, syncTasks } from "../sync/tasks.js";
 import { colors, header, pass, warn, info, clog, nextStep, shortcutsHint, emptyState, coachingCard, standupCard, ceremonyIntro, ceremonyOutro, select, isCancel, text, confirm } from "../ui/theme.js";
 
 export async function trackCommand(
@@ -39,6 +40,9 @@ export async function trackCommand(
     done?: boolean;
     snooze?: string | boolean;
     cut?: boolean;
+    push?: boolean;
+    pull?: boolean;
+    sync?: boolean;
   }
 ): Promise<void> {
   const config = readConfig();
@@ -66,6 +70,20 @@ export async function trackCommand(
   }
 
   const today = formatDate();
+
+  // ─── --push / --pull / --sync flags (early-exit, no board render) ─────
+  if (options?.push) {
+    await runTaskSync(slug, "push");
+    return;
+  }
+  if (options?.pull) {
+    await runTaskSync(slug, "pull");
+    return;
+  }
+  if (options?.sync) {
+    await runTaskSync(slug, "both");
+    return;
+  }
 
   // ─── Sync banner (if dashboard isn't getting data) ──────────────────────
   if (shouldShowSyncBanner()) {
@@ -1004,4 +1022,47 @@ function renderWeekSummary(
   }
 
   console.log(nextStep("ship"));
+}
+
+// ─── Task sync handler ──────────────────────────────────────────────
+
+async function runTaskSync(
+  slug: string,
+  direction: "push" | "pull" | "both",
+): Promise<void> {
+  ceremonyIntro(`Task sync · ${direction}`);
+
+  const s = spinner();
+  s.start(direction === "push" ? "Pushing to dashboard..." : direction === "pull" ? "Pulling from dashboard..." : "Syncing bidirectionally...");
+
+  try {
+    if (direction === "push") {
+      const result = await pushTasks(slug);
+      s.stop("Push complete.");
+      clog.success(
+        `Pushed: +${result.inserted} new, ~${result.updated} updated, ${result.skipped} unchanged`,
+      );
+    } else if (direction === "pull") {
+      const tasks = await pullTasks(slug);
+      s.stop(`Pulled ${tasks.length} task${tasks.length === 1 ? "" : "s"}.`);
+      if (tasks.length === 0) {
+        clog.info("Dashboard is empty for this project. Nothing to pull.");
+      } else {
+        clog.success(`Pulled ${tasks.length} task${tasks.length === 1 ? "" : "s"} into local tasks.md.`);
+      }
+    } else {
+      const report = await syncTasks(slug, "both");
+      s.stop("Sync complete.");
+      clog.success(report.reportLine);
+      if (report.stats.conflicts > 0) {
+        clog.warn(`${report.stats.conflicts} conflict${report.stats.conflicts === 1 ? "" : "s"} resolved (last-write-wins).`);
+      }
+    }
+    ceremonyOutro("Done. Run `loopkit track` to see your board.");
+  } catch (err) {
+    s.stop("Sync failed.");
+    clog.error(err instanceof Error ? err.message : String(err));
+    clog.message("If you haven't authenticated, run `loopkit auth` first.");
+    ceremonyOutro("Try again when ready.");
+  }
 }

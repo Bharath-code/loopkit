@@ -25,6 +25,7 @@ import type * as pulse from "../pulse.js";
 import type * as rateLimits from "../rateLimits.js";
 import type * as subscriptions from "../subscriptions.js";
 import type * as sync from "../sync.js";
+import type * as tasks from "../tasks.js";
 import type * as users from "../users.js";
 
 import type {
@@ -51,6 +52,7 @@ declare const fullApi: ApiFromModules<{
   rateLimits: typeof rateLimits;
   subscriptions: typeof subscriptions;
   sync: typeof sync;
+  tasks: typeof tasks;
   users: typeof users;
 }>;
 
