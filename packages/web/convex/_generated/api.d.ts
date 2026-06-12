@@ -13,6 +13,7 @@ import type * as auth from "../auth.js";
 import type * as authHelpers from "../authHelpers.js";
 import type * as cliAuth from "../cliAuth.js";
 import type * as competitorRadar from "../competitorRadar.js";
+import type * as crons from "../crons.js";
 import type * as email from "../email.js";
 import type * as http from "../http.js";
 import type * as keywords from "../keywords.js";
@@ -41,6 +42,7 @@ declare const fullApi: ApiFromModules<{
   authHelpers: typeof authHelpers;
   cliAuth: typeof cliAuth;
   competitorRadar: typeof competitorRadar;
+  crons: typeof crons;
   email: typeof email;
   http: typeof http;
   keywords: typeof keywords;
