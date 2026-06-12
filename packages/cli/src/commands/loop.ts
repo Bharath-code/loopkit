@@ -7,6 +7,7 @@ import {
   writeConfig,
   readBriefJson,
   readTasksFile,
+  writeTasksFile,
   readShipLog,
   readPulseResponses,
   readLoopLog,
@@ -29,16 +30,14 @@ import { getPriorityMoment, recordMomentShown } from "../analytics/coach.js";
 import { computeLoopKitScore, renderLoopKitScore, readLoopKitScoreFromLog } from "../analytics/score.js";
 import { buildProofCard, buildTweetLine, copyToClipboard, buildTwitterIntentUrl, openUrl } from "../ui/proof-card.js";
 import { colors, header, box, pass, warn, info, nextStep, scoreBar, shortcutsHint, emptyState, patternCard, coachingCard, ceremonyIntro, ceremonyOutro, clog, note, tasks, confirm, isCancel, select, text, spinner } from "../ui/theme.js";
+import {
+  computeLoopProof,
+  formatScoreDelta,
+  detectHighOverrideRate,
+  type LoopProof,
+} from "./loop/helpers.js";
 
-interface LoopProof {
-  previousScore: number;
-  currentScore: number;
-  scoreDelta: number;
-  weeksActive: number;
-  decisionsMade: number;
-  feedbackResponses: number;
-  feedbackActedOn: boolean;
-}
+export type { LoopProof } from "./loop/helpers.js";
 
 export async function loopCommand(options?: { revenue?: string; async?: boolean }): Promise<void> {
   const config = readConfig();
@@ -334,7 +333,6 @@ export async function loopCommand(options?: { revenue?: string; async?: boolean 
             updated += `\n## This Week\n${newTasks}\n`;
           }
 
-          const { writeTasksFile } = await import("../storage/local.js");
           writeTasksFile(slug, updated);
           clog.success("Micro-tasks added to tasks.md");
         }
@@ -560,7 +558,6 @@ export async function loopCommand(options?: { revenue?: string; async?: boolean 
         } else {
           updated = `# ${briefData?.answers.name || slug} — Tasks\n\n## This Week\n${newTask}\n\n## Backlog\n`;
         }
-        const { writeTasksFile } = await import("../storage/local.js");
         writeTasksFile(slug, updated);
         clog.success(`Set as next week's #1: "${finalOneThing}"`);
       }
@@ -747,7 +744,6 @@ export async function loopCommand(options?: { revenue?: string; async?: boolean 
           note(`loopkit.dev/r/${referralCode}\n\nShare this link — when a friend signs up, you both get 1 month free.`, "Your Referral Link 🎁");
           config.referralShown = true;
           config.referralCode = referralCode;
-          const { writeConfig } = await import("../storage/local.js");
           writeConfig(config);
         }
       }
@@ -776,59 +772,7 @@ export async function loopCommand(options?: { revenue?: string; async?: boolean 
   ceremonyOutro(`Week ${weekNum} closed. You made the next move visible.`);
 }
 
-// ─── Proof Loop Helpers ──────────────────────────────────────────
-
-function computeLoopProof({
-  slug,
-  weekNum,
-  shippingScore,
-  tasksCompleted,
-  tasksOpen,
-}: {
-  slug: string;
-  weekNum: number;
-  shippingScore: number;
-  tasksCompleted: string[];
-  tasksOpen: string[];
-}): LoopProof {
-  const previousLogs = readLastNLoopLogs(100, slug).filter(
-    (log) => log.weekNumber !== weekNum,
-  );
-  const previousScore = findPreviousScore(previousLogs.map((log) => log.weekNumber));
-  const feedbackResponses = readPulseResponses().length;
-  const taskText = [...tasksCompleted, ...tasksOpen].join(" ").toLowerCase();
-  const feedbackActedOn =
-    feedbackResponses > 0 &&
-    /\b(feedback|pulse|user|customer|fix|onboarding|response)\b/.test(taskText);
-
-  return {
-    previousScore,
-    currentScore: shippingScore,
-    scoreDelta: shippingScore - previousScore,
-    weeksActive: previousLogs.length + 1,
-    decisionsMade: previousLogs.length + 1,
-    feedbackResponses,
-    feedbackActedOn,
-  };
-}
-
-function findPreviousScore(weekNumbers: number[]): number {
-  for (const weekNumber of weekNumbers.sort((a, b) => b - a)) {
-    const log = readLoopLog(weekNumber);
-    const score = parseShippingScore(log);
-    if (score !== null) return score;
-  }
-  return 0;
-}
-
-function parseShippingScore(content: string | null): number | null {
-  if (!content) return null;
-  const match =
-    content.match(/Shipping score:\s*(\d+)%/i) ||
-    content.match(/\*\*Shipping Score:\*\*\s*(\d+)%/i);
-  if (!match) return null;
-  return Number.parseInt(match[1], 10);
-}
+// ─── Render Helpers (UI side effects) ────────────────────────────
 
 function renderProof(proof: LoopProof): void {
   const lines = [
@@ -840,11 +784,6 @@ function renderProof(proof: LoopProof): void {
 
   clog.step("Proof This Week");
   console.log(box(lines.join("\n")));
-}
-
-function formatScoreDelta(delta: number): string {
-  if (delta > 0) return `+${delta}`;
-  return `${delta}`;
 }
 
 async function maybeShowUpgradeIntent(proof: LoopProof): Promise<void> {
@@ -915,21 +854,15 @@ function displayDNA(dna: ShippingDNA): void {
 // ─── Override Rate Warning ──────────────────────────────────────
 
 function checkOverrideRate(slug: string): void {
-  const WINDOW = 4; // weeks to look back
-  const THRESHOLD = 2; // ≥2 overrides in 4 weeks = warning
+  const result = detectHighOverrideRate(slug);
+  if (!result) return;
 
-  const logs = readLastNLoopLogs(WINDOW, slug);
-  if (logs.length < WINDOW) return; // Not enough history yet
-
-  const overrideCount = logs.filter((l) => l.overridden).length;
-  if (overrideCount >= THRESHOLD) {
-    clog.warn(
-      `Override rate: ${overrideCount}/${WINDOW} weeks — you've changed the AI recommendation more than half the time.`
-    );
-    clog.message(
-      "  This may mean the AI needs better context. Try updating your brief: `loopkit init --analyze`"
-    );
-  }
+  clog.warn(
+    `Override rate: ${result.overrideCount}/${result.window} weeks — you've changed the AI recommendation more than half the time.`
+  );
+  clog.message(
+    "  This may mean the AI needs better context. Try updating your brief: `loopkit init --analyze`"
+  );
 }
 
 // ─── GF-4: Revenue Prompt Helper ─────────────────────────────────
