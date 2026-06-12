@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono, Geist } from "next/font/google";
+import { JetBrains_Mono } from "next/font/google";
 import Link from "next/link";
 import "./globals.css";
 import { ConvexClientProvider } from "@/components/ConvexClientProvider";
@@ -11,33 +11,30 @@ import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
 import { RefreshCw } from "lucide-react";
 
-const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
-
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-});
-
+// LoopKit is a CLI company. The site is mono-everything.
+// JetBrains Mono is the only typeface — used for body, code,
+// and headings. This is intentional and is the brand.
 const jetbrains = JetBrains_Mono({
-  variable: "--font-mono",
+  variable: "--font-sans",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
-  title: "LoopKit — CLI for Solo Technical Founders Shipping Weekly",
+  title: "loopkit — a CLI for solo founders who keep quitting at week 4",
   description:
-    "Define · Develop · Deliver · Feedback · Iterate. The CLI for solo technical founders shipping weekly.",
+    "Five commands. One weekly loop. Run init, then close loop every Sunday for 6 weeks. Free for the basics.",
   keywords: [
     "solo founder",
     "shipping",
     "CLI",
     "build in public",
     "indie hacker",
-    "productivity",
+    "weekly loop",
   ],
   openGraph: {
-    title: "LoopKit — CLI for Solo Technical Founders Shipping Weekly",
-    description: "One CLI. Five commands. One weekly shipping loop.",
+    title: "loopkit — a CLI for solo founders who keep quitting at week 4",
+    description: "Five commands. One weekly loop. Free for the basics.",
     type: "website",
   },
 };
@@ -53,10 +50,8 @@ export default function RootLayout({
       className={cn(
         "h-full",
         "antialiased",
-        inter.variable,
         jetbrains.variable,
         "font-sans",
-        geist.variable,
         "dark", // Marketing site is intentionally dark-only; the dashboard
                 // sidebar toggle only affects /dashboard/* sub-routes
                 // because the dashboard layout sets its own theme.
@@ -71,62 +66,43 @@ export default function RootLayout({
           Skip to content
         </a>
         {/* ─── Nav ────────────────────────────────────────────── */}
-        <header className="sticky top-0 z-50 border-b border-zinc-900/80 bg-background/80 backdrop-blur-md">
+        <header className="sticky top-0 z-50 border-b border-zinc-900 bg-background">
           <nav
-            className="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between"
+            className="max-w-3xl mx-auto px-6 h-14 flex items-center justify-between"
             aria-label="Main navigation"
           >
             {/* Logo */}
             <Link
               href="/"
-              className="flex items-center gap-2 font-bold text-white hover:opacity-80 transition-opacity"
+              className="flex items-center gap-2 text-zinc-100 hover:text-white"
               aria-label="LoopKit home"
             >
-              <span className="text-violet-400 text-lg">
-                <RefreshCw className="h-5 w-5" aria-hidden="true" />
-              </span>
-              <span className="tracking-tight">LoopKit</span>
+              <RefreshCw className="h-4 w-4 text-emerald-400" aria-hidden="true" />
+              <span>loopkit</span>
             </Link>
 
-            {/* Center links */}
-            <div className="hidden sm:flex items-center gap-6 text-sm text-zinc-400">
+            {/* Right links — minimal, terminal-style */}
+            <div className="flex items-center gap-5 text-sm text-zinc-500">
               <Link
-                href="#how-it-works"
-                className="hover:text-white transition-colors"
+                href="/docs"
+                className="hover:text-zinc-200"
               >
-                How it works
-              </Link>
-              <Link
-                href="#pricing"
-                className="hover:text-white transition-colors"
-              >
-                Pricing
+                docs
               </Link>
               <a
                 href="https://github.com/loopkit/loopkit"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hover:text-white transition-colors"
+                className="hover:text-zinc-200"
               >
-                GitHub
+                github
               </a>
-            </div>
-
-            {/* Right CTAs */}
-            <div className="flex items-center gap-3">
               <Link
                 href="/login"
                 id="nav-sign-in"
-                className="hidden sm:block text-sm text-zinc-400 hover:text-white transition-colors"
+                className="hover:text-zinc-200"
               >
-                Sign in
-              </Link>
-              <Link
-                href="#pricing"
-                id="nav-get-started"
-                className="text-sm px-4 py-1.5 rounded-lg bg-violet-600 hover:bg-violet-500 text-white font-medium transition-colors"
-              >
-                Get started
+                sign in
               </Link>
             </div>
           </nav>
