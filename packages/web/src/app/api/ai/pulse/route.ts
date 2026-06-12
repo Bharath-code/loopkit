@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: csrf.error }, { status: csrf.status });
     }
 
-    const auth = await verifyAndRateLimit(req, { gateFreeTier: true });
+    const auth = await verifyAndRateLimit(req, { gateFreeTier: true, endpoint: "pulse" });
     if ("error" in auth) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
       temperature: 0.2,
     });
 
-    await incrementAIUsage(auth.token);
+    await incrementAIUsage(auth.token, "pulse");
 
     return NextResponse.json({ result: object });
   } catch (error) {

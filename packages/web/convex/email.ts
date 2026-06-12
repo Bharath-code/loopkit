@@ -14,6 +14,7 @@
  */
 
 import { v } from "convex/values";
+import { createHmac, timingSafeEqual } from "node:crypto";
 import { internalMutation, mutation, query } from "./_generated/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { Resend } from "resend";
@@ -22,6 +23,52 @@ import { renderDigestHtml } from "../src/lib/email-templates";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://loopkit.dev";
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const FROM_ADDRESS = process.env.DIGEST_FROM_ADDRESS || "LoopKit <digest@loopkit.dev>";
+
+/**
+ * HMAC secret for signing unsubscribe tokens. In production this MUST
+ * be set in Convex env. If missing, we fall back to a process-stable
+ * derivation from the Resend key (which is already required).
+ * Tokens verify via timingSafeEqual to prevent timing attacks.
+ */
+const UNSUBSCRIBE_SECRET =
+  process.env.UNSUBSCRIBE_SECRET ||
+  (RESEND_API_KEY ? createHmac("sha256", RESEND_API_KEY).update("unsub-salt").digest("hex") : "dev-only-insecure-fallback");
+
+const UNSUBSCRIBE_TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+
+export function signUnsubscribeToken(userId: string): string {
+  const ts = Date.now();
+  const payload = `${userId}:${ts}`;
+  const sig = createHmac("sha256", UNSUBSCRIBE_SECRET).update(payload).digest("hex");
+  return Buffer.from(`${payload}:${sig}`).toString("base64url");
+}
+
+export function verifyUnsubscribeToken(token: string, userId: string): { ok: boolean; reason?: string } {
+  try {
+    const decoded = Buffer.from(token, "base64url").toString("utf-8");
+    const parts = decoded.split(":");
+    if (parts.length !== 3) return { ok: false, reason: "Malformed token" };
+
+    const [tokenUserId, tsStr, sig] = parts;
+    if (tokenUserId !== userId) return { ok: false, reason: "Token does not match user" };
+
+    const ts = parseInt(tsStr, 10);
+    if (Number.isNaN(ts)) return { ok: false, reason: "Invalid timestamp" };
+    if (Date.now() - ts > UNSUBSCRIBE_TOKEN_TTL_MS) return { ok: false, reason: "Token expired" };
+
+    const expected = createHmac("sha256", UNSUBSCRIBE_SECRET)
+      .update(`${tokenUserId}:${ts}`)
+      .digest("hex");
+    const sigBuf = Buffer.from(sig, "hex");
+    const expBuf = Buffer.from(expected, "hex");
+    if (sigBuf.length !== expBuf.length || !timingSafeEqual(sigBuf, expBuf)) {
+      return { ok: false, reason: "Invalid signature" };
+    }
+    return { ok: true };
+  } catch {
+    return { ok: false, reason: "Decode failed" };
+  }
+}
 
 interface DigestData {
   userEmail: string;
@@ -121,10 +168,8 @@ export const sendWeeklyDigest = mutation({
       return { ok: false, error: "No loop data yet — skip digest" };
     }
 
-    // Generate a one-time unsubscribe token (signed-ish via timestamp + userId)
-    const unsubToken = Buffer.from(
-      `${args.userId}:${Date.now()}`,
-    ).toString("base64url");
+    // Generate a signed unsubscribe token (HMAC + 30-day TTL)
+    const unsubToken = signUnsubscribeToken(args.userId);
     const unsubscribeUrl = `${APP_URL}/api/email/unsubscribe?token=${unsubToken}&userId=${args.userId}`;
 
     const data: DigestData = {
@@ -182,9 +227,7 @@ export const sendWeeklyDigestToAll = internalMutation({
         .first();
       if (!lastLoop) continue;
 
-      const unsubToken = Buffer.from(
-        `${p.userId}:${Date.now()}`,
-      ).toString("base64url");
+      const unsubToken = signUnsubscribeToken(p.userId);
       const data: DigestData = {
         userEmail: (user as { email?: string }).email!,
         userName: (user as { name?: string }).name ?? "Founder",
@@ -213,12 +256,22 @@ export const sendWeeklyDigestToAll = internalMutation({
 
 /**
  * Opt out of email digests. Called by the unsubscribe link.
+ *
+ * The route handler is public (no auth), so the route must first call
+ * `validateUnsubscribeToken` to prove the request is for the named
+ * userId. As defense in depth, we re-validate the token here.
  */
 export const optOut = mutation({
   args: {
     userId: v.id("users"),
+    token: v.string(),
   },
   handler: async (ctx, args) => {
+    const check = verifyUnsubscribeToken(args.token, args.userId);
+    if (!check.ok) {
+      return { ok: false, error: check.reason ?? "Token validation failed" };
+    }
+
     const existing = await ctx.db
       .query("userPreferences")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
@@ -235,6 +288,77 @@ export const optOut = mutation({
       });
     }
     return { ok: true };
+  },
+});
+
+/**
+ * Authenticated self-service opt-out. Used by the dashboard settings
+ * page toggle. No token required because the user is already
+ * authenticated and acting on their own account.
+ */
+export const optOutSelf = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return { ok: false, error: "Not authenticated" };
+
+    const existing = await ctx.db
+      .query("userPreferences")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+
+    if (existing) {
+      await ctx.db.patch(existing._id, { emailOptIn: false });
+    } else {
+      await ctx.db.insert("userPreferences", {
+        userId,
+        emailOptIn: false,
+        pushOptIn: true,
+        leaderboardOptIn: true,
+      });
+    }
+    return { ok: true };
+  },
+});
+
+/**
+ * Authenticated self-service opt-in. Used by the dashboard settings
+ * page toggle.
+ */
+export const optInSelf = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return { ok: false, error: "Not authenticated" };
+
+    const existing = await ctx.db
+      .query("userPreferences")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+
+    if (existing) {
+      await ctx.db.patch(existing._id, { emailOptIn: true });
+    } else {
+      await ctx.db.insert("userPreferences", {
+        userId,
+        emailOptIn: true,
+        pushOptIn: true,
+        leaderboardOptIn: true,
+      });
+    }
+    return { ok: true };
+  },
+});
+
+/**
+ * Validate an unsubscribe token for a given userId. Returns the
+ * validation result. The route calls this first to decide which
+ * error page to show.
+ */
+export const validateUnsubscribeToken = query({
+  args: { userId: v.id("users"), token: v.string() },
+  handler: async (_ctx, args) => {
+    return verifyUnsubscribeToken(args.token, args.userId);
   },
 });
 

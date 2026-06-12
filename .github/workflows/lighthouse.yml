@@ -1,0 +1,46 @@
+name: Lighthouse CI
+
+# Runs Lighthouse against the dashboard and homepage to catch
+# performance/accessibility regressions before they ship.
+# Uses temporary public storage for results — no auth setup needed.
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build shared + CLI
+        run: |
+          pnpm --filter @loopkit/shared build
+          pnpm --filter @loopkit/cli build
+
+      - name: Build web
+        env:
+          NEXT_PUBLIC_CONVEX_URL: "https://placeholder.convex.cloud"
+        run: pnpm --filter @loopkit/web build
+
+      - name: Run Lighthouse CI
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+        run: |
+          pnpm dlx @lhci/cli@0.14.x autorun

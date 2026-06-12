@@ -107,6 +107,7 @@ export default defineSchema({
     userId: v.id("users"),
     date: v.string(),
     count: v.number(),
+    byEndpoint: v.optional(v.record(v.string(), v.number())),
   })
     .index("by_user_date", ["userId", "date"])
     .index("by_user", ["userId"]),

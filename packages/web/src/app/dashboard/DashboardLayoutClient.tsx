@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useQuery } from "convex/react";
+import { useTheme } from "next-themes";
 import { api } from "../../../convex/_generated/api";
 import {
   LayoutDashboard,
@@ -20,6 +21,8 @@ import {
   Menu,
   LogOut,
   Settings,
+  Sun,
+  Moon,
   type LucideIcon,
 } from "lucide-react";
 
@@ -43,7 +46,13 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const { signOut } = useAuthActions();
   const user = useQuery(api.users.me);
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -103,18 +112,18 @@ export default function DashboardLayout({
           })}
 
           {/* Settings — separated at the bottom of the nav */}
-          <div className="pt-4 mt-4 border-t border-zinc-900">
+          <div className="pt-4 mt-4 border-t border-sidebar-border">
             <Link
               key="/dashboard/settings"
               href="/dashboard/settings"
               className={`flex items-center gap-3 px-3 py-2.5 sm:py-2 rounded-lg text-sm transition-colors cursor-pointer min-h-[44px] ${
                 pathname === "/dashboard/settings"
-                  ? "bg-zinc-800/50 text-white font-medium"
-                  : "text-zinc-400 hover:bg-zinc-900 hover:text-white"
+                  ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                  : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
               }`}
             >
               <Settings
-                className={`h-4 w-4 ${pathname === "/dashboard/settings" ? "text-violet-400" : "text-zinc-500"}`}
+                className={`h-4 w-4 ${pathname === "/dashboard/settings" ? "text-violet-400" : ""}`}
                 aria-hidden="true"
               />
               Settings
@@ -123,13 +132,13 @@ export default function DashboardLayout({
         </nav>
       </div>
 
-      <div className="mt-auto p-4 sm:p-6 border-t border-zinc-900 space-y-4">
+      <div className="mt-auto p-4 sm:p-6 border-t border-sidebar-border space-y-4">
         {user?.tier === "free" && (
           <div className="p-4 rounded-xl border border-violet-500/20 bg-violet-500/10">
-            <h3 className="text-sm font-semibold text-white mb-1">
+            <h3 className="text-sm font-semibold text-foreground mb-1">
               Upgrade to Pro
             </h3>
-            <p className="text-xs text-zinc-400 mb-3">
+            <p className="text-xs text-muted-foreground mb-3">
               Unlock AI synthesis and team pulse features.
             </p>
             <button
@@ -140,11 +149,30 @@ export default function DashboardLayout({
             </button>
           </div>
         )}
+        {mounted && (
+          <button
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            className="flex items-center gap-3 px-3 py-2.5 w-full rounded-lg text-sm text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors cursor-pointer min-h-[44px]"
+            aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+          >
+            {theme === "dark" ? (
+              <>
+                <Sun className="h-4 w-4" aria-hidden="true" />
+                Light mode
+              </>
+            ) : (
+              <>
+                <Moon className="h-4 w-4" aria-hidden="true" />
+                Dark mode
+              </>
+            )}
+          </button>
+        )}
         <button
           onClick={() => void signOut()}
-          className="flex items-center gap-3 px-3 py-2.5 w-full rounded-lg text-sm text-zinc-400 hover:bg-zinc-900 hover:text-white transition-colors cursor-pointer min-h-[44px]"
+          className="flex items-center gap-3 px-3 py-2.5 w-full rounded-lg text-sm text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors cursor-pointer min-h-[44px]"
         >
-          <LogOut className="h-4 w-4 text-zinc-500" aria-hidden="true" />
+          <LogOut className="h-4 w-4" aria-hidden="true" />
           Sign Out
         </button>
       </div>

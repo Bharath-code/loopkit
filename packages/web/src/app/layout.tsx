@@ -5,6 +5,7 @@ import { Inter, JetBrains_Mono, Geist } from "next/font/google";
 import Link from "next/link";
 import "./globals.css";
 import { ConvexClientProvider } from "@/components/ConvexClientProvider";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
@@ -56,7 +57,11 @@ export default function RootLayout({
         jetbrains.variable,
         "font-sans",
         geist.variable,
+        "dark", // Marketing site is intentionally dark-only; the dashboard
+                // sidebar toggle only affects /dashboard/* sub-routes
+                // because the dashboard layout sets its own theme.
       )}
+      suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <a
@@ -128,8 +133,10 @@ export default function RootLayout({
         </header>
 
         <ConvexClientProvider>
-          <TooltipProvider>{children}</TooltipProvider>
-          <Toaster />
+          <ThemeProvider>
+            <TooltipProvider>{children}</TooltipProvider>
+            <Toaster />
+          </ThemeProvider>
         </ConvexClientProvider>
       </body>
     </html>

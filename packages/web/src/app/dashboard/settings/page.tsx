@@ -19,8 +19,8 @@ import { Mail, Send, Check, X } from "lucide-react";
 export default function DashboardSettingsPage() {
   const user = useQuery(api.users.me);
   const prefs = useQuery(api.email.getMyPreferences);
-  const optIn = useMutation(api.email.optIn);
-  const optOut = useMutation(api.email.optOut);
+  const optIn = useMutation(api.email.optInSelf);
+  const optOut = useMutation(api.email.optOutSelf);
   const sendTest = useMutation(api.email.sendWeeklyDigest);
 
   const [sending, setSending] = useState(false);
@@ -32,7 +32,7 @@ export default function DashboardSettingsPage() {
   if (!user) {
     return (
       <div className="space-y-4">
-        <p className="text-zinc-500 text-sm">Loading...</p>
+        <p className="text-muted-foreground text-sm">Loading...</p>
       </div>
     );
   }
@@ -40,11 +40,10 @@ export default function DashboardSettingsPage() {
   const subscribed = prefs?.emailOptIn ?? false;
 
   const handleToggle = async () => {
-    if (!user._id) return;
     if (subscribed) {
-      await optOut({ userId: user._id as Id<"users"> });
+      await optOut();
     } else {
-      await optIn({ userId: user._id as Id<"users"> });
+      await optIn();
     }
   };
 

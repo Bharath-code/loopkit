@@ -835,12 +835,36 @@ describe("GET /api/email/unsubscribe", () => {
     expect(res.status).toBe(400);
   });
 
-  it("rejects when token doesn't match userId", async () => {
-    // Token encodes "user_2:12345" but URL has user_1
-    const token = Buffer.from("user_2:12345").toString("base64url");
+  it("rejects when token doesn't match userId (HMAC validation fails)", async () => {
+    // Mock the validateUnsubscribeToken query to return a non-OK
+    // result, simulating a forged or wrong-user token.
+    mockFetchQuery.mockResolvedValue({ ok: false, reason: "Token does not match user" });
     const req = makeRequest(
       "GET",
-      `http://localhost:3000/api/email/unsubscribe?userId=user_1&token=${token}`,
+      `http://localhost:3000/api/email/unsubscribe?userId=user_1&token=forged-token`,
+      {},
+    );
+    const res = await emailUnsubscribeGet(req as any);
+    expect(res.status).toBe(400);
+    expect(mockFetchMutation).not.toHaveBeenCalled();
+  });
+
+  it("rejects an expired token", async () => {
+    mockFetchQuery.mockResolvedValue({ ok: false, reason: "Token expired" });
+    const req = makeRequest(
+      "GET",
+      `http://localhost:3000/api/email/unsubscribe?userId=user_1&token=expired-token`,
+      {},
+    );
+    const res = await emailUnsubscribeGet(req as any);
+    expect(res.status).toBe(400);
+  });
+
+  it("rejects a malformed token", async () => {
+    mockFetchQuery.mockResolvedValue({ ok: false, reason: "Malformed token" });
+    const req = makeRequest(
+      "GET",
+      `http://localhost:3000/api/email/unsubscribe?userId=user_1&token=garbage!!!`,
       {},
     );
     const res = await emailUnsubscribeGet(req as any);
@@ -848,30 +872,59 @@ describe("GET /api/email/unsubscribe", () => {
   });
 
   it("opts out successfully on valid token", async () => {
+    // Validation passes; mutation succeeds
+    mockFetchQuery.mockResolvedValue({ ok: true });
     mockFetchMutation.mockResolvedValue({ ok: true });
-    const token = Buffer.from("user_1:12345").toString("base64url");
     const req = makeRequest(
       "GET",
-      `http://localhost:3000/api/email/unsubscribe?userId=user_1&token=${token}`,
+      `http://localhost:3000/api/email/unsubscribe?userId=user_1&token=valid-signed-token`,
       {},
     );
     const res = await emailUnsubscribeGet(req as any);
     expect(res.status).toBe(200);
+    expect(mockFetchQuery).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ userId: "user_1", token: "valid-signed-token" }),
+    );
     expect(mockFetchMutation).toHaveBeenCalledWith(
       expect.anything(),
-      expect.objectContaining({ userId: "user_1" }),
+      expect.objectContaining({ userId: "user_1", token: "valid-signed-token" }),
     );
   });
 
-  it("returns 500 when Convex mutation throws", async () => {
-    mockFetchMutation.mockRejectedValue(new Error("convex down"));
-    const token = Buffer.from("user_1:12345").toString("base64url");
+  it("returns 500 when Convex validate query throws", async () => {
+    mockFetchQuery.mockRejectedValue(new Error("convex down"));
     const req = makeRequest(
       "GET",
-      `http://localhost:3000/api/email/unsubscribe?userId=user_1&token=${token}`,
+      `http://localhost:3000/api/email/unsubscribe?userId=user_1&token=valid-token`,
       {},
     );
     const res = await emailUnsubscribeGet(req as any);
     expect(res.status).toBe(500);
+  });
+
+  it("returns 500 when optOut mutation throws", async () => {
+    mockFetchQuery.mockResolvedValue({ ok: true });
+    mockFetchMutation.mockRejectedValue(new Error("convex down"));
+    const req = makeRequest(
+      "GET",
+      `http://localhost:3000/api/email/unsubscribe?userId=user_1&token=valid-token`,
+      {},
+    );
+    const res = await emailUnsubscribeGet(req as any);
+    expect(res.status).toBe(500);
+  });
+
+  it("returns 400 when mutation returns ok:false (defense-in-depth re-validation)", async () => {
+    // Validation passed but mutation disagrees (e.g., race or env mismatch)
+    mockFetchQuery.mockResolvedValue({ ok: true });
+    mockFetchMutation.mockResolvedValue({ ok: false, error: "Invalid signature" });
+    const req = makeRequest(
+      "GET",
+      `http://localhost:3000/api/email/unsubscribe?userId=user_1&token=valid-token`,
+      {},
+    );
+    const res = await emailUnsubscribeGet(req as any);
+    expect(res.status).toBe(400);
   });
 });

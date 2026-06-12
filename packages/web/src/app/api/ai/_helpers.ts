@@ -63,7 +63,10 @@ export function csrfCheckRelaxed(req: NextRequest): { error: string; status: num
   return null;
 }
 
-export async function verifyAndRateLimit(req: NextRequest, options?: { gateFreeTier?: boolean }) {
+export async function verifyAndRateLimit(
+  req: NextRequest,
+  options?: { gateFreeTier?: boolean; endpoint?: string },
+) {
   const token = req.headers.get("Authorization")?.replace("Bearer ", "");
   if (!token) {
     return { error: "Authentication required.", status: 401 };
@@ -85,11 +88,18 @@ export async function verifyAndRateLimit(req: NextRequest, options?: { gateFreeT
 
     const limitCheck = await fetchQuery(
       api.rateLimits.checkLimit,
-      { tier },
+      { tier, endpoint: options?.endpoint },
       { token }
     );
 
     if (!limitCheck.allowed) {
+      // Prefer the more specific error if endpoint gating tripped
+      if (!limitCheck.endpointAllowed && limitCheck.endpointLimit) {
+        return {
+          error: `Endpoint limit reached: ${limitCheck.endpointCount}/${limitCheck.endpointLimit} ${options?.endpoint ?? "calls"} today. Try again tomorrow or upgrade your plan.`,
+          status: 429,
+        };
+      }
       return {
         error: `Rate limit exceeded: ${limitCheck.count}/${limitCheck.limit} AI calls today. Upgrade your plan for more.`,
         status: 429,
@@ -102,11 +112,11 @@ export async function verifyAndRateLimit(req: NextRequest, options?: { gateFreeT
   }
 }
 
-export async function incrementAIUsage(token: string) {
+export async function incrementAIUsage(token: string, endpoint?: string) {
   try {
     await fetchMutation(
       api.rateLimits.incrementUsage,
-      {},
+      endpoint ? { endpoint } : {},
       { token }
     );
   } catch (err) {
