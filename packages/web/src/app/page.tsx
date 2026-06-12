@@ -180,6 +180,13 @@ export default function LandingPage() {
             >
               See how it works →
             </Link>
+
+            <Link
+              href="/wins"
+              className="px-6 py-3 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white transition-colors text-sm"
+            >
+              See founders shipping →
+            </Link>
           </div>
 
           {/* Trust line */}

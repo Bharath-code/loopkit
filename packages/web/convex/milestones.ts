@@ -126,3 +126,54 @@ export const postPublicWin = mutation({
     return { winId };
   },
 });
+
+// ─── Public wins feed (v0.2.0) ───────────────────────────────────
+// Unauthenticated, read-only feed of recent public wins. Used by the
+// /wins landing page and the homepage hero.
+
+export const listPublicWins = query({
+  args: {
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const limit = Math.min(Math.max(args.limit ?? 50, 1), 200);
+    const wins = await ctx.db
+      .query("publicWins")
+      .withIndex("by_created_at")
+      .order("desc")
+      .take(limit);
+
+    // Join with user/project for display fields. We deliberately do
+    // not expose emails or any PII — only productName and a public slug.
+    return Promise.all(
+      wins.map(async (w) => {
+        const user: any = await ctx.db.get(w.userId);
+        const project = await ctx.db.get(w.projectId);
+        return {
+          _id: w._id,
+          productName: w.productName,
+          weekNum: w.weekNum,
+          shippingScore: w.shippingScore,
+          streak: w.streak,
+          tasksCompleted: w.tasksCompleted,
+          tasksTotal: w.tasksTotal,
+          feedbackCount: w.feedbackCount,
+          loopkitScore: w.loopkitScore ?? null,
+          mrr: w.mrr ?? null,
+          oneThing: w.oneThing,
+          createdAt: w.createdAt,
+          handle: (user?.handle as string | undefined) ?? (user?.name as string | undefined) ?? "anon",
+          projectSlug: (project as { slug?: string } | null)?.slug ?? null,
+        };
+      }),
+    );
+  },
+});
+
+export const getPublicWinCount = query({
+  args: {},
+  handler: async (ctx) => {
+    const wins = await ctx.db.query("publicWins").collect();
+    return wins.length;
+  },
+});
