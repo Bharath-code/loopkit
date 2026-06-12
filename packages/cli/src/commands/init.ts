@@ -58,15 +58,44 @@ import {
 import { getTemplate, getTemplateList } from "../templates/index.js";
 import { installFridayReminder } from "../cron/installer.js";
 import { installAliases } from "../aliases/installer.js";
+import { decodeWebPayload } from "./from-web.js";
 
 export async function initCommand(
   resumeName?: string,
-  options?: { analyze?: string; template?: string; cron?: boolean; validate?: boolean },
+  options?: {
+    analyze?: string;
+    template?: string;
+    cron?: boolean;
+    validate?: boolean;
+    "from-web"?: string;
+  },
 ): Promise<void> {
   // Handle --analyze flag
   if (options?.analyze) {
     await analyzeExisting(options.analyze);
     return;
+  }
+
+  // Handle --from-web: decode answers from the onboarding flow
+  if (options?.["from-web"]) {
+    const result = decodeWebPayload(options["from-web"]);
+    if (result.ok) {
+      const slug = resumeName
+        ? slugify(resumeName)
+        : slugify(result.answers.name ?? "");
+      if (slug) {
+        saveDraft(slug, result.answers, 0);
+        if (result.answers.name) {
+          clog.success(`Pre-filled "${result.answers.name}" from web onboarding.`);
+        } else {
+          clog.success("Pre-filled from web onboarding.");
+        }
+        // Fall through to the normal question flow which will resume.
+      }
+    } else {
+      clog.warn(`Could not decode --from-web payload: ${result.error ?? "unknown error"}`);
+      clog.message("Continuing with fresh questions.");
+    }
   }
 
   ensureLoopkitDir();

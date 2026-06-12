@@ -42,6 +42,7 @@ program
   .option("-t, --template <id>", "Use a project template (saas|api|mobile|cli|newsletter|agency|open-source|marketplace|ai-wrapper)")
   .option("--cron", "Install Friday reminder cron job")
   .option("--validate", "Run devil's advocate validation on your brief")
+  .option("--from-web <payload>", "Pre-fill from the web onboarding flow (base64 JSON)")
   .action((name, options) => {
     recordEvent({ command: "init" });
     initCommand(name, options);

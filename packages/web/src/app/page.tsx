@@ -175,10 +175,10 @@ export default function LandingPage() {
             </div>
 
             <Link
-              href="#how-it-works"
+              href="/onboarding"
               className="px-6 py-3 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-medium transition-colors text-sm"
             >
-              See how it works →
+              Start in 4 minutes →
             </Link>
 
             <Link
