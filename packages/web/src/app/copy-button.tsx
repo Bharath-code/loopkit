@@ -4,9 +4,10 @@ import { useState } from "react";
 
 interface CopyButtonProps {
   text: string;
+  small?: boolean;
 }
 
-export function CopyButton({ text }: CopyButtonProps) {
+export function CopyButton({ text, small = false }: CopyButtonProps) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -33,12 +34,14 @@ export function CopyButton({ text }: CopyButtonProps) {
     <button
       id="copy-install-cmd"
       onClick={handleCopy}
-      className={`ml-2 transition-all duration-200 text-sm ${
+      className={`transition-all duration-200 ${
+        small ? "text-xs" : "text-sm"
+      } ml-2 ${
         copied
           ? "text-emerald-400"
           : "text-zinc-500 hover:text-zinc-200"
       }`}
-      aria-label={copied ? "Copied!" : "Copy install command"}
+      aria-label={copied ? "Copied!" : "Copy to clipboard"}
       title={copied ? "Copied!" : "Copy to clipboard"}
     >
       {copied ? "✓" : "⎘"}

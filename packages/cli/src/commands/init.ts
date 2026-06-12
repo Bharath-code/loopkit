@@ -441,8 +441,26 @@ export async function initCommand(
     writeConfig(config);
   }
 
+  clog.step("Your first week");
+  clog.message(
+    colors.dim(
+      "  Day 0  " +
+        colors.primary.bold("loopkit track -a 'Your first task'") +
+        "\n" +
+        "         Add the smallest task you can ship in 48 hours.\n" +
+        "  Day 1  Make a commit. Your task auto-closes.\n" +
+        "  Day 2  " +
+        colors.primary.bold("loopkit ship") +
+        " — draft a 3-line launch post.\n" +
+        "  Day 6  " +
+        colors.primary.bold("loopkit loop") +
+        " — Sunday ritual. 10 minutes. Streak starts.\n"
+    )
+  );
   clog.step("Next Step");
   clog.info(`Run ${colors.primary.bold("loopkit track")} to plan your first week's tasks.`);
+  clog.info(`Run ${colors.primary.bold("loopkit next")} anytime for the single best action.`);
+  clog.info(`Run ${colors.primary.bold("loopkit doctor")} to see your streak, backlog, and shipping rhythm.`);
   clog.message(
     colors.dim(
       "💡 Set a Sunday reminder to close your week:\n" +

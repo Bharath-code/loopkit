@@ -272,6 +272,18 @@ makeCommand(
       .option("--no-preview", "Skip the confirmation step before writing"),
 );
 
+makeCommand(
+  "doctor",
+  "Diagnose your workspace — streak, backlog, shipping rhythm, time since last loop",
+  () => import("./commands/doctor.js"),
+);
+
+makeCommand(
+  "next",
+  "Tell me the single most valuable next action for this week",
+  () => import("./commands/next.js"),
+);
+
 // ─── Telemetry (cheap, no AI) ─────────────────────────────────────
 
 program

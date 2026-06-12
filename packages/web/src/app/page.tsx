@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CopyButton } from "./copy-button";
 import { LandingTracker } from "@/components/LandingTracker";
+import { VideoPlayer } from "@/components/VideoPlayer";
 import {
   Hexagon,
   Circle,
@@ -17,6 +18,7 @@ import {
   GitCommit,
   Calendar,
   Sparkles,
+  Play,
 } from "lucide-react";
 
 const PAIN_ICONS: Record<
@@ -246,6 +248,34 @@ export default function LandingPage() {
         {/* Scroll indicator */}
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-zinc-600 animate-bounce">
           <ChevronDown className="h-5 w-5" aria-hidden="true" />
+        </div>
+      </section>
+
+      {/* ─── 4-min video ────────────────────────────────────── */}
+      <section className="relative py-24 px-6">
+        <div className="max-w-3xl mx-auto">
+          <div className="text-center mb-10">
+            <div className="inline-flex items-center gap-2 px-3 py-1 mb-4 rounded-full bg-violet-500/10 border border-violet-500/20 text-xs text-violet-300">
+              <Play className="h-3 w-3" aria-hidden="true" />
+              4-minute walkthrough
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
+              The whole product, in four minutes.
+            </h2>
+            <p className="mt-3 text-zinc-400 max-w-xl mx-auto">
+              Watch a real founder run the weekly loop — from <code className="text-zinc-300 font-mono text-sm">init</code> through <code className="text-zinc-300 font-mono text-sm">loop</code> — and ship a 7-streak summary at the end.
+            </p>
+          </div>
+          <VideoPlayer
+            // Replace LOOM_ID with a real Loom share ID before launch.
+            // Format: https://www.loom.com/share/<LOOM_ID> (the embed is auto-derived).
+            loomId="LOOM_ID"
+            title="LoopKit in 4 minutes"
+            posterHint="Terminal demo: init → track → ship → pulse → loop"
+          />
+          <p className="text-center text-xs text-zinc-600 mt-3">
+            Or just run it: <code className="text-zinc-400 font-mono">npx loopkit init</code> — 4 min interactive setup.
+          </p>
         </div>
       </section>
 
@@ -676,6 +706,12 @@ export default function LandingPage() {
             <span>· Built for solo technical founders shipping weekly.</span>
           </div>
           <div className="flex gap-6">
+            <Link
+              href="/docs"
+              className="hover:text-zinc-300 transition-colors"
+            >
+              Docs
+            </Link>
             <a
               href="https://github.com/loopkit"
               className="hover:text-zinc-300 transition-colors"

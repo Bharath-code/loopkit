@@ -317,6 +317,17 @@ function renderBriefMarkdown(answers: InitAnswers, brief?: Brief): string {
   }
 
   lines.push("");
+  lines.push("## Your First Week");
+  lines.push("");
+  lines.push("Run these commands in order. The first week is where the streak starts.");
+  lines.push("");
+  lines.push("- [ ] **Day 0** — `loopkit track -a 'Your first task'`. Add the smallest thing you can ship in 48 hours.");
+  lines.push("- [ ] **Day 1** — `git add . && git commit -m 'start'`. Your commit will auto-close the task.");
+  lines.push("- [ ] **Day 2** — `loopkit ship`. Draft a 3-line launch post.");
+  lines.push("- [ ] **Day 6 (Sunday)** — `loopkit loop`. 10 minutes. Streak starts.");
+  lines.push("");
+  lines.push("**Anytime:** `loopkit next` for the single most valuable action. `loopkit doctor` for a workspace checkup.");
+  lines.push("");
   lines.push("---");
   lines.push("");
   lines.push("## Raw Answers");
@@ -418,6 +429,54 @@ export function readLoopLog(weekNum: number): string | null {
 
 export function loopLogExists(weekNum: number): boolean {
   return fs.existsSync(getLoopLogPath(weekNum));
+}
+
+/**
+ * List all existing loop logs, sorted by week number ascending.
+ * Returns the parsed JSON metadata (weekNumber, date, tasksCompleted,
+ * tasksTotal, shippingScore) plus the file path. Used by `loopkit doctor`
+ * and the streak calculator.
+ */
+export function listLoopLogs(): Array<{
+  weekNumber: number;
+  date: string;
+  tasksCompleted: number;
+  tasksTotal: number;
+  shippingScore: number;
+  overridden: boolean;
+}> {
+  const dir = getLogsDir();
+  if (!fs.existsSync(dir)) return [];
+  const files = fs.readdirSync(dir).filter((f) => /^week-\d+\.md$/.test(f));
+  const out: Array<{
+    weekNumber: number;
+    date: string;
+    tasksCompleted: number;
+    tasksTotal: number;
+    shippingScore: number;
+    overridden: boolean;
+  }> = [];
+  for (const f of files) {
+    const weekNumber = parseInt(f.replace(/^week-/, "").replace(/\.md$/, ""), 10);
+    if (Number.isNaN(weekNumber)) continue;
+    const raw = fs.readFileSync(path.join(dir, f), "utf-8");
+    const match = raw.match(/```json\n([\s\S]+?)\n```/);
+    if (!match) continue;
+    try {
+      const parsed = JSON.parse(match[1]);
+      out.push({
+        weekNumber,
+        date: String(parsed.date ?? ""),
+        tasksCompleted: Number(parsed.tasksCompleted ?? 0),
+        tasksTotal: Number(parsed.tasksTotal ?? 0),
+        shippingScore: Number(parsed.shippingScore ?? 0),
+        overridden: Boolean(parsed.overridden ?? false),
+      });
+    } catch {
+      // skip malformed
+    }
+  }
+  return out.sort((a, b) => a.weekNumber - b.weekNumber);
 }
 
 // ─── List Projects ──────────────────────────────────────────────
