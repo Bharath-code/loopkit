@@ -17,6 +17,7 @@ import { revenueCommand } from "./commands/revenue.js";
 import { remindFridayCommand } from "./commands/remind.js";
 import { aliasesCommand } from "./commands/aliases.js";
 import { updateCommand } from "./commands/update.js";
+import { labsCommand } from "./commands/labs-cmd.js";
 import { recordEvent, telemetryCommand } from "./analytics/telemetry.js";
 
 const program = new Command();
@@ -111,7 +112,7 @@ program
 
 program
   .command("radar")
-  .description("Scan Product Hunt & Hacker News for launches in your category")
+  .description("(labs) Scan Product Hunt & Hacker News for launches in your category")
   .option("-c, --category <name>", "Category to scan")
   .option("-p, --project <slug>", "Project to scan for")
   .action((options) => {
@@ -121,7 +122,7 @@ program
 
 program
   .command("keywords")
-  .description("Find low-competition keywords in your niche using free SEO data")
+  .description("(labs) Find low-competition keywords in your niche using free SEO data")
   .option("-c, --category <name>", "Category to find keywords for")
   .option("-p, --project <slug>", "Project to find keywords for")
   .action((options) => {
@@ -131,7 +132,7 @@ program
 
 program
   .command("timing")
-  .description("Analyze market timing signals: funding, dev activity, and hiring trends")
+  .description("(labs) Analyze market timing signals: funding, dev activity, and hiring trends")
   .option("-c, --category <name>", "Category to analyze")
   .option("-p, --project <slug>", "Project to analyze for")
   .action((options) => {
@@ -178,11 +179,18 @@ program
 
 program
   .command("update [month]")
-  .description("Generate structured monthly investor updates (Markdown & HTML)")
+  .description("(labs) Generate structured monthly investor updates (Markdown & HTML)")
   .option("--year <year>", "Specify the year for the update (defaults to current year)")
   .action((month, options) => {
     recordEvent({ command: "update" });
     updateCommand(month, options);
+  });
+
+program
+  .command("labs [action]")
+  .description("Toggle experimental commands (radar, keywords, timing, update)")
+  .action((action) => {
+    labsCommand(action);
   });
 
 program.parse(process.argv);

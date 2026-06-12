@@ -2,8 +2,11 @@ import { readConfig, readBriefJson, listProjects } from "../storage/local.js";
 import { colors, clog, shortcutsHint, ceremonyIntro, ceremonyOutro, select, isCancel, text, spinner } from "../ui/theme.js";
 import { findKeywords } from "../analytics/keywordFinder.js";
 import { categorizeICP, categorizeProblem } from "../analytics/competitorRadar.js";
+import { labsGate } from "./labs.js";
 
 export async function keywordsCommand(options?: { category?: string; project?: string }): Promise<void> {
+  if (!labsGate("keywords")) return;
+
   ceremonyIntro("Keyword Opportunity Finder");
   console.log(shortcutsHint());
 

@@ -20,11 +20,14 @@ import {
   categorizeProblem,
 } from "../analytics/competitorRadar.js";
 import { pushRadarToConvex } from "../storage/sync.js";
+import { labsGate } from "./labs.js";
 
 export async function radarCommand(options?: {
   category?: string;
   project?: string;
 }): Promise<void> {
+  if (!labsGate("radar")) return;
+
   ceremonyIntro("Competitor Ship Radar");
   console.log(shortcutsHint());
 

@@ -3,11 +3,14 @@ import { colors, header, info, shortcutsHint, ceremonyIntro, ceremonyOutro, text
 import { analyzeMarket } from "../analytics/marketTiming.js";
 import { detectProjectCategory } from "@loopkit/shared";
 import { pushTimingToConvex } from "../storage/sync.js";
+import { labsGate } from "./labs.js";
 
 export async function timingCommand(options?: {
   category?: string;
   project?: string;
 }): Promise<void> {
+  if (!labsGate("timing")) return;
+
   ceremonyIntro("Market Timing Signal");
   console.log(shortcutsHint());
 

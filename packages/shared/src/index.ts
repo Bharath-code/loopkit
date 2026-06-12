@@ -330,6 +330,7 @@ export const ConfigSchema = z.object({
   aliasesInstalled: z.boolean().optional(),
   referralShown: z.boolean().optional(),
   referralCode: z.string().optional(),
+  labsEnabled: z.boolean().optional(),
 });
 
 export type Config = z.infer<typeof ConfigSchema>;

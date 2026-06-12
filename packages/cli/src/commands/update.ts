@@ -28,6 +28,7 @@ import {
   buildInvestorUpdatePrompt,
   type InvestorUpdate,
 } from "../ai/prompts/update.js";
+import { labsGate } from "./labs.js";
 
 interface ParsedLoop {
   weekNumber: number;
@@ -45,6 +46,8 @@ export async function updateCommand(
   monthOption: string | undefined,
   options: { year?: string }
 ): Promise<void> {
+  if (!labsGate("update")) return;
+
   ceremonyIntro("Investor Update Generator");
 
   const config = readConfig();

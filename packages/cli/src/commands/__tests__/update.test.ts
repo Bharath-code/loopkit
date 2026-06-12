@@ -12,6 +12,9 @@ import { generateStructured } from "../../ai/client.js";
 import { clog, select, text, isCancel, ceremonyOutro } from "../../ui/theme.js";
 import fs from "node:fs";
 
+// Labs flag is required for `update` (and radar/keywords/timing) since v0.2.0
+process.env.LOOPKIT_LABS = "1";
+
 // Mock storage/local.js
 vi.mock("../../storage/local.js", () => ({
   readConfig: vi.fn(),
