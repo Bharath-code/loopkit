@@ -264,6 +264,41 @@ export const AuditReportSchema = z.object({
 
 export type AuditReport = z.infer<typeof AuditReportSchema>;
 
+// ─── Analytics: Pricing Recommendation (v0.2.0) ──────────────────
+
+export const PricingModelEnum = z.enum([
+  "freemium",
+  "one-time",
+  "subscription",
+  "usage-based",
+  "tiered",
+  "donation",
+  "open-core",
+]);
+
+export const PricingTierSchema = z.object({
+  name: z.string().min(1).max(40),
+  price: z.number().min(0).max(10000),
+  cadence: z.enum(["monthly", "annual", "one-time", "per-use"]),
+  features: z.array(z.string().min(1).max(80)).min(1).max(8),
+  targetCustomer: z.string().min(1).max(120),
+});
+
+export const PricingRecommendationSchema = z.object({
+  recommendedModel: PricingModelEnum,
+  modelRationale: z.string().min(20).max(280),
+  tiers: z.array(PricingTierSchema).min(2).max(4),
+  validationExperiment: z.string().min(20).max(280),
+  risksToTest: z.array(z.string().min(10).max(120)).min(1).max(3),
+  priceTooLow: z.string().min(10).max(140),
+  priceTooHigh: z.string().min(10).max(140),
+});
+
+export type PricingRecommendation = z.infer<typeof PricingRecommendationSchema>;
+
+
+
+
 // ─── Analytics: Churn Risk ──────────────────────────────────────
 
 export const ChurnSignalSchema = z.object({

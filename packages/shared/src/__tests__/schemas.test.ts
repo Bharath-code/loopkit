@@ -27,6 +27,8 @@ import {
   RevenueEntrySchema,
   StandupLogSchema,
   AuditReportSchema,
+  PricingRecommendationSchema,
+  PricingTierSchema,
 } from "../index";
 
 describe("InitAnswersSchema", () => {
@@ -1077,5 +1079,147 @@ describe("AuditReportSchema", () => {
   it("rejects periodWeeks above 52", () => {
     const invalid = { ...validReport, periodWeeks: 100 };
     expect(() => AuditReportSchema.parse(invalid)).toThrow();
+  });
+});
+
+describe("PricingRecommendationSchema", () => {
+  const validRec = {
+    recommendedModel: "freemium" as const,
+    modelRationale: "Solo founders with low price sensitivity under $50/mo convert best with a free tier and one paid upgrade.",
+    tiers: [
+      {
+        name: "Free",
+        price: 0,
+        cadence: "monthly" as const,
+        features: ["Up to 100 tasks", "1 project", "Community support"],
+        targetCustomer: "Anyone exploring the tool.",
+      },
+      {
+        name: "Pro",
+        price: 19,
+        cadence: "monthly" as const,
+        features: ["Unlimited tasks", "Unlimited projects", "AI synthesis", "Priority email"],
+        targetCustomer: "Solo founders shipping weekly who need the full loop.",
+      },
+    ],
+    validationExperiment: "Charge 10 ICP-matched founders $19/mo for 30 days. Measure conversion at day 7, 14, 30. If <20% convert by day 30, the price is too high or the ICP is wrong.",
+    risksToTest: [
+      "Will ICP pay monthly when they could use a free alternative?",
+      "Does the free tier cannibalize Pro upgrades?",
+    ],
+    priceTooLow: "You'll burn out on $5/mo support tickets and never fund the roadmap.",
+    priceTooHigh: "Solo founders abandon at $50+/mo when the free tier is good enough.",
+  };
+
+  it("parses a valid pricing recommendation", () => {
+    const result = PricingRecommendationSchema.parse(validRec);
+    expect(result.recommendedModel).toBe("freemium");
+    expect(result.tiers).toHaveLength(2);
+    expect(result.tiers[0].price).toBe(0);
+    expect(result.tiers[1].price).toBe(19);
+  });
+
+  it("rejects invalid recommended model", () => {
+    const invalid = { ...validRec, recommendedModel: "nft-airdrop" };
+    expect(() => PricingRecommendationSchema.parse(invalid)).toThrow();
+  });
+
+  it("rejects fewer than 2 tiers", () => {
+    const invalid = { ...validRec, tiers: [validRec.tiers[0]] };
+    expect(() => PricingRecommendationSchema.parse(invalid)).toThrow();
+  });
+
+  it("rejects more than 4 tiers", () => {
+    const invalid = {
+      ...validRec,
+      tiers: [
+        ...validRec.tiers,
+        { ...validRec.tiers[1], name: "Pro+", price: 49 },
+        { ...validRec.tiers[1], name: "Team", price: 99 },
+        { ...validRec.tiers[1], name: "Enterprise", price: 499 },
+      ],
+    };
+    expect(() => PricingRecommendationSchema.parse(invalid)).toThrow();
+  });
+
+  it("rejects negative prices", () => {
+    const invalid = {
+      ...validRec,
+      tiers: [
+        validRec.tiers[0],
+        { ...validRec.tiers[1], price: -10 },
+      ],
+    };
+    expect(() => PricingRecommendationSchema.parse(invalid)).toThrow();
+  });
+
+  it("rejects prices above $10,000", () => {
+    const invalid = {
+      ...validRec,
+      tiers: [
+        validRec.tiers[0],
+        { ...validRec.tiers[1], price: 20000 },
+      ],
+    };
+    expect(() => PricingRecommendationSchema.parse(invalid)).toThrow();
+  });
+
+  it("rejects invalid cadence", () => {
+    const invalid = {
+      ...validRec,
+      tiers: [
+        validRec.tiers[0],
+        { ...validRec.tiers[1], cadence: "quarterly-bazillionaire" },
+      ],
+    };
+    expect(() => PricingRecommendationSchema.parse(invalid)).toThrow();
+  });
+
+  it("rejects tier with no features", () => {
+    const invalid = {
+      ...validRec,
+      tiers: [
+        validRec.tiers[0],
+        { ...validRec.tiers[1], features: [] },
+      ],
+    };
+    expect(() => PricingRecommendationSchema.parse(invalid)).toThrow();
+  });
+
+  it("rejects tier with too many features", () => {
+    const invalid = {
+      ...validRec,
+      tiers: [
+        validRec.tiers[0],
+        { ...validRec.tiers[1], features: Array(10).fill("feature") },
+      ],
+    };
+    expect(() => PricingRecommendationSchema.parse(invalid)).toThrow();
+  });
+
+  it("rejects empty risksToTest", () => {
+    const invalid = { ...validRec, risksToTest: [] };
+    expect(() => PricingRecommendationSchema.parse(invalid)).toThrow();
+  });
+
+  it("accepts all 7 model types", () => {
+    const models = ["freemium", "one-time", "subscription", "usage-based", "tiered", "donation", "open-core"] as const;
+    for (const m of models) {
+      const result = PricingRecommendationSchema.parse({ ...validRec, recommendedModel: m });
+      expect(result.recommendedModel).toBe(m);
+    }
+  });
+});
+
+describe("PricingTierSchema", () => {
+  it("validates a free tier with no price", () => {
+    const tier = {
+      name: "Free",
+      price: 0,
+      cadence: "monthly" as const,
+      features: ["1 project"],
+      targetCustomer: "Curious users.",
+    };
+    expect(PricingTierSchema.parse(tier).price).toBe(0);
   });
 });

@@ -66,6 +66,13 @@ const PRIMARY_COMMANDS = [
     when:        "Monthly",
     flags:       ["--weeks <n>", "--export <md|pdf>", "--cohort"],
   },
+  {
+    name:        "price",
+    args:        "",
+    description: "Pricing copilot: tiers + 30-day experiment",
+    when:        "On pricing decision",
+    flags:       ["--local", "--export <md>", "--experiment <days>"],
+  },
 ] as const;
 
 const TOOL_COMMANDS = [

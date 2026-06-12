@@ -20,6 +20,7 @@ import { updateCommand } from "./commands/update.js";
 import { labsCommand } from "./commands/labs-cmd.js";
 import { syncCommand } from "./commands/sync.js";
 import { auditCommand } from "./commands/audit.js";
+import { priceCommand } from "./commands/price.js";
 import { recordEvent, telemetryCommand } from "./analytics/telemetry.js";
 
 const program = new Command();
@@ -214,6 +215,21 @@ program
       weeks: options.weeks,
       export: options.export,
       cohort: options.cohort,
+    });
+  });
+
+program
+  .command("price")
+  .description("Pricing copilot: 2-3 tier model + 30-day validation experiment")
+  .option("--local", "Show local context only (no AI call)")
+  .option("-e, --export <format>", "Export to .loopkit/pricing/ (md only)")
+  .option("--experiment <days>", "Add a reminder after N days to log conversion", (v) => parseInt(v, 10))
+  .action((options) => {
+    recordEvent({ command: "price" });
+    priceCommand({
+      local: options.local,
+      export: options.export,
+      experiment: options.experiment,
     });
   });
 
