@@ -452,6 +452,19 @@ export async function initCommand(
   );
   ceremonyOutro("Brief saved. Now build against it.");
 
+  // Funnel: init complete with overall score (the activation moment)
+  try {
+    const { trackCli } = await import("../telemetry/index.js");
+    const overall = (brief as { overallScore?: number }).overallScore ?? 0;
+    trackCli("cli.init_complete", {
+      score: overall,
+      template: options?.template ?? "none",
+    });
+    trackCli("cli.init_run", { template: options?.template ?? "none" });
+  } catch {
+    // best-effort
+  }
+
   // ─── Install cron job if --cron flag is set ───────────────────────
   if (options?.cron) {
     const installed = await installFridayReminder();

@@ -11,6 +11,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { track } from "@/lib/track";
 import {
   Check,
   ChevronRight,
@@ -119,7 +120,11 @@ export function OnboardingFlow({ sessionKey }: { sessionKey: string }) {
 
   const next = () => {
     if (step < totalSteps && canAdvanceFromStep(step)) {
+      track("onboarding.step_complete", { step });
       setStep(step + 1);
+      if (step === totalSteps - 1) {
+        track("onboarding.complete");
+      }
     }
   };
   const back = () => {

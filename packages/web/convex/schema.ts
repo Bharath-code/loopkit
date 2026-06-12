@@ -112,6 +112,32 @@ export default defineSchema({
     .index("by_user_date", ["userId", "date"])
     .index("by_user", ["userId"]),
 
+  /**
+   * Funnel events — the single source of truth for retention.
+   *
+   * Every meaningful user action on the web dashboard, plus
+   * batched CLI events, ends up here. The /admin/funnel dashboard
+   * reads this table to compute activation %, week-N retention,
+   * and time-to-first-loop.
+   *
+   * Privacy: no PII, no brief contents, no task titles. Only
+   * the event name, the user, the source, and a tiny bag of
+   * numeric/string metadata (template id, score, command name).
+   */
+  funnelEvents: defineTable({
+    userId: v.optional(v.id("users")),
+    distinctId: v.string(), // for events before signup (CLI)
+    event: v.string(), // e.g. "cli.first_loop"
+    source: v.union(v.literal("web"), v.literal("cli")),
+    properties: v.optional(v.record(v.string(), v.union(v.string(), v.number(), v.boolean()))),
+    occurredAt: v.number(), // ms epoch
+    receivedAt: v.number(), // ms epoch (server time)
+  })
+    .index("by_event_time", ["event", "occurredAt"])
+    .index("by_user_time", ["userId", "occurredAt"])
+    .index("by_distinct", ["distinctId", "occurredAt"])
+    .index("by_time", ["occurredAt"]),
+
   briefAggregates: defineTable({
     icpCategory: v.string(),
     problemCategory: v.string(),

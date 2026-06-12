@@ -102,6 +102,11 @@ export async function loopCommand(options?: { revenue?: string; async?: boolean 
         saveAutoLoopDraft(slug, autoDraft);
         clog.success(`Week ${autoDraft.weekNumber} auto-loop saved.`);
         clog.message("  Run `loopkit loop` again for full AI synthesis.");
+        try {
+          const { trackCli } = await import("../telemetry/index.js");
+          trackCli("cli.loop_run", { mode: "auto" });
+          trackCli("cli.first_loop", { week: autoDraft.weekNumber });
+        } catch {}
         ceremonyOutro("Auto-loop complete. See you next Sunday.");
         return;
       } else {
@@ -782,6 +787,24 @@ export async function loopCommand(options?: { revenue?: string; async?: boolean 
 
   console.log(nextStep("track"));
   ceremonyOutro(`Week ${weekNum} closed. You made the next move visible.`);
+
+  // Funnel: the most important event we track — closing a week
+  try {
+    const { trackCli } = await import("../telemetry/index.js");
+    const shippingScore = (saved?.shippingScore as number) ?? score;
+    trackCli("cli.loop_run", {
+      mode: "full",
+      week: weekNum,
+      score: shippingScore,
+      streak: currentStreak,
+    });
+    trackCli("cli.first_loop", { week: weekNum });
+    if (currentStreak >= 4) {
+      trackCli("cli.streak_achieved", { streak: currentStreak });
+    }
+  } catch {
+    // best-effort
+  }
 }
 
 // ─── Render Helpers (UI side effects) ────────────────────────────

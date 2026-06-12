@@ -3,6 +3,7 @@
 import { Command } from "commander";
 import { applyHelpOverride } from "./ui/help.js";
 import { recordEvent, telemetryCommand } from "./analytics/telemetry.js";
+import { flushTelemetry } from "./telemetry/index.js";
 
 /**
  * LoopKit CLI entry point.
@@ -56,7 +57,12 @@ function makeCommand(
     const mod = await loader();
     const fn = findExport(mod, exportName);
     recordEvent({ command: name });
-    await fn(...args);
+    try {
+      await fn(...args);
+    } finally {
+      // Best-effort flush — never block on telemetry
+      void flushTelemetry();
+    }
   });
   return cmd;
 }

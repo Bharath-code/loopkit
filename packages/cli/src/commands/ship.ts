@@ -413,6 +413,10 @@ export async function shipCommand(options?: { changelog?: boolean }): Promise<vo
 
     clog.info(`Ship log saved → .loopkit/ships/${today}.md`);
     console.log(nextStep("loop", "Close your week Sunday"));
+    try {
+      const { trackCli } = await import("../telemetry/index.js");
+      trackCli("cli.first_ship", { date: today });
+    } catch {}
     ceremonyOutro("Shipped. Now close the loop Sunday.");
     return;
   }

@@ -7,6 +7,7 @@ import { useAuthActions } from "@convex-dev/auth/react";
 import { useQuery } from "convex/react";
 import { useTheme } from "next-themes";
 import { api } from "../../../convex/_generated/api";
+import { track, TrackProvider } from "@/lib/track";
 import {
   LayoutDashboard,
   ListTodo,
@@ -53,6 +54,10 @@ export default function DashboardLayout({
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (user) track("dashboard.view", { path: pathname });
+  }, [user, pathname]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -181,6 +186,7 @@ export default function DashboardLayout({
 
   return (
     <div className="flex flex-1 overflow-hidden h-[calc(100vh-56px)]">
+      <TrackProvider />
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:px-4 focus:py-2 focus:bg-violet-600 focus:text-white focus:rounded-lg focus:text-sm"

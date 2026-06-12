@@ -15,6 +15,7 @@ import { Id } from "../../../../convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Mail, Send, Check, X } from "lucide-react";
+import { track } from "@/lib/track";
 
 export default function DashboardSettingsPage() {
   const user = useQuery(api.users.me);
@@ -42,8 +43,10 @@ export default function DashboardSettingsPage() {
   const handleToggle = async () => {
     if (subscribed) {
       await optOut();
+      track("settings.digest_disabled");
     } else {
       await optIn();
+      track("settings.digest_enabled");
     }
   };
 

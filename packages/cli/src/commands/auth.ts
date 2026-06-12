@@ -79,6 +79,14 @@ export const authCommand = new Command("auth")
       config.auth = { apiKey: token };
       writeConfig(config);
 
+      // Bind any pre-auth telemetry to the new user account
+      try {
+        const { bindTelemetryToUser } = await import("../telemetry/index.js");
+        void bindTelemetryToUser();
+      } catch {
+        // best-effort
+      }
+
       ceremonyOutro("You are now logged in and ready to ship.");
 
     } catch (err) {

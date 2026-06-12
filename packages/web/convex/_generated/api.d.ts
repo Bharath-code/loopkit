@@ -28,6 +28,7 @@ import type * as rateLimits from "../rateLimits.js";
 import type * as subscriptions from "../subscriptions.js";
 import type * as sync from "../sync.js";
 import type * as tasks from "../tasks.js";
+import type * as telemetry from "../telemetry.js";
 import type * as users from "../users.js";
 
 import type {
@@ -57,6 +58,7 @@ declare const fullApi: ApiFromModules<{
   subscriptions: typeof subscriptions;
   sync: typeof sync;
   tasks: typeof tasks;
+  telemetry: typeof telemetry;
   users: typeof users;
 }>;
 
