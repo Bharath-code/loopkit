@@ -11,6 +11,7 @@ import { POST as cliAuthPost } from "../cli/auth/route";
 import { GET as peersGet, POST as peersPost } from "../peers/route";
 import { POST as syncLoopPost } from "../sync/loop/route";
 import { POST as syncShipPost } from "../sync/ship/route";
+import { POST as syncTasksPost, GET as syncTasksGet } from "../sync/tasks/route";
 import { POST as pulseSharePost } from "../pulse/share/route";
 import { POST as polarWebhookPost } from "../webhooks/polar/route";
 
@@ -577,6 +578,104 @@ describe("POST /api/sync/ship", () => {
     expect(res.status).toBe(200);
     const json = await res.json();
     expect(json.success).toBe(true);
+  });
+});
+
+describe("POST /api/sync/tasks", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    webhookShouldThrow = false;
+  });
+
+  it("rejects missing auth with 401", async () => {
+    const req = makeRequest("POST", "http://localhost:3000/api/sync/tasks", {
+      headers: { origin: "http://localhost:3000" },
+      body: { projectId: "proj_1", tasks: [] },
+    });
+    const res = await syncTasksPost(req as any);
+    expect(res.status).toBe(401);
+  });
+
+  it("rejects missing projectId with 400", async () => {
+    const req = makeRequest("POST", "http://localhost:3000/api/sync/tasks", {
+      headers: { origin: "http://localhost:3000", authorization: "Bearer tok" },
+      body: { tasks: [] },
+    });
+    const res = await syncTasksPost(req as any);
+    expect(res.status).toBe(400);
+  });
+
+  it("rejects more than 500 tasks with 413", async () => {
+    const tasks = Array.from({ length: 501 }, () => ({
+      cliTaskId: 1,
+      title: "t",
+      status: "open" as const,
+      section: "week" as const,
+      createdAt: "2026-01-01",
+      updatedAt: "2026-01-01",
+      lastModifiedBy: "web" as const,
+    }));
+    const req = makeRequest("POST", "http://localhost:3000/api/sync/tasks", {
+      headers: { origin: "http://localhost:3000", authorization: "Bearer tok" },
+      body: { projectId: "proj_1", tasks },
+    });
+    const res = await syncTasksPost(req as any);
+    expect(res.status).toBe(413);
+  });
+
+  it("returns inserted/updated/skipped from bulkUpsert", async () => {
+    mockFetchMutation.mockResolvedValue({ inserted: 3, updated: 1, skipped: 0 });
+    const req = makeRequest("POST", "http://localhost:3000/api/sync/tasks", {
+      headers: { origin: "http://localhost:3000", authorization: "Bearer tok" },
+      body: {
+        projectId: "proj_1",
+        tasks: [
+          {
+            cliTaskId: 1,
+            title: "A",
+            status: "open",
+            section: "week",
+            createdAt: "2026-01-01",
+            updatedAt: "2026-01-01",
+            lastModifiedBy: "web",
+          },
+        ],
+      },
+    });
+    const res = await syncTasksPost(req as any);
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.inserted).toBe(3);
+    expect(json.updated).toBe(1);
+  });
+});
+
+describe("GET /api/sync/tasks", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("rejects missing projectId with 400", async () => {
+    const req = makeRequest("GET", "http://localhost:3000/api/sync/tasks", {
+      headers: { authorization: "Bearer tok" },
+    });
+    const res = await syncTasksGet(req as any);
+    expect(res.status).toBe(400);
+  });
+
+  it("returns tasks list", async () => {
+    mockFetchQuery.mockResolvedValue([
+      { _id: "t1", cliTaskId: 1, title: "A", status: "open", section: "week" },
+    ]);
+    const req = makeRequest(
+      "GET",
+      "http://localhost:3000/api/sync/tasks?projectId=proj_1",
+      { headers: { authorization: "Bearer tok" } },
+    );
+    const res = await syncTasksGet(req as any);
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.tasks).toHaveLength(1);
   });
 });
 

@@ -34,10 +34,9 @@ export async function POST(req: NextRequest) {
     }
 
     if (tasks.length === 0) {
-      return { inserted: 0, updated: 0, skipped: 0 };
+      return NextResponse.json({ inserted: 0, updated: 0, skipped: 0 });
     }
 
-    // Cap payload to avoid abuse
     if (tasks.length > 500) {
       return NextResponse.json(
         { error: "Too many tasks in one push (max 500)." },

@@ -8,6 +8,7 @@ import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import {
   LayoutDashboard,
+  ListTodo,
   MessageCircle,
   History,
   BarChart3,
@@ -23,6 +24,7 @@ import {
 
 const navLinks: { name: string; href: string; icon: LucideIcon }[] = [
   { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
+  { name: "Tasks", href: "/dashboard/tasks", icon: ListTodo },
   { name: "Pulse Inbox", href: "/dashboard/pulse", icon: MessageCircle },
   { name: "Loop History", href: "/dashboard/loop", icon: History },
   { name: "Benchmarks", href: "/dashboard/benchmarks", icon: BarChart3 },
