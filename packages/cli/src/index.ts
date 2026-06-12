@@ -101,8 +101,9 @@ program
   .command("celebrate")
   .description("ASCII confetti + your shipping score, streak, and shareable card")
   .option("--share", "Post your win to the public feed at loopkit.dev/wins")
+  .option("--annual [year]", "Show year-in-review card (default: current year)")
   .action((options) => {
-    recordEvent({ command: "celebrate" });
+    recordEvent({ command: options.annual ? "celebrate:annual" : "celebrate" });
     celebrateCommand(true, options);
   });
 

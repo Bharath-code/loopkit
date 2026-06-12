@@ -8,7 +8,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "../../../../convex/_generated/api";
-import { ArrowLeft, Flame, TrendingUp, Calendar } from "lucide-react";
+import { ArrowLeft, Flame, TrendingUp, Calendar, Trophy } from "lucide-react";
 
 const CONVEX_URL =
   process.env.NEXT_PUBLIC_CONVEX_URL || process.env.CONVEX_URL || "";
@@ -112,6 +112,19 @@ export default async function HandleWinsPage({
             <dd className="mt-1 text-2xl font-bold text-white">{avgScore}%</dd>
           </div>
         </dl>
+
+        <div className="mt-6 flex flex-wrap items-center gap-3">
+          <Link
+            href={`/wins/${params.handle}/${new Date(sorted[sorted.length - 1].createdAt).getFullYear()}/card`}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium transition-colors"
+          >
+            <Trophy className="h-4 w-4" aria-hidden="true" />
+            View {new Date(sorted[sorted.length - 1].createdAt).getFullYear()} annual card
+          </Link>
+          <span className="text-xs text-zinc-500">
+            Sharable · screenshot-ready
+          </span>
+        </div>
       </header>
 
       <section>

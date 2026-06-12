@@ -8,8 +8,10 @@ import {
   listProjects,
   getLatestMRR,
   readRevenueHistory,
+  getRoot,
   readPulseResponses,
 } from "../storage/local.js";
+import { gatherAnnualSummary, type AnnualSummary } from "../analytics/annual.js";
 import { computeLoopKitScore } from "../analytics/score.js";
 import { buildProofCard, buildTweetLine, copyToClipboard, buildTwitterIntentUrl, openUrl } from "../ui/proof-card.js";
 import { colors, header, box, pass, info, clog, ceremonyIntro, ceremonyOutro, multiselect, isCancel } from "../ui/theme.js";
@@ -142,13 +144,38 @@ function getRank(score: number): { title: string; emoji: string } {
 
 export async function celebrateCommand(
   standalone: boolean = true,
-  options?: { share?: boolean },
+  options?: { share?: boolean; annual?: number | string },
 ): Promise<void> {
   const config = readConfig();
   const slug = config.activeProject;
 
   if (standalone) {
     ceremonyIntro("Celebrate");
+  }
+
+  // ─── --annual flag: year-in-review card data ────────────────────
+  if (options?.annual !== undefined) {
+    const year =
+      typeof options.annual === "number"
+        ? options.annual
+        : parseInt(String(options.annual), 10);
+
+    if (!Number.isFinite(year) || year < 2000 || year > 2100) {
+      clog.error(`Invalid year: "${options.annual}". Use --annual 2026`);
+      ceremonyOutro("Cancelled.");
+      return;
+    }
+
+    if (!slug) {
+      clog.error("No active project. Run `loopkit init` first.");
+      ceremonyOutro("Cancelled.");
+      return;
+    }
+
+    const summary = gatherAnnualSummary(year, slug);
+    renderAnnualCardCli(summary);
+    ceremonyOutro(`Open loopkit.dev/wins/@${slug}/${year}/card for a sharable PNG.`);
+    return;
   }
 
   if (!slug) {
@@ -296,4 +323,91 @@ export async function celebrateCommand(
   if (standalone) {
     ceremonyOutro("Keep shipping. 🚀");
   }
+}
+
+// ─── Annual Card (CLI preview) ───────────────────────────────────
+
+function renderAnnualCardCli(summary: AnnualSummary): void {
+  const lines: string[] = [];
+
+  lines.push("");
+  lines.push(
+    `  ${summary.archetypeEmoji}  ${colors.primary.bold(`${summary.year} — Year in Review`)}`,
+  );
+  lines.push("");
+
+  // 52-week heatmap (4 lines of 13 weeks each, simplified for terminal)
+  if (summary.weeks.length > 0) {
+    lines.push(colors.muted("  Weekly shipping scores:"));
+    lines.push("");
+
+    // Group weeks into 4 rows of 13
+    const ROWS = 4;
+    const COLS = 13;
+    const heatmap: string[][] = Array.from({ length: ROWS }, () =>
+      Array.from({ length: COLS }, () => " "),
+    );
+    const labels: string[][] = Array.from({ length: ROWS }, () =>
+      Array.from({ length: COLS }, () => ""),
+    );
+
+    for (let i = 0; i < summary.weeks.length && i < ROWS * COLS; i++) {
+      const w = summary.weeks[i];
+      const row = Math.floor(i / COLS);
+      const col = i % COLS;
+      const block =
+        w.shippingScore >= 80 ? "█"
+        : w.shippingScore >= 60 ? "▓"
+        : w.shippingScore >= 40 ? "▒"
+        : w.shippingScore > 0   ? "░"
+        : "·";
+      heatmap[row][col] = block;
+      labels[row][col] = String(w.shippingScore);
+    }
+
+    for (let r = 0; r < ROWS; r++) {
+      lines.push("    " + heatmap[r].map((b) => colors.primary(b)).join(" "));
+    }
+    lines.push("");
+    lines.push(
+      "    " +
+        colors.muted(
+          "·=0  ░<40  ▒<60  ▓<80  █≥80",
+        ),
+    );
+    lines.push("");
+  }
+
+  // Headline metrics
+  const longestStreakStr =
+    summary.longestStreak > 0
+      ? `${summary.longestStreak} weeks`
+      : "—";
+  const bestWeekStr = summary.bestWeek ? `W${summary.bestWeek.week} (${summary.bestWeek.shippingScore}%)` : "—";
+  const mrrStr = summary.hasRevenue && summary.mrrAtEndOfYear !== null
+    ? `$${summary.mrrAtEndOfYear}/mo`
+    : "—";
+
+  lines.push(colors.muted("  Headline:"));
+  lines.push(`    ${colors.white.bold("Weeks tracked:")}     ${summary.totalWeeks}`);
+  lines.push(`    ${colors.white.bold("Avg shipping score:")} ${summary.averageScore}%`);
+  lines.push(`    ${colors.white.bold("Total tasks done:")}  ${summary.totalTasksCompleted}`);
+  lines.push(`    ${colors.white.bold("Ships logged:")}      ${summary.totalShips}`);
+  lines.push(`    ${colors.white.bold("Longest streak:")}    ${colors.energy(longestStreakStr)}`);
+  lines.push(`    ${colors.white.bold("Best week:")}         ${colors.success(bestWeekStr)}`);
+  lines.push(`    ${colors.white.bold("MRR at year-end:")}  ${mrrStr}`);
+  if (summary.archetype) {
+    lines.push(
+      `    ${colors.white.bold("Founder DNA:")}        ${summary.archetypeEmoji} ${summary.archetype}`,
+    );
+  }
+  lines.push("");
+
+  lines.push(
+    colors.dim(
+      "  Tip: this data renders as a sharable PNG at loopkit.dev/wins/@<handle>/<year>/card",
+    ),
+  );
+
+  console.log(box(lines.join("\n"), `${summary.year} Annual Card`));
 }
