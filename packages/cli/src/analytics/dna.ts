@@ -1,4 +1,5 @@
 import { readLastNLoopLogs, readLoopLog } from "../storage/local.js";
+import { parseLoopLog } from "../commands/loop/frontmatter.js";
 
 export interface ShippingDNA {
   pattern: "Marathoner" | "Sprinter" | "Perfectionist" | "Reactor" | "All-Star";
@@ -23,6 +24,19 @@ interface WeekData {
 }
 
 function parseLoopLogMarkdown(content: string): WeekData {
+  // Prefer frontmatter (v0.2.0+); fall back to legacy regex for old logs.
+  const parsed = parseLoopLog(content);
+  const fm = parsed.frontmatter;
+  if (fm && fm.week > 0) {
+    return {
+      weekNumber: fm.week,
+      tasksCompleted: fm.tasksCompleted,
+      tasksTotal: fm.tasksTotal,
+      shippingScore: fm.shippingScore,
+      date: fm.date,
+    };
+  }
+  // Legacy regex fallback
   const tasksMatch = content.match(/- Tasks completed:\s*(\d+)/);
   const tasksTotalMatch = content.match(/- Tasks open:\s*(\d+)/);
   const scoreMatch = content.match(/- Shipping score:\s*(\d+)%/);

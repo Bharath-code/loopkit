@@ -36,6 +36,7 @@ import {
   detectHighOverrideRate,
   type LoopProof,
 } from "./loop/helpers.js";
+import { saveLoopLogWithFrontmatter } from "./loop/saveLoopLog.js";
 
 export type { LoopProof } from "./loop/helpers.js";
 
@@ -257,7 +258,19 @@ export async function loopCommand(options?: { revenue?: string; async?: boolean 
         "_Week 1 baseline set._",
       ].join("\n");
 
-      saveLoopLog(weekNum, logContent);
+      saveLoopLogWithFrontmatter({
+        week: weekNum,
+        date: formatDate(),
+        project: slug,
+        tasksCompleted: tasksCompleted.length,
+        tasksTotal,
+        shippingScore,
+        loopkitScore: null,
+        streak: null,
+        override: false,
+        tension: null,
+        body: logContent,
+      });
       clog.info(`Loop log saved → .loopkit/logs/week-${weekNum}.md`);
 
       const convexProjectId = getConvexProjectId(slug);
@@ -458,7 +471,19 @@ export async function loopCommand(options?: { revenue?: string; async?: boolean 
       "_AI synthesis unavailable._",
     ].join("\n");
 
-    saveLoopLog(weekNum, logContent);
+    saveLoopLogWithFrontmatter({
+      week: weekNum,
+      date: formatDate(),
+      project: slug,
+      tasksCompleted: tasksCompleted.length,
+      tasksTotal,
+      shippingScore,
+      loopkitScore: null,
+      streak: pastStreak + 1,
+      override: false,
+      tension: null,
+      body: logContent,
+    });
     clog.info(`Fallback log saved → .loopkit/logs/week-${weekNum}.md`);
 
     const convexProjectId3 = getConvexProjectId(slug);
@@ -668,7 +693,19 @@ export async function loopCommand(options?: { revenue?: string; async?: boolean 
       synthesis.bipPost,
     ].join("\n");
 
-    saveLoopLog(weekNum, logContent);
+    saveLoopLogWithFrontmatter({
+      week: weekNum,
+      date: formatDate(),
+      project: slug,
+      tasksCompleted: tasksCompleted.length,
+      tasksTotal,
+      shippingScore,
+      loopkitScore: currentLoopKitScore,
+      streak: pastStreak + 1,
+      override: overridden,
+      tension: synthesis.tension || null,
+      body: logContent,
+    });
     clog.success(`Loop log saved → .loopkit/logs/week-${weekNum}.md`);
 
     const convexProjectId2 = getConvexProjectId(slug);

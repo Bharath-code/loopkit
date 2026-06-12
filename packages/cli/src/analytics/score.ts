@@ -23,6 +23,7 @@ import {
   getConsecutiveWeeksStreak,
 } from "../storage/local.js";
 import { colors } from "../ui/theme.js";
+import { parseLoopLog } from "../commands/loop/frontmatter.js";
 
 // ─── Types ───────────────────────────────────────────────────────
 
@@ -98,7 +99,12 @@ function getMostRecentShippingScore(weekNumbers: number[]): number | null {
 
 function parseShippingScore(content: string | null): number | null {
   if (!content) return null;
-  // Handles both "Shipping score: 75%" and "**Shipping Score:** 75%"
+  // Prefer frontmatter (v0.2.0+)
+  const parsed = parseLoopLog(content);
+  if (parsed.frontmatter && parsed.frontmatter.week > 0) {
+    return Math.max(0, Math.min(100, parsed.frontmatter.shippingScore));
+  }
+  // Legacy regex fallback
   const match =
     content.match(/[Ss]hipping score:\s*(\d+)%/i) ||
     content.match(/\*\*Shipping Score:\*\*\s*(\d+)%/i);
@@ -116,6 +122,12 @@ function parseShippingScore(content: string | null): number | null {
 export function readLoopKitScoreFromLog(weekNumber: number): number | null {
   const content = readLoopLog(weekNumber);
   if (!content) return null;
+  // Prefer frontmatter
+  const parsed = parseLoopLog(content);
+  if (parsed.frontmatter?.loopkitScore != null) {
+    return parsed.frontmatter.loopkitScore;
+  }
+  // Legacy regex fallback
   const match = content.match(/\*\*LoopKit Score:\*\*\s*(\d+)/i);
   if (!match) return null;
   const val = parseInt(match[1], 10);
