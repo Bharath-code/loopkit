@@ -50,6 +50,10 @@ export async function updateCommand(
 
   ceremonyIntro("Investor Update Generator");
 
+  // Surface deprecation so users know the path forward
+  clog.warn("'update' is deprecated and behind the labs flag. It may be removed in v0.3.0.");
+  clog.message("Suggested alternatives: `loopkit ship --changelog` for releases, or copy `loopkit loop` output into your update.\n");
+
   const config = readConfig();
   const slug = config.activeProject;
   if (!slug) {

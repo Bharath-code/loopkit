@@ -34,14 +34,29 @@ These commands support the loop, but they are not the product's center of gravit
 
 | Command                        | What It Does                                             |
 | ------------------------------ | -------------------------------------------------------- |
-| `loopkit radar`                | Scan PH & HN for competitor launches in your category    |
-| `loopkit keywords`             | Find low-competition keywords for content strategy       |
-| `loopkit timing`               | Market timing signal — is your space heating up?         |
 | `loopkit coach`                | AI coaching based on your shipping patterns              |
 | `loopkit revenue`              | Track structured MRR/ARR records                         |
 | `loopkit celebrate`            | ASCII confetti + shareable proof card                    |
 | `loopkit aliases`             | Manage shell aliases for faster commands                |
 | `loopkit init --template <id>` | Pre-fill & AI-personalize tasks with 9 project templates |
+
+## Labs (Off by Default)
+
+These commands work, but they are intentionally behind a flag. They may move out of labs as they prove useful, or be removed if they don't.
+
+```bash
+loopkit labs on   # enable all labs commands
+LOOPKIT_LABS=1 loopkit radar   # enable per-invocation
+```
+
+| Command                        | What It Does                                             |
+| ------------------------------ | -------------------------------------------------------- |
+| `loopkit radar`                | Scan PH & HN for competitor launches in your category    |
+| `loopkit keywords`             | Find low-competition keywords for content strategy       |
+| `loopkit timing`               | Market timing signal — is your space heating up?         |
+| `loopkit update`               | **(deprecated)** Monthly investor update generator       |
+
+> **Why are some commands in labs?** The five core commands are the product. Everything else needs to earn its place by closing the loop, not by being a feature checkbox. See [`docs/MOAT.md`](docs/MOAT.md) for why we cut features.
 
 ## Quick Start
 

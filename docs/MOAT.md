@@ -341,4 +341,25 @@ LoopKit's moat strategy:
 
 ---
 
-*Last updated: April 2026 · IE-8 + IE-15 implemented*
+## Why Some Commands Are Behind the Labs Flag
+
+As of v0.2.0, `radar`, `keywords`, `timing`, and `update` are gated behind `loopkit labs on`. This is a product decision, not a technical one.
+
+**The thesis:** the five core commands (`init`, `track`, `ship`, `pulse`, `loop`) are the product. Everything else is a tool that might help a founder close the loop, or might distract them from it.
+
+**The risk of a fat CLI:**
+- Users who run `radar` instead of `ship` are not closing the loop.
+- Users who spend 20 minutes in `keywords` are not shipping.
+- Users who generate a perfect `update` are not building the next thing.
+
+**The test for graduating out of labs:** does the command *close the loop* or just *decorate* it? Commands that decorate get cut or stay in labs. Commands that close the loop get promoted.
+
+**The test for staying in labs:** is the AI output good enough to trust every week? If the radar result is "3 competitors shipped this week" but the founder doesn't know what to do with that, the command is decoration, not closure.
+
+**The hard part:** the founder's weekly ritual is the moat. Every week of `loop` data, every Sunday synthesis, every BIP post compounds. A command that interrupts that ritual — even a useful one — is a tax on retention.
+
+This is why the labs flag exists. Not to hide incomplete work, but to protect the ritual.
+
+---
+
+*Last updated: April 2026 · IE-8 + IE-15 implemented · v0.2.0 labs flag*

@@ -151,15 +151,24 @@ loopkit celebrate --share              # Post win to public feed
 loopkit auth                           # Log in
 
 # Secondary add-ons
+loopkit coach                          # View active coaching moments
+loopkit coach --dna                    # Generate Founder DNA report
+loopkit revenue                        # Track MRR milestones
+loopkit revenue --add 240              # Log MRR inline
+loopkit telemetry on                   # Opt-in to anonymous usage data
+loopkit telemetry off                  # Opt-out
+loopkit telemetry status               # Check current status
+loopkit labs on                        # Enable labs commands (radar, keywords, timing, update)
+loopkit labs off                       # Disable labs commands
+
+# Labs (require `loopkit labs on` or LOOPKIT_LABS=1)
 loopkit radar                          # Scan PH & HN for competitor launches
 loopkit radar --category "saas"        # Scan a specific category
 loopkit keywords                       # Find low-competition keywords in your niche
 loopkit keywords --category "saas"     # Find keywords for a specific category
 loopkit timing                         # Market timing signal for your category
 loopkit timing --category "saas"       # Check timing for a specific category
-loopkit telemetry on                   # Opt-in to anonymous usage data
-loopkit telemetry off                  # Opt-out
-loopkit telemetry status               # Check current status
+loopkit update                         # (deprecated) Monthly investor update generator
 
 # Utilities
 loopkit aliases                        # Manage shell shortcuts

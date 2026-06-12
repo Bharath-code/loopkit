@@ -62,15 +62,19 @@ const PRIMARY_COMMANDS = [
 ] as const;
 
 const TOOL_COMMANDS = [
-  { name: "radar",     description: "Scan Product Hunt & HN launches in your category" },
-  { name: "keywords",  description: "Find low-competition keywords in your niche" },
-  { name: "timing",    description: "Analyze market timing signals" },
   { name: "coach",     description: "AI coaching based on your shipping patterns" },
   { name: "celebrate", description: "ASCII confetti + shareable weekly card" },
-  { name: "update",    description: "Generate structured monthly investor updates (Markdown & HTML)" },
   { name: "auth",      description: "Manage your API key (BYOK)" },
   { name: "aliases",   description: "Install shell shortcuts: lk, lks, lkt, lkl" },
   { name: "telemetry", description: "Manage anonymous usage analytics" },
+  { name: "labs",      description: "Toggle experimental commands (off by default)" },
+] as const;
+
+const LABS_COMMANDS = [
+  { name: "radar",     description: "(labs) Scan Product Hunt & HN launches in your category" },
+  { name: "keywords",  description: "(labs) Find low-competition keywords in your niche" },
+  { name: "timing",    description: "(labs) Analyze market timing signals" },
+  { name: "update",    description: "(labs, deprecated) Generate monthly investor updates" },
 ] as const;
 
 const GLOBAL_FLAGS = [
@@ -148,6 +152,18 @@ function renderHelp(): string {
     const name = token.muted(cmd.name.padEnd(cmdWidth));
     lines.push(`  ${name}${space.indent}${token.dim(cmd.description)}`);
   }
+  lines.push("");
+
+  // ── Labs — gated commands
+  lines.push("");
+  lines.push(divider(token.warning("Labs (off by default)")));
+  lines.push("");
+
+  for (const cmd of LABS_COMMANDS) {
+    const name = token.warning(cmd.name.padEnd(cmdWidth));
+    lines.push(`  ${name}${space.indent}${token.dim(cmd.description)}`);
+  }
+  lines.push(`  ${token.dim("Enable with:")} ${token.code("loopkit labs on")}`);
   lines.push("");
 
   // ── Global flags
