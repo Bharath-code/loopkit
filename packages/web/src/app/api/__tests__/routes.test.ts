@@ -14,6 +14,7 @@ import { POST as syncShipPost } from "../sync/ship/route";
 import { POST as syncTasksPost, GET as syncTasksGet } from "../sync/tasks/route";
 import { POST as pulseSharePost } from "../pulse/share/route";
 import { POST as polarWebhookPost } from "../webhooks/polar/route";
+import { GET as emailUnsubscribeGet } from "../email/unsubscribe/route";
 
 // ─── Mocks ──────────────────────────────────────────────────────
 
@@ -806,5 +807,71 @@ describe("POST /api/webhooks/polar", () => {
     const json = await res.json();
     expect(json.received).toBe(true);
     expect(mockFetchMutation).not.toHaveBeenCalled();
+  });
+});
+
+describe("GET /api/email/unsubscribe", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("rejects when userId is missing", async () => {
+    const req = makeRequest(
+      "GET",
+      "http://localhost:3000/api/email/unsubscribe?token=abc",
+      {},
+    );
+    const res = await emailUnsubscribeGet(req as any);
+    expect(res.status).toBe(400);
+  });
+
+  it("rejects when token is missing", async () => {
+    const req = makeRequest(
+      "GET",
+      "http://localhost:3000/api/email/unsubscribe?userId=user_1",
+      {},
+    );
+    const res = await emailUnsubscribeGet(req as any);
+    expect(res.status).toBe(400);
+  });
+
+  it("rejects when token doesn't match userId", async () => {
+    // Token encodes "user_2:12345" but URL has user_1
+    const token = Buffer.from("user_2:12345").toString("base64url");
+    const req = makeRequest(
+      "GET",
+      `http://localhost:3000/api/email/unsubscribe?userId=user_1&token=${token}`,
+      {},
+    );
+    const res = await emailUnsubscribeGet(req as any);
+    expect(res.status).toBe(400);
+  });
+
+  it("opts out successfully on valid token", async () => {
+    mockFetchMutation.mockResolvedValue({ ok: true });
+    const token = Buffer.from("user_1:12345").toString("base64url");
+    const req = makeRequest(
+      "GET",
+      `http://localhost:3000/api/email/unsubscribe?userId=user_1&token=${token}`,
+      {},
+    );
+    const res = await emailUnsubscribeGet(req as any);
+    expect(res.status).toBe(200);
+    expect(mockFetchMutation).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ userId: "user_1" }),
+    );
+  });
+
+  it("returns 500 when Convex mutation throws", async () => {
+    mockFetchMutation.mockRejectedValue(new Error("convex down"));
+    const token = Buffer.from("user_1:12345").toString("base64url");
+    const req = makeRequest(
+      "GET",
+      `http://localhost:3000/api/email/unsubscribe?userId=user_1&token=${token}`,
+      {},
+    );
+    const res = await emailUnsubscribeGet(req as any);
+    expect(res.status).toBe(500);
   });
 });

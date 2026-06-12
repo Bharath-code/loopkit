@@ -19,6 +19,7 @@ import {
   X,
   Menu,
   LogOut,
+  Settings,
   type LucideIcon,
 } from "lucide-react";
 
@@ -100,6 +101,25 @@ export default function DashboardLayout({
               </Link>
             );
           })}
+
+          {/* Settings — separated at the bottom of the nav */}
+          <div className="pt-4 mt-4 border-t border-zinc-900">
+            <Link
+              key="/dashboard/settings"
+              href="/dashboard/settings"
+              className={`flex items-center gap-3 px-3 py-2.5 sm:py-2 rounded-lg text-sm transition-colors cursor-pointer min-h-[44px] ${
+                pathname === "/dashboard/settings"
+                  ? "bg-zinc-800/50 text-white font-medium"
+                  : "text-zinc-400 hover:bg-zinc-900 hover:text-white"
+              }`}
+            >
+              <Settings
+                className={`h-4 w-4 ${pathname === "/dashboard/settings" ? "text-violet-400" : "text-zinc-500"}`}
+                aria-hidden="true"
+              />
+              Settings
+            </Link>
+          </div>
         </nav>
       </div>
 
